@@ -186,6 +186,68 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 
 // Update resource
 func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+	var state AlertRule
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	alertRuleID := state.ID.Value
+
+	// Retrieve values from plan
+	var plan AlertRule
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	alertRuleResp, err := r.p.client.UpdateAlertRule(uptycs.AlertRule{
+    ID:          alertRuleID,
+		Name:        plan.Name.Value,
+		Code:        plan.Code.Value,
+		Description: plan.Description.Value,
+		Rule:        plan.Rule.Value,
+		Type:        plan.Type.Value,
+		Enabled:     plan.Enabled.Value,
+		SQLConfig: uptycs.SQLConfig{
+			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
+		},
+		Grouping:   plan.Grouping.Value,
+		GroupingL2: plan.GroupingL2.Value,
+		GroupingL3: plan.GroupingL3.Value,
+	})
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating alertRule",
+			"Could not create alertRule, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var result = AlertRule{
+		ID:          types.String{Value: alertRuleResp.ID},
+		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
+		Name:        types.String{Value: alertRuleResp.Name},
+		Description: types.String{Value: alertRuleResp.Description},
+		Code:        types.String{Value: alertRuleResp.Code},
+		Type:        types.String{Value: alertRuleResp.Type},
+		Rule:        types.String{Value: alertRuleResp.Rule},
+		SQLConfig: SQLConfig{
+			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
+		},
+		Grouping:   types.String{Value: alertRuleResp.Grouping},
+		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
+		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
+	}
+
+	diags = resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 // Delete resource
