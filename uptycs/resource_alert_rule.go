@@ -150,7 +150,7 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	var alertRuleId string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &alertRuleId)...)
 	alertRuleResp, err := r.p.client.GetAlertRule(uptycs.AlertRule{
-	  ID: alertRuleId,
+		ID: alertRuleId,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -174,7 +174,6 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
 		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
 	}
-
 
 	diags := resp.State.Set(ctx, result)
 	resp.Diagnostics.Append(diags...)
@@ -204,7 +203,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 	}
 
 	alertRuleResp, err := r.p.client.UpdateAlertRule(uptycs.AlertRule{
-    ID:          alertRuleID,
+		ID:          alertRuleID,
 		Name:        plan.Name.Value,
 		Code:        plan.Code.Value,
 		Description: plan.Description.Value,
@@ -262,7 +261,7 @@ func (r resourceAlertRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	alertRuleID := state.ID.Value
 
 	_, err := r.p.client.DeleteAlertRule(uptycs.AlertRule{
-	  ID: alertRuleID,
+		ID: alertRuleID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
