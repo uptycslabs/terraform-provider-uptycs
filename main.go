@@ -2,12 +2,19 @@ package main
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"terraform-provider-uptycs/uptycs"
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/myoung34/terraform-provider-uptycs/uptycs"
 )
 
 func main() {
-	tfsdk.Serve(context.Background(), uptycs.New, tfsdk.ServeOpts{
-		Name: "uptycs",
-	})
+	err := providerserver.Serve(
+		context.Background(),
+		uptycs.New,
+		providerserver.ServeOpts{},
+	)
+
+	if err != nil {
+		panic(fmt.Sprintf("Error serving provider: %v", err))
+	}
 }
