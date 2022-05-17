@@ -3,7 +3,7 @@ HOSTNAME=snooguts.net
 NAMESPACE=reddit
 NAME=uptycs
 BINARY=terraform-provider-${NAME}
-VERSION=0.0.2
+VERSION=0.0.6
 OS_ARCH=darwin_amd64
 
 default: install

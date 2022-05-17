@@ -11,7 +11,9 @@ func main() {
 	err := providerserver.Serve(
 		context.Background(),
 		uptycs.New,
-		providerserver.ServeOpts{},
+		providerserver.ServeOpts{
+			Address: "snooguts.net/reddit/uptycs",
+		},
 	)
 
 	if err != nil {
