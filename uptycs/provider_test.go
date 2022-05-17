@@ -3,16 +3,14 @@ package uptycs
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func makeProviderFactoryMap(name string, prov *provider) map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
-		name: func() (tfprotov6.ProviderServer, error) {
-			return tfsdk.NewProtocol6Server(prov), nil
-		},
+		name: providerserver.NewProtocol6WithError(prov),
 	}
 }
 
