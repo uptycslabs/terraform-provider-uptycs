@@ -41,3 +41,4 @@ terraform.rc
 terraform
 
 *.sw[o-p]
+dist/*
