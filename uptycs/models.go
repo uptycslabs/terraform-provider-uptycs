@@ -52,3 +52,16 @@ type AutoAlertConfig struct {
 	RaiseAlert   types.Bool `tfsdk:"raise_alert"`
 	DisableAlert types.Bool `tfsdk:"disable_alert"`
 }
+
+type Destination struct {
+	ID      types.String `tfsdk:"id"`
+	Name    types.String `tfsdk:"name"`
+	Type    types.String `tfsdk:"type"`
+	Address types.String `tfsdk:"address"`
+	//Config TODO
+	//"config": {
+	//  "sender": null
+	//},
+	Enabled types.Bool `tfsdk:"enabled"`
+	//Template TODO
+}
