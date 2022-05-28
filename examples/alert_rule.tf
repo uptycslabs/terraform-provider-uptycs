@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     uptycs = {
-      source = "snooguts.net/reddit/uptycs"
+      source = "github.com/myoung34/uptycs"
     }
   }
 }
