@@ -284,7 +284,6 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 // Update resource

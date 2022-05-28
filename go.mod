@@ -7,7 +7,8 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v0.8.0
 	github.com/hashicorp/terraform-plugin-go v0.9.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
-	github.com/myoung34/uptycs-client-go v0.0.11
+	github.com/myoung34/uptycs-client-go v0.0.12
+	gopkg.in/yaml.v3 v3.0.1 // CVE-2022-28948
 )
 
 require (
