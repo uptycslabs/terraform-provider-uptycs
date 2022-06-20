@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/myoung34/uptycs-client-go/uptycs"
+	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
 type resourceEventRuleType struct{}

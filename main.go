@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/myoung34/terraform-provider-uptycs/uptycs"
+	"github.com/uptycslabs/terraform-provider-uptycs/uptycs"
 )
 
 // Generate the Terraform provider documentation using `tfplugindocs`:
@@ -15,7 +15,7 @@ func main() {
 		context.Background(),
 		uptycs.New,
 		providerserver.ServeOpts{
-			Address: "github.com/myoung34/uptycs",
+			Address: "github.com/uptycslabs/uptycs",
 		},
 	)
 

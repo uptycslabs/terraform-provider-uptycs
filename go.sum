@@ -218,10 +218,10 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/myoung34/uptycs-client-go v0.0.11 h1:2ePdBUbNEZHTFgTanEwM8ImXSVpkdgiLEsoTs1NYOrc=
-github.com/myoung34/uptycs-client-go v0.0.11/go.mod h1:ePrU9WPa/w085X59pOtI2P9JtivhIAOhYFzH5lpfCn0=
-github.com/myoung34/uptycs-client-go v0.0.12 h1:AFUSVlX/WIttc+W4EUjHpmX+NPYiVa0FSH7jnk65XHI=
-github.com/myoung34/uptycs-client-go v0.0.12/go.mod h1:ePrU9WPa/w085X59pOtI2P9JtivhIAOhYFzH5lpfCn0=
+github.com/uptycslabs/uptycs-client-go v0.0.11 h1:2ePdBUbNEZHTFgTanEwM8ImXSVpkdgiLEsoTs1NYOrc=
+github.com/uptycslabs/uptycs-client-go v0.0.11/go.mod h1:ePrU9WPa/w085X59pOtI2P9JtivhIAOhYFzH5lpfCn0=
+github.com/uptycslabs/uptycs-client-go v0.0.12 h1:AFUSVlX/WIttc+W4EUjHpmX+NPYiVa0FSH7jnk65XHI=
+github.com/uptycslabs/uptycs-client-go v0.0.12/go.mod h1:ePrU9WPa/w085X59pOtI2P9JtivhIAOhYFzH5lpfCn0=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/nsf/jsondiff v0.0.0-20200515183724-f29ed568f4ce h1:RPclfga2SEJmgMmz2k+Mg7cowZ8yv4Trqw9UsJby758=
 github.com/nsf/jsondiff v0.0.0-20200515183724-f29ed568f4ce/go.mod h1:uFMI8w+ref4v2r9jz+c9i1IfIttS/OkmLfrk1jne5hs=

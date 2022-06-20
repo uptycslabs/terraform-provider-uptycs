@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/myoung34/uptycs-client-go/uptycs"
+	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
 var stderr = os.Stderr
