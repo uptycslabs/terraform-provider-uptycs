@@ -57,7 +57,6 @@ func (d dataSourceDestinationType) Read(ctx context.Context, req tfsdk.ReadDataS
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
 			"Could not get destination with ID  "+destinationId+": "+err.Error(),
 		)
 		return

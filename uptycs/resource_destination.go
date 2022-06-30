@@ -109,7 +109,6 @@ func (r resourceDestination) Read(ctx context.Context, req tfsdk.ReadResourceReq
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
 			"Could not get destination with ID  "+destinationId+": "+err.Error(),
 		)
 		return
@@ -196,7 +195,6 @@ func (r resourceDestination) Delete(ctx context.Context, req tfsdk.DeleteResourc
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting order",
 			"Could not delete destination with ID  "+destinationID+": "+err.Error(),
 		)
 		return

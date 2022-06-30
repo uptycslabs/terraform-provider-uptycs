@@ -235,7 +235,6 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
 			"Could not get eventRule with ID  "+eventRuleId+": "+err.Error(),
 		)
 		return
@@ -405,7 +404,6 @@ func (r resourceEventRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting order",
 			"Could not delete eventRule with ID  "+eventRuleID+": "+err.Error(),
 		)
 		return

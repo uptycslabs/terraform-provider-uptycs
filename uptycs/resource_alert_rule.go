@@ -154,7 +154,6 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
 			"Could not get alertRule with ID  "+alertRuleId+": "+err.Error(),
 		)
 		return
@@ -265,7 +264,6 @@ func (r resourceAlertRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting order",
 			"Could not delete alertRule with ID  "+alertRuleID+": "+err.Error(),
 		)
 		return
