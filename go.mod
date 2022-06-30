@@ -7,12 +7,12 @@ require (
 	github.com/hashicorp/terraform-plugin-framework v0.8.0
 	github.com/hashicorp/terraform-plugin-go v0.9.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.16.0
-	github.com/uptycslabs/uptycs-client-go v0.0.13
+	github.com/uptycslabs/uptycs-client-go v0.0.15
 	gopkg.in/yaml.v3 v3.0.1 // indirect; CVE-2022-28948
+	github.com/Masterminds/goutils v1.1.1 // indirect; https://security.snyk.io/vuln/SNYK-GOLANG-GITHUBCOMMASTERMINDSGOUTILS-1296313
 )
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.0 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect

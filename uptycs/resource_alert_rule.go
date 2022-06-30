@@ -116,7 +116,7 @@ func (r resourceAlertRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating alertRule",
+			"Error creating",
 			"Could not create alertRule, unexpected error: "+err.Error(),
 		)
 		return
@@ -154,6 +154,7 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
+			"Error reading",
 			"Could not get alertRule with ID  "+alertRuleId+": "+err.Error(),
 		)
 		return
@@ -219,7 +220,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating alertRule",
+			"Error creating",
 			"Could not create alertRule, unexpected error: "+err.Error(),
 		)
 		return
@@ -264,6 +265,7 @@ func (r resourceAlertRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
+			"Error Deleting",
 			"Could not delete alertRule with ID  "+alertRuleID+": "+err.Error(),
 		)
 		return

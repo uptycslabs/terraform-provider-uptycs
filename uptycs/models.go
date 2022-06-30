@@ -65,3 +65,13 @@ type Destination struct {
 	Enabled types.Bool `tfsdk:"enabled"`
 	//Template TODO
 }
+
+type EventExcludeProfile struct {
+	ID           types.String `tfsdk:"id"`
+	Name         types.String `tfsdk:"name"`
+	Description  types.String `tfsdk:"description"`
+	Priority     int          `tfsdk:"priority"`
+	Metadata     types.String `tfsdk:"metadata"`
+	ResourceType types.String `tfsdk:"resource_type"`
+	Platform     types.String `tfsdk:"platform"`
+}

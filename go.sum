@@ -3,6 +3,8 @@ cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Masterminds/goutils v1.1.0 h1:zukEsf/1JZwCMgHiK3GZftabmxiCw4apj3a28RPBiVg=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
+github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
+github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Masterminds/sprig/v3 v3.2.0 h1:P1ekkbuU73Ui/wS0nK1HOM37hh4xdfZo485UPf8rc+Y=
@@ -256,6 +258,10 @@ github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMT
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/uptycslabs/uptycs-client-go v0.0.13 h1:z0PTh5ssjOqg3yZYIXS3opz1EGL2vqr9DFVa77elfQA=
 github.com/uptycslabs/uptycs-client-go v0.0.13/go.mod h1:xkiTJfPiiDp6kc1hbgOgTQcsJuSt0y4yNpxkSe358tc=
+github.com/uptycslabs/uptycs-client-go v0.0.14 h1:FbSusdODGBjUYUOgrFoUFMFyNOsdXOC97ZjWeV/C11A=
+github.com/uptycslabs/uptycs-client-go v0.0.14/go.mod h1:xkiTJfPiiDp6kc1hbgOgTQcsJuSt0y4yNpxkSe358tc=
+github.com/uptycslabs/uptycs-client-go v0.0.15 h1:OhT8U8zpZEPCOhS62biYz1FICmrirMvvP0QBCQKE7dE=
+github.com/uptycslabs/uptycs-client-go v0.0.15/go.mod h1:xkiTJfPiiDp6kc1hbgOgTQcsJuSt0y4yNpxkSe358tc=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
