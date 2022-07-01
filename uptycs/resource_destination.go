@@ -32,9 +32,9 @@ func (r resourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, dia
 				Optional: true,
 			},
 			"enabled": {
-				Type:     types.BoolType,
-				Optional: true,
-				Computed: true,
+				Type:          types.BoolType,
+				Optional:      true,
+				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
 			},
 		},
@@ -79,7 +79,7 @@ func (r resourceDestination) Create(ctx context.Context, req tfsdk.CreateResourc
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating destination",
+			"Error creating",
 			"Could not create destination, unexpected error: "+err.Error(),
 		)
 		return
@@ -109,7 +109,7 @@ func (r resourceDestination) Read(ctx context.Context, req tfsdk.ReadResourceReq
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
+			"Error reading",
 			"Could not get destination with ID  "+destinationId+": "+err.Error(),
 		)
 		return
@@ -159,7 +159,7 @@ func (r resourceDestination) Update(ctx context.Context, req tfsdk.UpdateResourc
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating destination",
+			"Error creating",
 			"Could not create destination, unexpected error: "+err.Error(),
 		)
 		return
@@ -196,7 +196,7 @@ func (r resourceDestination) Delete(ctx context.Context, req tfsdk.DeleteResourc
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting order",
+			"Error deleting",
 			"Could not delete destination with ID  "+destinationID+": "+err.Error(),
 		)
 		return

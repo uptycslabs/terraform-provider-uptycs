@@ -175,7 +175,7 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating eventRule",
+			"Error creating",
 			"Could not create eventRule, unexpected error: "+err.Error(),
 		)
 		return
@@ -235,7 +235,7 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading order",
+			"Error reading",
 			"Could not get eventRule with ID  "+eventRuleId+": "+err.Error(),
 		)
 		return
@@ -337,7 +337,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating eventRule",
+			"Error creating",
 			"Could not create eventRule, unexpected error: "+err.Error(),
 		)
 		return
@@ -405,7 +405,7 @@ func (r resourceEventRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting order",
+			"Error deleting",
 			"Could not delete eventRule with ID  "+eventRuleID+": "+err.Error(),
 		)
 		return
