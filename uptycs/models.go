@@ -75,3 +75,14 @@ type EventExcludeProfile struct {
 	ResourceType types.String `tfsdk:"resource_type"`
 	Platform     types.String `tfsdk:"platform"`
 }
+
+type User struct {
+	ID         types.String `tfsdk:"id"`
+	Name       types.String `tfsdk:"name"`
+	Email      types.String `tfsdk:"email"`
+	Active     types.Bool   `tfsdk:"active"`
+	SuperAdmin types.Bool   `tfsdk:"super_admin"`
+	Bot        types.Bool   `tfsdk:"bot"`
+	Support    types.Bool   `tfsdk:"support"`
+	//MaxIdleTimeMins int          `tfsdk:"max_idle_time_mins"`
+}

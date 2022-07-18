@@ -195,6 +195,7 @@ func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceTyp
 		"uptycs_event_rule":            resourceEventRuleType{},
 		"uptycs_destination":           resourceDestinationType{},
 		"uptycs_event_exclude_profile": resourceEventExcludeProfileType{},
+		"uptycs_user":                  resourceUserType{},
 	}, nil
 }
 
@@ -203,5 +204,6 @@ func (p *provider) GetDataSources(_ context.Context) (map[string]tfsdk.DataSourc
 	return map[string]tfsdk.DataSourceType{
 		"uptycs_destination":           dataSourceDestinationType{},
 		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
+		"uptycs_user":                  dataSourceUserType{},
 	}, nil
 }
