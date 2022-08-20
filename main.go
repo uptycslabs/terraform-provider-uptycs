@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/uptycslabs/terraform-provider-uptycs/uptycs"
+	"terraform-provider-uptycs/uptycs"
 )
 
 // Generate the Terraform provider documentation using `tfplugindocs`:

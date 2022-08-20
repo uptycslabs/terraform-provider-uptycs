@@ -32,6 +32,35 @@ Run the following command to build the provider
 $ go build -o terraform-provider-uptycs
 ```
 
+## Using provider locally
+
+While developing you'll likely want to use this provider locally.
+
+If you need to use a temporary branch for the `uptycs-client-go`:
+
+ * push the commit for the uptycs-client-go to the uptycslabs upstream
+ * note the SHA (hint: `git log -1`)
+ * pull the temporary sha via `go get github.com/uptycslabs/uptycs-client-go@{sha from git log -1}`
+
+
+Next, Bump the `VERSION` in the `Makefile`, then build and install the provider with `$ make install`, use this for your init configuration:
+
+```
+terraform {
+  required_providers {
+    uptycs = {
+      source  = "github.com/uptycslabs/uptycs"
+      version = "0.0.5" # the version you bumped above
+    }
+  }
+}
+```
+
+Do not use the s3 state to prevent corruption. Use a local state file.
+Make sure to remove cached versions, state, etc: `rm .terraform.lock.hcl; rm -rf .terraform; rm terraform.tfstate*`
+
+The github.com namespace is what lets you run this locally. When running the officially published one from the terraform registry note the lack of that part.
+
 ## Test sample configuration
 
 First, build and install the provider.
