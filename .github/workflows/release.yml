@@ -22,4 +22,4 @@ jobs:
       gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
       gpg-private-key-passphrase: ${{ secrets.PASSPHRASE }}
     with:
-      setup-go-version: 1.17.x
+      setup-go-version: 1.19.x
