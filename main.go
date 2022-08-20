@@ -16,7 +16,7 @@ func main() {
 		context.Background(),
 		uptycs.New,
 		providerserver.ServeOpts{
-			Address: "github.com/uptycslabs/uptycs",
+			Address: "uptycslabs/uptycs",
 		},
 	)
 
