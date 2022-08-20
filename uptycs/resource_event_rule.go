@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -159,7 +160,7 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
 		BuilderConfig: uptycs.BuilderConfig{
-			FiltersJson:   plan.BuilderConfig.Filters.Value,
+			Filters:       uptycs.BuilderConfigFilterString(plan.BuilderConfig.Filters.Value),
 			TableName:     plan.BuilderConfig.TableName.Value,
 			Added:         plan.BuilderConfig.Added.Value,
 			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
@@ -180,6 +181,7 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 		)
 		return
 	}
+
 	filtersJson, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
 	if err != nil {
 		fmt.Println(err)
@@ -213,6 +215,9 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
 			},
 		},
+	}
+	if result.Type.Value == "sql" {
+		result.Rule.Value += "\n"
 	}
 
 	for _, t := range eventRuleResp.EventTags {
@@ -275,6 +280,11 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 			},
 		},
 	}
+
+	if result.Type.Value == "sql" {
+		result.Rule.Value += "\n"
+	}
+
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
 	}
@@ -307,6 +317,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
+
 	eventRuleResp, err := r.p.client.UpdateEventRule(uptycs.EventRule{
 		ID:          eventRuleID,
 		Name:        plan.Name.Value,
@@ -321,7 +332,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
 		BuilderConfig: uptycs.BuilderConfig{
-			FiltersJson:   plan.BuilderConfig.Filters.Value,
+			Filters:       uptycs.BuilderConfigFilterString(plan.BuilderConfig.Filters.Value),
 			TableName:     plan.BuilderConfig.TableName.Value,
 			Added:         plan.BuilderConfig.Added.Value,
 			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,

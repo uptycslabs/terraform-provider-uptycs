@@ -106,7 +106,7 @@ func (r resourceAlertRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 		Rule:        plan.Rule.Value,
 		Type:        plan.Type.Value,
 		Enabled:     plan.Enabled.Value,
-		SQLConfig: uptycs.SQLConfig{
+		SQLConfig: &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
 		},
 		Grouping:   plan.Grouping.Value,
@@ -210,7 +210,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 		Rule:        plan.Rule.Value,
 		Type:        plan.Type.Value,
 		Enabled:     plan.Enabled.Value,
-		SQLConfig: uptycs.SQLConfig{
+		SQLConfig: &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
 		},
 		Grouping:   plan.Grouping.Value,

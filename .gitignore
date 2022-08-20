@@ -42,3 +42,5 @@ terraform
 
 *.sw[o-p]
 dist/*
+.vscode
+*.code-workspace
