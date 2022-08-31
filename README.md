@@ -32,38 +32,15 @@ Run the following command to build the provider
 $ go build -o terraform-provider-uptycs
 ```
 
-## Using provider locally
-
-While developing you'll likely want to use this provider locally.
-
-If you need to use a temporary branch for the `uptycs-client-go`:
-
- * push the commit for the uptycs-client-go to the uptycslabs upstream
- * note the SHA (hint: `git log -1`)
- * pull the temporary sha via `go get github.com/uptycslabs/uptycs-client-go@{sha from git log -1}`
-
-
-Next, Bump the `VERSION` in the `Makefile`, then build and install the provider with `$ make install`, use this for your init configuration:
-
-```
-terraform {
-  required_providers {
-    uptycs = {
-      source  = "github.com/uptycslabs/uptycs"
-      version = "0.0.5" # the version you bumped above
-    }
-  }
-}
-```
-
-Do not use the s3 state to prevent corruption. Use a local state file.
-Make sure to remove cached versions, state, etc: `rm .terraform.lock.hcl; rm -rf .terraform; rm terraform.tfstate*`
-
-The github.com namespace is what lets you run this locally. When running the officially published one from the terraform registry note the lack of that part.
-
 ## Test sample configuration
 
-First, build and install the provider.
+First, bump the version so that its unique and won't pull from the registry:
+
+```shell
+$ vim Makefile
+```
+
+Next, build and install the provider.
 
 ```shell
 $ make install
@@ -75,8 +52,31 @@ Then, navigate to the `examples` directory.
 $ cd examples
 ```
 
+To run this locally you'll need to use this for `init.tf`:
+
+```
+terraform {
+  required_providers {
+    uptycs = {
+      source  = "github.com/uptycslabs/uptycs" # this source has HOSTNAME to make it unique and valid for local testing
+      # source  = "uptycslabs/uptycs" # this is what you'll use when not local, pulling from the registry (with signature checking etc)
+      version = "0.0.5"
+    }
+  }
+}
+
+provider "uptycs" {
+  host = "https://thor.uptycs.io"
+  customer_id = "fda3f46b-c262-439c-bc93-5de6ee6993b6"
+}
+```
+
 Run the following command to initialize the workspace and apply the sample configuration.
 
 ```shell
-$ terraform init && terraform apply
+$ rm -rf .terraform .terraform.lock.hcl
+$ terraform init
+$ export UPTYCS_API_KEY="changeme"
+$ export UPTYCS_API_SECRET="changeme"
+$ terraform plan
 ```

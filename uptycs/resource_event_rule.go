@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -116,18 +118,18 @@ func (r resourceEventRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 }
 
 // New resource instance
-func (r resourceEventRuleType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r resourceEventRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
 	return resourceEventRule{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
 type resourceEventRule struct {
-	p provider
+	p Provider
 }
 
 // Create a new resource
-func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r resourceEventRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -182,7 +184,7 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 		return
 	}
 
-	filtersJson, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -203,7 +205,7 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 			Elems:    make([]attr.Value, 0),
 		},
 		BuilderConfig: BuilderConfig{
-			Filters:       types.String{Value: string([]byte(filtersJson)) + "\n"},
+			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
 			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
 			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
@@ -232,21 +234,21 @@ func (r resourceEventRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 }
 
 // Read resource information
-func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-	var eventRuleId string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &eventRuleId)...)
+func (r resourceEventRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var eventRuleID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &eventRuleID)...)
 	eventRuleResp, err := r.p.client.GetEventRule(uptycs.EventRule{
-		ID: eventRuleId,
+		ID: eventRuleID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading",
-			"Could not get eventRule with ID  "+eventRuleId+": "+err.Error(),
+			"Could not get eventRule with ID  "+eventRuleID+": "+err.Error(),
 		)
 		return
 	}
 
-	filtersJson, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -267,7 +269,7 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 			Elems:    make([]attr.Value, 0),
 		},
 		BuilderConfig: BuilderConfig{
-			Filters:       types.String{Value: string([]byte(filtersJson)) + "\n"},
+			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
 			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
 			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
@@ -297,7 +299,7 @@ func (r resourceEventRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 }
 
 // Update resource
-func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r resourceEventRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state EventRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -354,7 +356,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 		return
 	}
 
-	filtersJson, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -375,7 +377,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 			Elems:    make([]attr.Value, 0),
 		},
 		BuilderConfig: BuilderConfig{
-			Filters:       types.String{Value: string([]byte(filtersJson)) + "\n"},
+			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
 			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
 			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
@@ -401,7 +403,7 @@ func (r resourceEventRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 }
 
 // Delete resource
-func (r resourceEventRule) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r resourceEventRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state EventRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -427,6 +429,6 @@ func (r resourceEventRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 }
 
 // Import resource
-func (r resourceEventRule) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+func (r resourceEventRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

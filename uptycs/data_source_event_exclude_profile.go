@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
 type dataSourceEventExcludeProfileType struct {
-	p provider
+	p Provider
 }
 
 func (r dataSourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -51,28 +53,28 @@ func (r dataSourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.S
 	}, nil
 }
 
-func (d dataSourceEventExcludeProfileType) NewDataSource(_ context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (r dataSourceEventExcludeProfileType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	return dataSourceEventExcludeProfileType{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
-func (d dataSourceEventExcludeProfileType) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
-	var eventExcludeProfileId string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &eventExcludeProfileId)...)
+func (r dataSourceEventExcludeProfileType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var eventExcludeProfileID string
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)...)
 
-	eventExcludeProfileResp, err := d.p.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
-		ID: eventExcludeProfileId,
+	eventExcludeProfileResp, err := r.p.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
+		ID: eventExcludeProfileID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
-			"Could not get eventExcludeProfile with ID  "+eventExcludeProfileId+": "+err.Error(),
+			"Could not get eventExcludeProfile with ID  "+eventExcludeProfileID+": "+err.Error(),
 		)
 		return
 	}
 
-	metadataJson, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
+	metadataJSON, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -81,7 +83,7 @@ func (d dataSourceEventExcludeProfileType) Read(ctx context.Context, req tfsdk.R
 		ID:           types.String{Value: eventExcludeProfileResp.ID},
 		Name:         types.String{Value: eventExcludeProfileResp.Name},
 		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJson)) + "\n"},
+		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
 		Platform:     types.String{Value: eventExcludeProfileResp.Platform},

@@ -1,0 +1,36 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.3.0
+  hooks:
+  - id: check-yaml
+  - id: end-of-file-fixer
+    exclude: |
+        (?x)(
+            ^docs/|
+            ^vendor/
+        )
+  - id: trailing-whitespace
+    exclude: |
+        (?x)(
+            ^docs/|
+            ^vendor/
+        )
+  - id: check-case-conflict
+    exclude: |
+        (?x)(
+            ^docs/|
+            ^vendor/
+        )
+  - id: check-merge-conflict
+    exclude: ^vendor/
+  - id: detect-private-key
+- repo: https://github.com/golangci/golangci-lint
+  rev: v1.49.0
+  hooks:
+    - id: golangci-lint
+      exclude: ^vendor/
+- repo: https://github.com/dnephin/pre-commit-golang
+  rev: v0.5.0
+  hooks:
+    - id: go-fmt
+      exclude: ^vendor/

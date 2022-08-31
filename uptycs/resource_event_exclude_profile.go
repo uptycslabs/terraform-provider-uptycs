@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -50,18 +52,18 @@ func (r resourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.Sch
 }
 
 // New resource instance
-func (r resourceEventExcludeProfileType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r resourceEventExcludeProfileType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
 	return resourceEventExcludeProfile{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
 type resourceEventExcludeProfile struct {
-	p provider
+	p Provider
 }
 
 // Create a new resource
-func (r resourceEventExcludeProfile) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r resourceEventExcludeProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -81,7 +83,7 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req tfsdk.Creat
 	eventExcludeProfileResp, err := r.p.client.CreateEventExcludeProfile(uptycs.EventExcludeProfile{
 		Name:         plan.Name.Value,
 		Description:  plan.Description.Value,
-		MetadataJson: plan.Metadata.Value,
+		MetadataJSON: plan.Metadata.Value,
 		Priority:     plan.Priority,
 		ResourceType: plan.ResourceType.Value,
 		Platform:     plan.Platform.Value,
@@ -95,7 +97,7 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req tfsdk.Creat
 		return
 	}
 
-	metadataJson, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
+	metadataJSON, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -104,7 +106,7 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req tfsdk.Creat
 		ID:           types.String{Value: eventExcludeProfileResp.ID},
 		Name:         types.String{Value: eventExcludeProfileResp.Name},
 		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJson)) + "\n"},
+		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
 		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
@@ -118,21 +120,21 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req tfsdk.Creat
 }
 
 // Read resource information
-func (r resourceEventExcludeProfile) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-	var eventExcludeProfileId string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &eventExcludeProfileId)...)
+func (r resourceEventExcludeProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var eventExcludeProfileID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)...)
 	eventExcludeProfileResp, err := r.p.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
-		ID: eventExcludeProfileId,
+		ID: eventExcludeProfileID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading",
-			"Could not get eventExcludeProfile with ID  "+eventExcludeProfileId+": "+err.Error(),
+			"Could not get eventExcludeProfile with ID  "+eventExcludeProfileID+": "+err.Error(),
 		)
 		return
 	}
 
-	metadataJson, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
+	metadataJSON, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -141,7 +143,7 @@ func (r resourceEventExcludeProfile) Read(ctx context.Context, req tfsdk.ReadRes
 		ID:           types.String{Value: eventExcludeProfileResp.ID},
 		Name:         types.String{Value: eventExcludeProfileResp.Name},
 		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJson)) + "\n"},
+		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
 		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
@@ -156,7 +158,7 @@ func (r resourceEventExcludeProfile) Read(ctx context.Context, req tfsdk.ReadRes
 }
 
 // Update resource
-func (r resourceEventExcludeProfile) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r resourceEventExcludeProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state EventExcludeProfile
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -178,7 +180,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req tfsdk.Updat
 		ID:           eventExcludeProfileID,
 		Name:         plan.Name.Value,
 		Description:  plan.Description.Value,
-		MetadataJson: plan.Metadata.Value,
+		MetadataJSON: plan.Metadata.Value,
 		Priority:     plan.Priority,
 		ResourceType: plan.ResourceType.Value,
 		Platform:     plan.Platform.Value,
@@ -192,7 +194,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req tfsdk.Updat
 		return
 	}
 
-	metadataJson, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
+	metadataJSON, err := json.MarshalIndent(eventExcludeProfileResp.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -201,7 +203,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req tfsdk.Updat
 		ID:           types.String{Value: eventExcludeProfileResp.ID},
 		Name:         types.String{Value: eventExcludeProfileResp.Name},
 		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJson)) + "\n"},
+		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
 		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
@@ -215,7 +217,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req tfsdk.Updat
 }
 
 // Delete resource
-func (r resourceEventExcludeProfile) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r resourceEventExcludeProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state EventExcludeProfile
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -241,6 +243,6 @@ func (r resourceEventExcludeProfile) Delete(ctx context.Context, req tfsdk.Delet
 }
 
 // Import resource
-func (r resourceEventExcludeProfile) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+func (r resourceEventExcludeProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.4"
+      version = "0.0.7"
     }
   }
 }
@@ -19,11 +19,11 @@ data "uptycs_event_exclude_profile" "sample" {
 }
 
 resource "uptycs_event_exclude_profile" "sample" {
-  name = "marc test"
+  name        = "marc test"
   description = "a test"
-  priority = 9999
-  platform = "all"
-  metadata = <<EOT
+  priority    = 9999
+  platform    = "all"
+  metadata    = <<EOT
 {
   "dns_lookup_events": {},
   "user_events": {},

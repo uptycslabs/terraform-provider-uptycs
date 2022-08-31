@@ -2,16 +2,17 @@ package uptycs
 
 import (
 	"context"
-
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
 type dataSourceDestinationType struct {
-	p provider
+	p Provider
 }
 
 func (r dataSourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -42,23 +43,24 @@ func (r dataSourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-func (d dataSourceDestinationType) NewDataSource(_ context.Context, p tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (r dataSourceDestinationType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	return dataSourceDestinationType{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
-func (d dataSourceDestinationType) Read(ctx context.Context, req tfsdk.ReadDataSourceRequest, resp *tfsdk.ReadDataSourceResponse) {
-	var destinationId string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &destinationId)...)
+func (r dataSourceDestinationType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var destinationID string
+	path.Root("test")
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &destinationID)...)
 
-	destinationResp, err := d.p.client.GetDestination(uptycs.Destination{
-		ID: destinationId,
+	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
+		ID: destinationID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
-			"Could not get destination with ID  "+destinationId+": "+err.Error(),
+			"Could not get destination with ID  "+destinationID+": "+err.Error(),
 		)
 		return
 	}

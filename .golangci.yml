@@ -1,0 +1,6 @@
+linters:
+  enable:
+    - revive
+issues:
+  exclude:
+    - "import .github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs. is a program, not an importable package"
