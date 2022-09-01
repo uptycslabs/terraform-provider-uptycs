@@ -54,6 +54,36 @@ type resourceDestination struct {
 	p Provider
 }
 
+// Read resource information
+func (r resourceDestination) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var destinationID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &destinationID)...)
+	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
+		ID: destinationID,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading",
+			"Could not get destination with ID  "+destinationID+": "+err.Error(),
+		)
+		return
+	}
+	var result = Destination{
+		ID:      types.String{Value: destinationResp.ID},
+		Name:    types.String{Value: destinationResp.Name},
+		Type:    types.String{Value: destinationResp.Type},
+		Address: types.String{Value: destinationResp.Address},
+		Enabled: types.Bool{Value: destinationResp.Enabled},
+	}
+
+	diags := resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}
+
 // Create a new resource
 func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
@@ -100,36 +130,6 @@ func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-// Read resource information
-func (r resourceDestination) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var destinationID string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &destinationID)...)
-	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
-		ID: destinationID,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading",
-			"Could not get destination with ID  "+destinationID+": "+err.Error(),
-		)
-		return
-	}
-	var result = Destination{
-		ID:      types.String{Value: destinationResp.ID},
-		Name:    types.String{Value: destinationResp.Name},
-		Type:    types.String{Value: destinationResp.Type},
-		Address: types.String{Value: destinationResp.Address},
-		Enabled: types.Bool{Value: destinationResp.Enabled},
-	}
-
-	diags := resp.State.Set(ctx, result)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 }
 
 // Update resource

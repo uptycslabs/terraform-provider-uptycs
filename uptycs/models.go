@@ -119,3 +119,140 @@ type ObjectGroup struct {
 	RetentionDays    int          `tfsdk:"retention_days"`
 	Destinations     types.List   `tfsdk:"destinations"`
 }
+
+type TagRule struct {
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	Query          types.String `tfsdk:"query"`
+	Source         types.String `tfsdk:"source"`
+	RunOnce        types.Bool   `tfsdk:"run_once"`
+	Interval       int          `tfsdk:"interval"`
+	OSqueryVersion types.String `tfsdk:"osquery_version"`
+	Platform       types.String `tfsdk:"platform"`
+	Enabled        types.Bool   `tfsdk:"enabled"`
+	System         types.Bool   `tfsdk:"system"`
+	ResourceType   types.String `tfsdk:"resource_type"`
+}
+
+type Tag struct {
+	ID                          types.String `tfsdk:"id"`
+	Value                       types.String `tfsdk:"value"`
+	Key                         types.String `tfsdk:"key"`
+	FlagProfileID               types.String `tfsdk:"flag_profile_id"`
+	CustomProfileID             types.String `tfsdk:"custom_profile_id"`
+	ComplianceProfileID         types.String `tfsdk:"compliance_profile_id"`
+	ProcessBlockRuleID          types.String `tfsdk:"process_block_rule_id"`
+	DNSBlockRuleID              types.String `tfsdk:"dns_block_rule_id"`
+	WindowsDefenderPreferenceID types.String `tfsdk:"windows_defender_preference_id"`
+	Tag                         types.String `tfsdk:"tag"`
+	Custom                      types.Bool   `tfsdk:"custom"`
+	System                      types.Bool   `tfsdk:"system"`
+	TagRuleID                   types.String `tfsdk:"tag_rule_id"`
+	Status                      types.String `tfsdk:"status"`
+	Source                      types.String `tfsdk:"source"`
+	ResourceType                types.String `tfsdk:"resource_type"`
+	FilePathGroups              types.List   `tfsdk:"file_path_groups"`
+	EventExcludeProfiles        types.List   `tfsdk:"event_exclude_profiles"`
+	Querypacks                  types.List   `tfsdk:"querypacks"`
+	RegistryPaths               types.List   `tfsdk:"registry_paths"`
+	YaraGroupRules              types.List   `tfsdk:"yara_group_rules"`
+	AuditConfigurations         types.List   `tfsdk:"audit_configurations"`
+	//ImageLoadExclusions # TODO: cant find any examples of this
+	//AuditGroups         # TODO: cant find any examples of this
+	//Destinations        # TODO: cant find any examples of this
+	//Redactions          # TODO: cant find any examples of this
+	//AuditRules          # TODO: cant find any examples of this
+	//PrometheusTargets   # TODO: cant find any examples of this
+	//AtcQueries          # TODO: cant find any examples of this
+}
+
+type FilePathGroup struct {
+	ID                    types.String             `tfsdk:"id"`
+	Name                  types.String             `tfsdk:"name"`
+	Description           types.String             `tfsdk:"description"`
+	Grouping              types.String             `tfsdk:"grouping"`
+	IncludePaths          types.List               `tfsdk:"include_paths"`
+	IncludePathExtensions types.List               `tfsdk:"include_path_extensions"`
+	ExcludePaths          types.List               `tfsdk:"exclude_paths"`
+	Custom                types.Bool               `tfsdk:"custom"`
+	CheckSignature        types.Bool               `tfsdk:"check_signature"`
+	FileAccesses          types.Bool               `tfsdk:"file_accesses"`
+	ExcludeProcessNames   types.List               `tfsdk:"exclude_process_names"`
+	PriorityPaths         types.List               `tfsdk:"priority_paths"`
+	Signatures            []FilePathGroupSignature `tfsdk:"signatures"`
+	YaraGroupRules        []YaraGroupRule          `tfsdk:"yara_group_rules"`
+	//ExcludeProcessPaths   []string                 `json:"excludeProcessPaths"` //TODO this seems broken in the API. returns null or {}
+}
+
+type FilePathGroupSignature struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Paths       types.List   `tfsdk:"paths"`
+}
+
+type YaraGroupRule struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Rules       types.String `tfsdk:"rules"`
+	Custom      types.Bool   `tfsdk:"custom"`
+}
+
+type RegistryPath struct {
+	ID                   types.String `tfsdk:"id"`
+	Name                 types.String `tfsdk:"name"`
+	Description          types.String `tfsdk:"description"`
+	Grouping             types.String `tfsdk:"grouping"`
+	IncludeRegistryPaths types.List   `tfsdk:"include_registry_paths"`
+	RegAccesses          types.Bool   `tfsdk:"reg_accesses"`
+	ExcludeRegistryPaths types.List   `tfsdk:"exclude_registry_paths"`
+	Custom               types.Bool   `tfsdk:"custom"`
+}
+
+type Querypack struct {
+	ID               types.String `tfsdk:"id"`
+	Sha              types.String `tfsdk:"sha"`
+	Name             types.String `tfsdk:"name"`
+	Description      types.String `tfsdk:"description"`
+	Type             types.String `tfsdk:"type"`
+	AdditionalLogger types.Bool   `tfsdk:"additional_logger"`
+	Custom           types.Bool   `tfsdk:"custom"`
+	IsInternal       types.Bool   `tfsdk:"is_internal"`
+	ResourceType     types.String `tfsdk:"resource_type"`
+	Queries          []Query      `tfsdk:"queries"`
+	Conf             types.String `tfsdk:"conf"`
+}
+
+type Query struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Query       types.String `tfsdk:"query"`
+	Removed     types.Bool   `tfsdk:"removed"`
+	Version     types.String `tfsdk:"version"`
+	Interval    int          `tfsdk:"interval"`
+	Platform    types.String `tfsdk:"platform"`
+	Snapshot    types.Bool   `tfsdk:"snapshot"`
+	RunNow      types.Bool   `tfsdk:"run_now"`
+	Value       types.String `tfsdk:"value"`
+	QuerypackID types.String `tfsdk:"querypack_id"`
+	TableName   types.String `tfsdk:"table_name"`
+	DataTypes   types.String `tfsdk:"data_types"`
+	Verified    types.Bool   `tfsdk:"verified"`
+}
+
+type AuditConfiguration struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Framework   types.String `tfsdk:"framework"`
+	Version     types.String `tfsdk:"version"`
+	OsVersion   types.String `tfsdk:"os_version"`
+	Platform    types.String `tfsdk:"platform"`
+	TableName   types.String `tfsdk:"table_name"`
+	Sha256      types.String `tfsdk:"sha256"`
+	Type        types.String `tfsdk:"type"`
+	Checks      int          `tfsdk:"checks"`
+}
