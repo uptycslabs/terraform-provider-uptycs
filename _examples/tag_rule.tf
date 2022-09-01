@@ -14,17 +14,13 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-resource "uptycs_alert_rule" "test" {
-  name        = "marcus test 2"
-  description = "marcus test"
-  enabled     = true
-  grouping    = "MITRE"
-  grouping_l2 = "Impact"
-  grouping_l3 = "T1560"
-  sql_config = {
-    interval_seconds : 3600,
-  }
-  code = "test_marc"
-  type = "sql"
-  rule = "select * from processes limit 2 :to;"
+data "uptycs_tag_rule" "foo" {
+  id = "56a72960-1673-418a-ac51-dbead6069742"
+}
+
+output "tag_rule_foo_name" {
+  value = data.uptycs_tag_rule.foo.name
+}
+output "tag_rule_foo_query" {
+  value = data.uptycs_tag_rule.foo.query
 }

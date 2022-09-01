@@ -206,5 +206,6 @@ func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSo
 		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
 		"uptycs_user":                  dataSourceUserType{},
 		"uptycs_role":                  dataSourceRoleType{},
+		"uptycs_tag_rule":              dataSourceTagRuleType{},
 	}, nil
 }

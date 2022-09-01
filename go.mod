@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-validators v0.5.0
 	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.21.0
-	github.com/uptycslabs/uptycs-client-go v0.0.21
+	github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220901173006-fd8fdd4a777d
 )
 
 require (
