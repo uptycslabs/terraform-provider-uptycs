@@ -44,3 +44,5 @@ terraform
 dist/*
 .vscode
 *.code-workspace
+
+coverage.out

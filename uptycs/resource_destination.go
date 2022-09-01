@@ -3,9 +3,11 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -42,18 +44,18 @@ func (r resourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, dia
 }
 
 // New resource instance
-func (r resourceDestinationType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r resourceDestinationType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
 	return resourceDestination{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
 type resourceDestination struct {
-	p provider
+	p Provider
 }
 
 // Create a new resource
-func (r resourceDestination) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -101,16 +103,16 @@ func (r resourceDestination) Create(ctx context.Context, req tfsdk.CreateResourc
 }
 
 // Read resource information
-func (r resourceDestination) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-	var destinationId string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &destinationId)...)
+func (r resourceDestination) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var destinationID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &destinationID)...)
 	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
-		ID: destinationId,
+		ID: destinationID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading",
-			"Could not get destination with ID  "+destinationId+": "+err.Error(),
+			"Could not get destination with ID  "+destinationID+": "+err.Error(),
 		)
 		return
 	}
@@ -131,7 +133,7 @@ func (r resourceDestination) Read(ctx context.Context, req tfsdk.ReadResourceReq
 }
 
 // Update resource
-func (r resourceDestination) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r resourceDestination) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state Destination
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -181,7 +183,7 @@ func (r resourceDestination) Update(ctx context.Context, req tfsdk.UpdateResourc
 }
 
 // Delete resource
-func (r resourceDestination) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r resourceDestination) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Destination
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -207,6 +209,6 @@ func (r resourceDestination) Delete(ctx context.Context, req tfsdk.DeleteResourc
 }
 
 // Import resource
-func (r resourceDestination) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+func (r resourceDestination) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -1,0 +1,139 @@
+package uptycs
+
+import (
+	"context"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/uptycslabs/uptycs-client-go/uptycs"
+)
+
+type dataSourceRoleType struct {
+	p Provider
+}
+
+func (r dataSourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				Type:     types.StringType,
+				Optional: true,
+			},
+			"name": {
+				Type:     types.StringType,
+				Optional: true,
+			},
+			"description": {
+				Type:     types.StringType,
+				Optional: true,
+			},
+			"permissions": {
+				Type:     types.ListType{ElemType: types.StringType},
+				Optional: true,
+			},
+			"custom": {
+				Type:     types.BoolType,
+				Optional: true,
+			},
+			"hidden": {
+				Type:     types.BoolType,
+				Optional: true,
+			},
+			"no_minimal_permissions": {
+				Type:     types.BoolType,
+				Optional: true,
+			},
+			"role_object_groups": {
+				Type:     types.ListType{ElemType: types.StringType},
+				Optional: true,
+			},
+		},
+	}, nil
+}
+
+func (r dataSourceRoleType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
+	return dataSourceRoleType{
+		p: *(p.(*Provider)),
+	}, nil
+}
+
+func (r dataSourceRoleType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var roleID string
+	var roleName string
+
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &roleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &roleName)
+
+	var roleToLookup uptycs.Role
+
+	if len(roleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		roleToLookup = uptycs.Role{
+			Name: roleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		roleToLookup = uptycs.Role{
+			ID: roleID,
+		}
+	}
+
+	roleResp, err := r.p.client.GetRole(roleToLookup)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to read.",
+			"Could not get role with ID  "+roleID+": "+err.Error(),
+		)
+		return
+	}
+
+	var result = Role{
+		ID:          types.String{Value: roleResp.ID},
+		Name:        types.String{Value: roleResp.Name},
+		Description: types.String{Value: roleResp.Description},
+		Permissions: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Custom:               types.Bool{Value: roleResp.Custom},
+		Hidden:               types.Bool{Value: roleResp.Hidden},
+		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		RoleObjectGroups: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+	}
+
+	// Iterate the response permissions and fill up the list with it
+	for _, t := range roleResp.Permissions {
+		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
+	}
+
+	// Iterate the roleObjectGroups in the GET response
+	for _, _rogid := range roleResp.RoleObjectGroups {
+		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
+		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
+		if err != nil {
+			// Couldnt find the object group, give an error
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get object group with ID  "+_rogid.ID+": "+err.Error(),
+			)
+			return
+		}
+		// build up the state object to be the list of strings of objectGroupNames (friendly to the user)
+		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: rogResp.Name})
+	}
+
+	diags := resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}

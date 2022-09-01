@@ -3,9 +3,11 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -71,18 +73,18 @@ func (r resourceAlertRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 }
 
 // New resource instance
-func (r resourceAlertRuleType) NewResource(_ context.Context, p tfsdk.Provider) (tfsdk.Resource, diag.Diagnostics) {
+func (r resourceAlertRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
 	return resourceAlertRule{
-		p: *(p.(*provider)),
+		p: *(p.(*Provider)),
 	}, nil
 }
 
 type resourceAlertRule struct {
-	p provider
+	p Provider
 }
 
 // Create a new resource
-func (r resourceAlertRule) Create(ctx context.Context, req tfsdk.CreateResourceRequest, resp *tfsdk.CreateResourceResponse) {
+func (r resourceAlertRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	if !r.p.configured {
 		resp.Diagnostics.AddError(
 			"Provider not configured",
@@ -146,16 +148,16 @@ func (r resourceAlertRule) Create(ctx context.Context, req tfsdk.CreateResourceR
 }
 
 // Read resource information
-func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceRequest, resp *tfsdk.ReadResourceResponse) {
-	var alertRuleId string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, tftypes.NewAttributePath().WithAttributeName("id"), &alertRuleId)...)
+func (r resourceAlertRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var alertRuleID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &alertRuleID)...)
 	alertRuleResp, err := r.p.client.GetAlertRule(uptycs.AlertRule{
-		ID: alertRuleId,
+		ID: alertRuleID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading",
-			"Could not get alertRule with ID  "+alertRuleId+": "+err.Error(),
+			"Could not get alertRule with ID  "+alertRuleID+": "+err.Error(),
 		)
 		return
 	}
@@ -184,7 +186,7 @@ func (r resourceAlertRule) Read(ctx context.Context, req tfsdk.ReadResourceReque
 }
 
 // Update resource
-func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceRequest, resp *tfsdk.UpdateResourceResponse) {
+func (r resourceAlertRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state AlertRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -250,7 +252,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req tfsdk.UpdateResourceR
 }
 
 // Delete resource
-func (r resourceAlertRule) Delete(ctx context.Context, req tfsdk.DeleteResourceRequest, resp *tfsdk.DeleteResourceResponse) {
+func (r resourceAlertRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state AlertRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -276,6 +278,6 @@ func (r resourceAlertRule) Delete(ctx context.Context, req tfsdk.DeleteResourceR
 }
 
 // Import resource
-func (r resourceAlertRule) ImportState(ctx context.Context, req tfsdk.ImportResourceStateRequest, resp *tfsdk.ImportResourceStateResponse) {
-	tfsdk.ResourceImportStatePassthroughID(ctx, tftypes.NewAttributePath().WithAttributeName("id"), req, resp)
+func (r resourceAlertRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

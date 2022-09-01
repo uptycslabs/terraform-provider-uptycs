@@ -2,6 +2,7 @@ package uptycs
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -10,19 +11,17 @@ import (
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-var stderr = os.Stderr
-
-func New() tfsdk.Provider {
-	return &provider{}
+func New() provider.Provider {
+	return &Provider{}
 }
 
-type provider struct {
+type Provider struct {
 	configured bool
 	client     *uptycs.Client
 }
 
 // GetSchema
-func (p *provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"host": {
@@ -55,11 +54,11 @@ func (p *provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 type providerData struct {
 	Host       types.String `tfsdk:"host"`
 	CustomerID types.String `tfsdk:"customer_id"`
-	ApiKey     types.String `tfsdk:"api_key"`
-	ApiSecret  types.String `tfsdk:"api_secret"`
+	APIKey     types.String `tfsdk:"api_key"`
+	APISecret  types.String `tfsdk:"api_secret"`
 }
 
-func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderRequest, resp *tfsdk.ConfigureProviderResponse) {
+func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Retrieve provider data from configuration
 	var config providerData
 	diags := req.Config.Get(ctx, &config)
@@ -68,22 +67,22 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		return
 	}
 
-	var customerId string
+	var customerID string
 	if config.CustomerID.Unknown {
 		resp.Diagnostics.AddWarning(
 			"Unable to create client",
-			"Cannot use unknown value as customerId",
+			"Cannot use unknown value as customerID",
 		)
 		return
 	}
 
 	if config.CustomerID.Null {
-		customerId = os.Getenv("UPTYCS_CUSTOMER_ID")
+		customerID = os.Getenv("UPTYCS_CUSTOMER_ID")
 	} else {
-		customerId = config.CustomerID.Value
+		customerID = config.CustomerID.Value
 	}
 
-	if customerId == "" {
+	if customerID == "" {
 		// Error vs warning - empty value must stop execution
 		resp.Diagnostics.AddError(
 			"Unable to find customer id",
@@ -93,7 +92,7 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	}
 
 	var apiKey string
-	if config.ApiKey.Unknown {
+	if config.APIKey.Unknown {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddWarning(
 			"Unable to create client",
@@ -102,43 +101,43 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 		return
 	}
 
-	if config.ApiKey.Null {
+	if config.APIKey.Null {
 		apiKey = os.Getenv("UPTYCS_API_KEY")
 	} else {
-		apiKey = config.ApiKey.Value
+		apiKey = config.APIKey.Value
 	}
 
 	if apiKey == "" {
 		// Error vs warning - empty value must stop execution
 		resp.Diagnostics.AddError(
 			"Unable to find api key",
-			"ApiKey cannot be an empty string",
+			"APIKey cannot be an empty string",
 		)
 		return
 	}
 
 	// User must provide an api secret to the provider
 	var apiSecret string
-	if config.ApiSecret.Unknown {
+	if config.APISecret.Unknown {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddError(
 			"Unable to create client",
-			"Cannot use unknown value as ApiSecret",
+			"Cannot use unknown value as APISecret",
 		)
 		return
 	}
 
-	if config.ApiSecret.Null {
+	if config.APISecret.Null {
 		apiSecret = os.Getenv("UPTYCS_API_SECRET")
 	} else {
-		apiSecret = config.ApiSecret.Value
+		apiSecret = config.APISecret.Value
 	}
 
 	if apiSecret == "" {
 		// Error vs warning - empty value must stop execution
 		resp.Diagnostics.AddError(
-			"Unable to find ApiSecret",
-			"ApiSecret cannot be an empty string",
+			"Unable to find APISecret",
+			"APISecret cannot be an empty string",
 		)
 		return
 	}
@@ -170,11 +169,11 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 	}
 
 	// Create a new uptycs client and set it to the provider client
-	c, err := uptycs.NewClient(uptycs.UptycsConfig{
+	c, err := uptycs.NewClient(uptycs.Config{
 		Host:       host,
-		ApiKey:     apiKey,
-		ApiSecret:  apiSecret,
-		CustomerID: customerId,
+		APIKey:     apiKey,
+		APISecret:  apiSecret,
+		CustomerID: customerID,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -189,19 +188,23 @@ func (p *provider) Configure(ctx context.Context, req tfsdk.ConfigureProviderReq
 }
 
 // GetResources - Defines provider resources
-func (p *provider) GetResources(_ context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
-	return map[string]tfsdk.ResourceType{
+func (p *Provider) GetResources(_ context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
+	return map[string]provider.ResourceType{
 		"uptycs_alert_rule":            resourceAlertRuleType{},
 		"uptycs_event_rule":            resourceEventRuleType{},
 		"uptycs_destination":           resourceDestinationType{},
 		"uptycs_event_exclude_profile": resourceEventExcludeProfileType{},
+		"uptycs_role":                  resourceRoleType{},
+		"uptycs_user":                  resourceUserType{},
 	}, nil
 }
 
 // GetDataSources - Defines provider data sources
-func (p *provider) GetDataSources(_ context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
-	return map[string]tfsdk.DataSourceType{
+func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
+	return map[string]provider.DataSourceType{
 		"uptycs_destination":           dataSourceDestinationType{},
 		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
+		"uptycs_user":                  dataSourceUserType{},
+		"uptycs_role":                  dataSourceRoleType{},
 	}, nil
 }
