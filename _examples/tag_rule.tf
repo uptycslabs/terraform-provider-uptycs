@@ -24,3 +24,13 @@ output "tag_rule_foo_name" {
 output "tag_rule_foo_query" {
   value = data.uptycs_tag_rule.foo.query
 }
+
+resource "uptycs_tag_rule" "foo" {
+  name = "marcus test"
+  description = "a test tag rule"
+  interval = 3601 # >3601 on realtime
+  source = "realtime"
+  platform = "something" # required if realtime source
+  run_once = false
+  query = "select owner_id as tag, upt_asset_id from upt_cloud_instance_inventory;"
+}

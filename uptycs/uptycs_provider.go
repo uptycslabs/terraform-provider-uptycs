@@ -196,6 +196,8 @@ func (p *Provider) GetResources(_ context.Context) (map[string]provider.Resource
 		"uptycs_event_exclude_profile": resourceEventExcludeProfileType{},
 		"uptycs_role":                  resourceRoleType{},
 		"uptycs_user":                  resourceUserType{},
+		"uptycs_tag":                   resourceTagType{},
+		"uptycs_tag_rule":              resourceTagRuleType{},
 	}, nil
 }
 
@@ -207,5 +209,6 @@ func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSo
 		"uptycs_user":                  dataSourceUserType{},
 		"uptycs_role":                  dataSourceRoleType{},
 		"uptycs_tag_rule":              dataSourceTagRuleType{},
+		"uptycs_tag":                   dataSourceTagType{},
 	}, nil
 }

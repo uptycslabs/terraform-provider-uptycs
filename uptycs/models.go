@@ -135,31 +135,29 @@ type TagRule struct {
 	ResourceType   types.String `tfsdk:"resource_type"`
 }
 
-type TagConfiguration Tag
-
 type Tag struct {
-	ID                          types.String             `tfsdk:"id"`
-	Value                       types.String             `tfsdk:"value"`
-	Key                         types.String             `tfsdk:"key"`
-	FlagProfileID               types.String             `tfsdk:"flag_profile_id"`
-	CustomProfileID             types.String             `tfsdk:"custom_profile_id"`
-	ComplianceProfileID         types.String             `tfsdk:"compliance_profile_id"`
-	ProcessBlockRuleID          types.String             `tfsdk:"process_block_rule_id"`
-	DNSBlockRuleID              types.String             `tfsdk:"dns_block_rule_id"`
-	WindowsDefenderPreferenceID types.String             `tfsdk:"windows_defender_preference_id"`
-	Tag                         types.String             `tfsdk:"tag"`
-	Custom                      types.Bool               `tfsdk:"custom"`
-	System                      types.Bool               `tfsdk:"system"`
-	TagRuleID                   types.String             `tfsdk:"tag_rule_id"`
-	Status                      types.String             `tfsdk:"status"`
-	Source                      types.String             `tfsdk:"source"`
-	ResourceType                types.String             `tfsdk:"resource_type"`
-	FilePathGroups              []TagConfigurationObject `tfsdk:"file_path_groups"`
-	EventExcludeProfiles        []TagConfigurationObject `tfsdk:"event_exclude_profiles"`
-	RegistryPaths               []TagConfigurationObject `tfsdk:"registry_paths"`
-	Querypacks                  []TagConfigurationObject `tfsdk:"querypacks"`
-	YaraGroupRules              []TagConfigurationObject `tfsdk:"yara_group_rules"`
-	AuditConfigurations         []TagConfigurationObject `tfsdk:"audit_configurations"`
+	ID                          types.String `tfsdk:"id"`
+	Value                       types.String `tfsdk:"value"`
+	Key                         types.String `tfsdk:"key"`
+	FlagProfileID               types.String `tfsdk:"flag_profile_id"`
+	CustomProfileID             types.String `tfsdk:"custom_profile_id"`
+	ComplianceProfileID         types.String `tfsdk:"compliance_profile_id"`
+	ProcessBlockRuleID          types.String `tfsdk:"process_block_rule_id"`
+	DNSBlockRuleID              types.String `tfsdk:"dns_block_rule_id"`
+	WindowsDefenderPreferenceID types.String `tfsdk:"windows_defender_preference_id"`
+	Tag                         types.String `tfsdk:"tag"`
+	Custom                      types.Bool   `tfsdk:"custom"`
+	System                      types.Bool   `tfsdk:"system"`
+	TagRuleID                   types.String `tfsdk:"tag_rule_id"`
+	Status                      types.String `tfsdk:"status"`
+	Source                      types.String `tfsdk:"source"`
+	ResourceType                types.String `tfsdk:"resource_type"`
+	FilePathGroups              types.List   `tfsdk:"file_path_groups"`
+	EventExcludeProfiles        types.List   `tfsdk:"event_exclude_profiles"`
+	Querypacks                  types.List   `tfsdk:"querypacks"`
+	RegistryPaths               types.List   `tfsdk:"registry_paths"`
+	YaraGroupRules              types.List   `tfsdk:"yara_group_rules"`
+	AuditConfigurations         types.List   `tfsdk:"audit_configurations"`
 	//ImageLoadExclusions # TODO: cant find any examples of this
 	//AuditGroups         # TODO: cant find any examples of this
 	//Destinations        # TODO: cant find any examples of this
@@ -167,26 +165,4 @@ type Tag struct {
 	//AuditRules          # TODO: cant find any examples of this
 	//PrometheusTargets   # TODO: cant find any examples of this
 	//AtcQueries          # TODO: cant find any examples of this
-}
-
-type TagConfigurationObjectDetails struct {
-	ID                   types.String `tfsdk:"id"`
-	AuditConfigurationID types.String `tfsdk:"audit_configuration_id"`
-	YaraGroupRuleID      types.String `tfsdk:"yara_group_rule_id"`
-	QuerypackID          types.String `tfsdk:"querypack_id"`
-	RegistryPathID       types.String `tfsdk:"registry_path_id"`
-	EventExcludeProfile  types.String `tfsdk:"event_exclude_profile"`
-	FilePathGroupID      types.String `tfsdk:"file_path_group_id"`
-	TagID                types.String `tfsdk:"tag_id"`
-}
-
-type TagConfigurationObject struct {
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
-	//AuditConfigurationTag  *TagConfigurationObjectDetails `tfsdk:"AuditConfigurationTag"`
-	//YaraGroupRuleTag       *TagConfigurationObjectDetails `tfsdk:"YaraGroupRuleTag"`
-	//QuerypackTag           *TagConfigurationObjectDetails `tfsdk:"QuerypackTag"`
-	//RegistryPathTag        *TagConfigurationObjectDetails `tfsdk:"RegistryPathTag"`
-	//EventExcludeProfileTag *TagConfigurationObjectDetails `tfsdk:"EventExcludeProfileTag"`
-	//FilePathGroupTag       *TagConfigurationObjectDetails `tfsdk:"FilePathGroupTag"`
 }

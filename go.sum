@@ -250,6 +250,16 @@ github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
 github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220901173006-fd8fdd4a777d h1:mU69Bv4hvVWrdmX4OWwyfAnvVcsEttobOWeQ/arPxdM=
 github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220901173006-fd8fdd4a777d/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907105101-5f86613935ca h1:endyE8XcuQ4Z7E+Pm7AgYU9MbsabFrYb07bjksO068w=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907105101-5f86613935ca/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907105352-e3176b29b2e0 h1:5q4tUwSdtdzu98TykxA8dUgAPHZb0wnsxn6v14uUZjg=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907105352-e3176b29b2e0/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907162258-adeb06746018 h1:TkODqHUUYz0lO7h9MDaw7G8Olvt0IG18tggmDbmyp5Q=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907162258-adeb06746018/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907175833-37ab3845b05e h1:QtuHsbzHIjwIfZB6otnmxf5W31BxzbxNff4nzDerxAM=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907175833-37ab3845b05e/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907180504-e37e1a0e334b h1:4xYandKXZE7Vuf1ShNAuofEApe+MLm6j2iVOHdJn/QA=
+github.com/uptycslabs/uptycs-client-go v0.0.22-0.20220907180504-e37e1a0e334b/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
