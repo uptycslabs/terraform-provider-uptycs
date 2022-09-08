@@ -191,13 +191,13 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 func (p *Provider) GetResources(_ context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	return map[string]provider.ResourceType{
 		"uptycs_alert_rule":            resourceAlertRuleType{},
-		"uptycs_event_rule":            resourceEventRuleType{},
 		"uptycs_destination":           resourceDestinationType{},
 		"uptycs_event_exclude_profile": resourceEventExcludeProfileType{},
+		"uptycs_event_rule":            resourceEventRuleType{},
 		"uptycs_role":                  resourceRoleType{},
-		"uptycs_user":                  resourceUserType{},
 		"uptycs_tag":                   resourceTagType{},
 		"uptycs_tag_rule":              resourceTagRuleType{},
+		"uptycs_user":                  resourceUserType{},
 	}, nil
 }
 
@@ -207,9 +207,10 @@ func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSo
 		"uptycs_audit_configuration":   dataSourceAuditConfigurationType{},
 		"uptycs_destination":           dataSourceDestinationType{},
 		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
-		"uptycs_user":                  dataSourceUserType{},
+		"uptycs_querypack":             dataSourceQuerypackType{},
 		"uptycs_role":                  dataSourceRoleType{},
-		"uptycs_tag_rule":              dataSourceTagRuleType{},
 		"uptycs_tag":                   dataSourceTagType{},
+		"uptycs_tag_rule":              dataSourceTagRuleType{},
+		"uptycs_user":                  dataSourceUserType{},
 	}, nil
 }

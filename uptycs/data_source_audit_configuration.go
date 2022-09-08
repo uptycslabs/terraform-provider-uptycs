@@ -75,7 +75,6 @@ func (r dataSourceAuditConfigurationType) NewDataSource(_ context.Context, p pro
 
 func (r dataSourceAuditConfigurationType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var auditConfigurationID string
-	path.Root("test")
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &auditConfigurationID)...)
 
 	auditConfigurationResp, err := r.p.client.GetAuditConfiguration(uptycs.AuditConfiguration{

@@ -221,10 +221,8 @@ type Querypack struct {
 	Custom           types.Bool   `tfsdk:"custom"`
 	IsInternal       types.Bool   `tfsdk:"is_internal"`
 	ResourceType     types.String `tfsdk:"resource_type"`
-	Queries          types.List   `json:"queries"`
-	Conf             struct {
-		Queries types.String `tfsdk:"queries"`
-	} `tfsdk:"conf"`
+	Queries          types.List   `tfsdk:"queries"`
+	Conf             types.String `tfsdk:"conf"`
 }
 
 type Query struct {
