@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -108,9 +109,6 @@ func (r dataSourceQuerypackType) Read(ctx context.Context, req datasource.ReadRe
 		fmt.Println(err)
 	}
 
-	queries := Query{}
-	querypackResp.Queries.(types.Object).As(ctx, &queries, types.ObjectAsOptions{})
-
 	var result = Querypack{
 		ID:               types.String{Value: querypackResp.ID},
 		Sha:              types.String{Value: querypackResp.Sha},
@@ -121,12 +119,16 @@ func (r dataSourceQuerypackType) Read(ctx context.Context, req datasource.ReadRe
 		Custom:           types.Bool{Value: querypackResp.Custom},
 		IsInternal:       types.Bool{Value: querypackResp.IsInternal},
 		ResourceType:     types.String{Value: querypackResp.ResourceType},
-		//Queries: types.List{
-		//	ElemType: types.StringType,
-		//	Elems:    make([]attr.Value, 0),
-		//},
+		Queries: types.List{
+			Elems: make([]attr.Value, 0),
+		},
 		Conf: types.String{Value: string([]byte(queryPackConfJson)) + "\n"},
 	}
+
+	for _, q := range querypackResp.Queries {
+		result.Queries.Elems = append(result.Queries.Elems, NewQueryFromClientQuery(q).ToObjectType())
+	}
+
 	panic("fuck")
 
 	//for _, q := range querypackResp.Queries {

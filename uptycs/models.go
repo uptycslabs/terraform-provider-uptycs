@@ -1,7 +1,9 @@
 package uptycs
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
 type AlertRule struct {
@@ -232,19 +234,64 @@ type Query struct {
 	Query       types.String `tfsdk:"query"`
 	Removed     types.Bool   `tfsdk:"removed"`
 	Version     types.String `tfsdk:"version"`
-	Interval    int          `tfsdk:"interval"`
+	Interval    types.Int64  `tfsdk:"interval"`
 	Platform    types.String `tfsdk:"platform"`
 	Snapshot    types.Bool   `tfsdk:"snapshot"`
 	RunNow      types.Bool   `tfsdk:"runNow"`
 	Value       types.String `tfsdk:"value"`
 	QuerypackID types.String `tfsdk:"querypack_id"`
 	TableName   types.String `tfsdk:"table_name"`
-	DataTypes   struct {
-		Md5  types.String `tfsdk:"md5"`
-		Name types.String `tfsdk:"name"`
-		Size types.String `tfsdk:"size"`
-	} `tfsdk:"data_types"`
-	Verified types.Bool `tfsdk:"verified"`
+	DataTypes   types.Object `tfsdk:"data_types"`
+	Verified    types.Bool   `tfsdk:"verified"`
+}
+
+func (q Query) ToObjectType() types.Object {
+	ot := types.Object{
+		Attrs: map[string]attr.Value{
+			"id":           q.ID,
+			"name":         q.Name,
+			"description":  q.Description,
+			"query":        q.Query,
+			"removed":      q.Removed,
+			"version":      q.Version,
+			"interval":     q.Interval,
+			"platform":     q.Platform,
+			"snapshot":     q.Snapshot,
+			"runNow":       q.RunNow,
+			"value":        q.Value,
+			"querypack_id": q.QuerypackID,
+			"table_name":   q.TableName,
+			"data_types":   q.DataTypes,
+			"verified":     q.Verified,
+		},
+	}
+	return ot
+}
+
+func NewQueryFromClientQuery(q uptycs.Query) Query {
+	tq := Query{
+		ID:          types.String{Value: q.ID},
+		Name:        types.String{Value: q.Name},
+		Description: types.String{Value: q.Description},
+		Query:       types.String{Value: q.Query},
+		Removed:     types.Bool{Value: q.Removed},
+		Version:     types.String{Value: q.Version},
+		Interval:    types.Int64{Value: int64(q.Interval)},
+		Platform:    types.String{Value: q.Platform},
+		Snapshot:    types.Bool{Value: q.Snapshot},
+		RunNow:      types.Bool{Value: q.RunNow},
+		QuerypackID: types.String{Value: q.QuerypackID},
+		TableName:   types.String{Value: q.TableName},
+		DataTypes: types.Object{
+			Attrs: map[string]attr.Value{
+				"Md5":  types.String{Value: q.DataTypes.Md5},
+				"Name": types.String{Value: q.DataTypes.Name},
+				"Size": types.String{Value: q.DataTypes.Size},
+			},
+		},
+	}
+
+	return tq
 }
 
 type AuditConfiguration struct {
