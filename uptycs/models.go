@@ -213,7 +213,6 @@ type RegistryPath struct {
 
 type Querypack struct {
 	ID               types.String `tfsdk:"id"`
-	Sha              types.String `tfsdk:"sha"`
 	Name             types.String `tfsdk:"name"`
 	Description      types.String `tfsdk:"description"`
 	Type             types.String `tfsdk:"type"`
@@ -221,7 +220,6 @@ type Querypack struct {
 	Custom           types.Bool   `tfsdk:"custom"`
 	IsInternal       types.Bool   `tfsdk:"is_internal"`
 	ResourceType     types.String `tfsdk:"resource_type"`
-	Queries          []Query      `tfsdk:"queries"`
 	Conf             types.String `tfsdk:"conf"`
 }
 

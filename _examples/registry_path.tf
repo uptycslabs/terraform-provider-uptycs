@@ -14,21 +14,22 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-data "uptycs_registry_path" "foo" {
+data "uptycs_registry_path" "rp" {
   id = "ce064913-0c00-4b14-8df3-b1dd90372f04"
 }
 
-resource "uptycs_registry_path" "test" {
+resource "uptycs_registry_path" "new_rp" {
   name = "marc test"
   include_registry_paths = [
     "/foo/bar/**wut"
   ]
+  exclude_registry_paths = []
 }
 
-output "foo" {
-  value = data.uptycs_registry_path.foo
+output "rp" {
+  value = data.uptycs_registry_path.rp
 }
 
-output "test" {
-  value = resource.uptycs_registry_path.test
+output "new_rp" {
+  value = resource.uptycs_registry_path.new_rp
 }

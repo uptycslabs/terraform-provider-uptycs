@@ -19,7 +19,6 @@ description: |-
 
 - `conf` (String)
 - `description` (String)
-- `sha` (String)
 - `type` (String) Should be one of: compliance default hardware incident system vulnerability
 
 ### Optional
@@ -28,32 +27,10 @@ description: |-
 - `custom` (Boolean)
 - `is_internal` (Boolean)
 - `name` (String)
-- `queries` (Attributes List) (see [below for nested schema](#nestedatt--queries))
 - `resource_type` (String)
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedatt--queries"></a>
-### Nested Schema for `queries`
-
-Optional:
-
-- `data_types` (String)
-- `description` (String)
-- `id` (String)
-- `interval` (Number)
-- `name` (String)
-- `platform` (String)
-- `query` (String)
-- `querypack_id` (String)
-- `removed` (Boolean)
-- `run_now` (Boolean)
-- `snapshot` (Boolean)
-- `table_name` (String)
-- `value` (String)
-- `verified` (Boolean)
-- `version` (String)
 
 

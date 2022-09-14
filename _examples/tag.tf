@@ -45,5 +45,5 @@ resource "uptycs_tag" "new_tag" {
 }
 
 output "new_tag_id" {
-  value = resource.uptycs_tag.new_tag.id
+  value = uptycs_tag.new_tag
 }
