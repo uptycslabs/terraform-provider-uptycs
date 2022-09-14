@@ -51,7 +51,6 @@ func (r dataSourceDestinationType) NewDataSource(_ context.Context, p provider.P
 
 func (r dataSourceDestinationType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var destinationID string
-	path.Root("test")
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &destinationID)...)
 
 	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{

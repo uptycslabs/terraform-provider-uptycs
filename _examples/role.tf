@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.7"
+      version = "0.0.8"
     }
   }
 }
@@ -37,9 +37,9 @@ resource "uptycs_role" "test_role" {
     "ALERT_RULE:READ",
     "ALERT:READ",
   ]
-   role_object_groups = [
-     "workstations"
-   ]
+  role_object_groups = [
+    "workstations"
+  ]
 }
 
 output "test_role_permissions" {

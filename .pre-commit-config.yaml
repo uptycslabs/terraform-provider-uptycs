@@ -34,3 +34,26 @@ repos:
   hooks:
     - id: go-fmt
       exclude: ^vendor/
+- repo: https://github.com/FalcoSuessgott/tfplugindocs
+  rev: v0.0.2
+  hooks:
+    - id: tfplugindocs
+- repo: https://github.com/antonbabenko/pre-commit-terraform
+  rev: v1.75.0
+  hooks:
+    - id: terraform_fmt
+      include: _examples/
+- repo: local
+  hooks:
+    - id: main-go-wrong-address
+      name: main-go-wrong-address
+      entry: bash -c "grep 'github.com/uptycslabs/uptycs' main.go"
+      language: system
+      pass_filenames: false
+- repo: local
+  hooks:
+    - id: not-using-valid-secret-placeholders
+      name: not-using-valid-secret-placeholders
+      entry: bash -c "lines=$(grep -rE 'UPTYCS_CUSTOMER_ID=|UPTYCS_API_KEY=|UPTYCS_API_SECRET=' | grep -vEInH 'your-customer-id|your-api-key|your-api-secret' | wc -l) && (( $lines >= 1 )) && exit 1 || :"
+      language: system
+      pass_filenames: false

@@ -14,17 +14,19 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-resource "uptycs_alert_rule" "test" {
-  name        = "marcus test 2"
-  description = "marcus test"
-  enabled     = true
-  grouping    = "MITRE"
-  grouping_l2 = "Impact"
-  grouping_l3 = "T1560"
-  sql_config = {
-    interval_seconds : 3600,
-  }
-  code = "test_marc"
-  type = "sql"
-  rule = "select * from processes limit 2 :to;"
+data "uptycs_yara_group_rule" "ygr" {
+  id = "9a5a3262-ee74-417c-ade0-c1948ec8bc27"
+}
+
+resource "uptycs_yara_group_rule" "new_ygr" {
+  name        = "marc testttt"
+  description = "another marc test"
+}
+
+output "ygr" {
+  value = data.uptycs_yara_group_rule.ygr
+}
+
+output "new_ygr" {
+  value = resource.uptycs_yara_group_rule.new_ygr
 }

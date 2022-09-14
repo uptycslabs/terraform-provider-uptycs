@@ -162,7 +162,7 @@ func (r resourceEventRule) Create(ctx context.Context, req resource.CreateReques
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
 		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.BuilderConfigFilterString(plan.BuilderConfig.Filters.Value),
+			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
 			TableName:     plan.BuilderConfig.TableName.Value,
 			Added:         plan.BuilderConfig.Added.Value,
 			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
@@ -334,7 +334,7 @@ func (r resourceEventRule) Update(ctx context.Context, req resource.UpdateReques
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
 		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.BuilderConfigFilterString(plan.BuilderConfig.Filters.Value),
+			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
 			TableName:     plan.BuilderConfig.TableName.Value,
 			Added:         plan.BuilderConfig.Added.Value,
 			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
