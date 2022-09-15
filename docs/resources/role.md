@@ -18,6 +18,7 @@ description: |-
 ### Required
 
 - `name` (String)
+- `no_minimal_permissions` (Boolean)
 - `permissions` (List of String)
 
 ### Optional
@@ -25,7 +26,6 @@ description: |-
 - `custom` (Boolean)
 - `description` (String)
 - `hidden` (Boolean)
-- `no_minimal_permissions` (Boolean)
 - `role_object_groups` (List of String)
 
 ### Read-Only

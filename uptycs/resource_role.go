@@ -49,10 +49,8 @@ func (r resourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
 			"no_minimal_permissions": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Type:     types.BoolType,
+				Required: true,
 			},
 			"role_object_groups": {
 				Type:     types.ListType{ElemType: types.StringType},

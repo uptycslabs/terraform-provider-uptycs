@@ -3,7 +3,7 @@ HOSTNAME=registry.terraform.io
 NAMESPACE=uptycslabs
 NAME=uptycs
 BINARY=terraform-provider-${NAME}
-VERSION = 0.0.9
+VERSION = 0.0.10
 GOOS = darwin
 GOARCH = amd64
 
@@ -12,7 +12,8 @@ default: install
 bump_version:
 	find _examples -type f -name '*.tf' -exec sed -i '' "s/version = \".*\"/version = \"$(VERSION)\"/g" {} +
 	sed -i '' "s/version = \".*\"/version = \"$(VERSION)\"/g" README.md
-	sed -i '' "s/VERSION = 0.0.9/VERSION = $(VERSION)/g" Makefile
+	sed -i '' -e '1s/VERSION = .*/VERSION = $(VERSION)/;t' -e '1,/VERSION = .*/s//VERSION = $(VERSION)/' Makefile
+
 
 build:
 	GOOS="" GOARCH="" go build -o ${BINARY}
