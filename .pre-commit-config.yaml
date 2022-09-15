@@ -28,6 +28,7 @@ repos:
   rev: v1.49.0
   hooks:
     - id: golangci-lint
+      files: uptycs/
       exclude: ^vendor/
 - repo: https://github.com/dnephin/pre-commit-golang
   rev: v0.5.0
@@ -42,7 +43,7 @@ repos:
   rev: v1.75.0
   hooks:
     - id: terraform_fmt
-      include: _examples/
+      files: _examples/
 - repo: local
   hooks:
     - id: main-go-wrong-address
