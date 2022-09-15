@@ -137,7 +137,6 @@ func (r resourceQuerypack) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	//r.p.client.HostURL = "http://localhost:8000"
 	querypackResp, err := r.p.client.CreateQuerypack(uptycs.Querypack{
 		Name:             plan.Name.Value,
 		Description:      plan.Description.Value,

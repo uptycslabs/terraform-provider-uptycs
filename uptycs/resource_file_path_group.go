@@ -286,7 +286,6 @@ func (r resourceFilePathGroup) Create(ctx context.Context, req resource.CreateRe
 		})
 	}
 
-	//r.p.client.HostURL = "http://localhost:8000"
 	filePathGroupResp, err := r.p.client.CreateFilePathGroup(uptycs.FilePathGroup{
 		Name:                  plan.Name.Value,
 		Description:           plan.Description.Value,
