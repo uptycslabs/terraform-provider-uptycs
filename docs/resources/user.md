@@ -18,8 +18,6 @@ description: |-
 ### Required
 
 - `alert_hidden_columns` (List of String)
-- `email` (String)
-- `image_url` (String)
 - `max_idle_time_mins` (Number)
 - `name` (String)
 - `roles` (List of String)
@@ -28,6 +26,8 @@ description: |-
 
 - `active` (Boolean)
 - `bot` (Boolean)
+- `email` (String)
+- `image_url` (String)
 - `phone` (String)
 - `super_admin` (Boolean)
 - `support` (Boolean)

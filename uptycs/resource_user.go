@@ -28,8 +28,10 @@ func (r resourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 				Required: true,
 			},
 			"email": {
-				Type:     types.StringType,
-				Required: true,
+				Type:          types.StringType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
 			"phone": {
 				Type:          types.StringType,
@@ -62,8 +64,10 @@ func (r resourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
 			"image_url": {
-				Type:     types.StringType,
-				Required: true,
+				Type:          types.StringType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 				Validators: []tfsdk.AttributeValidator{
 					stringvalidator.LengthBetween(1, 512),
 				},

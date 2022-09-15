@@ -52,22 +52,21 @@ Then, navigate to the `examples` directory.
 $ cd examples
 ```
 
-To run this locally you'll need to use this for `init.tf`:
+To run this locally you'll need to add a `~/.terraformrc` file with:
 
 ```
-terraform {
-  required_providers {
-    uptycs = {
-      source  = "github.com/uptycslabs/uptycs" # this source has HOSTNAME to make it unique and valid for local testing
-      # source  = "uptycslabs/uptycs" # this is what you'll use when not local, pulling from the registry (with signature checking etc)
-      version = "0.0.8"
-    }
-  }
-}
+provider_installation {
+  filesystem_mirror {
+    path    = "/Users/marcus.young/.terraform.d/plugins"
+    include = [
+      "github.com/uptycslabs/uptycs",
+      "registry.terraform.io/uptycslabs/uptycs",
+    ]
 
-provider "uptycs" {
-  host = "https://thor.uptycs.io"
-  customer_id = "your-customer-id"
+  }
+  direct {
+    exclude = ["uptycslabs/uptycs"]
+  }
 }
 ```
 

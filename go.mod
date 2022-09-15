@@ -3,16 +3,16 @@ module terraform-provider-uptycs
 go 1.19
 
 require (
-	github.com/Masterminds/goutils v1.1.1
 	github.com/hashicorp/terraform-plugin-docs v0.8.1
 	github.com/hashicorp/terraform-plugin-framework v0.11.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.5.0
 	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.21.0
-	github.com/uptycslabs/uptycs-client-go v0.0.22
+	github.com/uptycslabs/uptycs-client-go v0.0.23-0.20220915150854-c9d6dd97e860
 )
 
 require (
+	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.0 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
