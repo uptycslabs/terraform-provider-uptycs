@@ -5,17 +5,43 @@ import (
 )
 
 type AlertRule struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Description types.String `tfsdk:"description"`
-	Code        types.String `tfsdk:"code"`
-	Type        types.String `tfsdk:"type"`
-	Rule        types.String `tfsdk:"rule"`
-	Grouping    types.String `tfsdk:"grouping"`
-	Enabled     types.Bool   `tfsdk:"enabled"`
-	GroupingL2  types.String `tfsdk:"grouping_l2"`
-	GroupingL3  types.String `tfsdk:"grouping_l3"`
-	SQLConfig   SQLConfig    `tfsdk:"sql_config"`
+	ID                  types.String           `tfsdk:"id"`
+	Name                types.String           `tfsdk:"name"`
+	Description         types.String           `tfsdk:"description"`
+	Code                types.String           `tfsdk:"code"`
+	Type                types.String           `tfsdk:"type"`
+	Rule                types.String           `tfsdk:"rule"`
+	Grouping            types.String           `tfsdk:"grouping"`
+	Enabled             types.Bool             `tfsdk:"enabled"`
+	Custom              types.Bool             `tfsdk:"custom"`
+	Throttled           types.Bool             `tfsdk:"throttled"`
+	IsInternal          types.Bool             `tfsdk:"is_internal"`
+	AlertTags           types.List             `tfsdk:"alert_tags"`
+	GroupingL2          types.String           `tfsdk:"grouping_l2"`
+	GroupingL3          types.String           `tfsdk:"grouping_l3"`
+	Lock                types.Bool             `tfsdk:"lock"`
+	AlertNotifyInterval *int                   `tfsdk:"notify_interval"`
+	AlertNotifyCount    *int                   `tfsdk:"notify_count"`
+	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
+	Destinations        []AlertRuleDestination `tfsdk:"destinations"`
+	SQLConfig           *SQLConfig             `tfsdk:"sql_config"`
+	//ScriptConfig        *ScriptConfig          `tfsdk:"script_config"` //TODO cant find any examples
+}
+
+type ScriptConfig struct {
+	ID               types.String `tfsdk:"id"`
+	QueryPackID      types.String `tfsdk:"querypack_id"`
+	TableName        types.String `tfsdk:"table_name"`
+	EventCode        types.String `tfsdk:"event_code"`
+	EventMinSeverity types.String `tfsdk:"event_min_severity"`
+	Added            types.Bool   `tfsdk:"added"`
+}
+
+type AlertRuleDestination struct {
+	Severity           types.String `tfsdk:"severity"`
+	DestinationID      types.String `tfsdk:"destination_id"`
+	NotifyEveryAlert   types.Bool   `tfsdk:"notify_every_alert"`
+	CloseAfterDelivery types.Bool   `tfsdk:"close_after_delivery"`
 }
 
 type SQLConfig struct {

@@ -58,3 +58,11 @@ repos:
       entry: bash -c "lines=$(grep -rE 'UPTYCS_CUSTOMER_ID=|UPTYCS_API_KEY=|UPTYCS_API_SECRET=' | grep -vEInH 'your-customer-id|your-api-key|your-api-secret' | wc -l) && (( $lines >= 1 )) && exit 1 || :"
       language: system
       pass_filenames: false
+- repo: local
+  hooks:
+    - id: keep-goutils-1-1-0-out
+      name: keep-goutils-1-1-0-out
+      # Theres a CVE in goutil 1.1.0 that a dependency is pinning, just ensure it doesnt slip back
+      entry: bash -c "sed -i '/goutils v1.1.0/d' go.sum"
+      language: system
+      pass_filenames: false
