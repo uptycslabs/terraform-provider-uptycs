@@ -208,6 +208,7 @@ func (p *Provider) GetResources(_ context.Context) (map[string]provider.Resource
 // GetDataSources - Defines provider data sources
 func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
 	return map[string]provider.DataSourceType{
+		"uptycs_alert_rule":            dataSourceAlertRuleType{},
 		"uptycs_audit_configuration":   dataSourceAuditConfigurationType{},
 		"uptycs_destination":           dataSourceDestinationType{},
 		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
