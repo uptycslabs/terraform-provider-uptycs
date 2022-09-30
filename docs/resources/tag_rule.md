@@ -19,7 +19,6 @@ description: |-
 
 - `description` (String)
 - `name` (String)
-- `platform` (String)
 - `query` (String)
 - `run_once` (Boolean)
 - `source` (String)
@@ -29,6 +28,7 @@ description: |-
 - `enabled` (Boolean)
 - `interval` (Number)
 - `osquery_version` (String)
+- `platform` (String)
 - `resource_type` (String)
 - `system` (Boolean)
 

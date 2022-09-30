@@ -53,8 +53,10 @@ func (r resourceTagRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
 			"platform": {
-				Type:     types.StringType,
-				Required: true,
+				Type:          types.StringType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
 			"resource_type": {
 				Type:          types.StringType,
