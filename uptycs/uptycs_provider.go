@@ -2,7 +2,10 @@ package uptycs
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -11,17 +14,28 @@ import (
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
+var (
+	_ provider.Provider = &UptycsProvider{}
+)
+
 func New() provider.Provider {
-	return &Provider{}
+	return &UptycsProvider{}
 }
 
-type Provider struct {
-	configured bool
-	client     *uptycs.Client
+type UptycsProvider struct{} //revive:disable-line:exported
+
+type uptycsProviderData struct {
+	Host       types.String `tfsdk:"host"`
+	CustomerID types.String `tfsdk:"customer_id"`
+	APIKey     types.String `tfsdk:"api_key"`
+	APISecret  types.String `tfsdk:"api_secret"`
 }
 
-// GetSchema
-func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *UptycsProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "uptycs"
+}
+
+func (p *UptycsProvider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"host": {
@@ -50,17 +64,11 @@ func (p *Provider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics)
 	}, nil
 }
 
-// Provider schema struct
-type providerData struct {
-	Host       types.String `tfsdk:"host"`
-	CustomerID types.String `tfsdk:"customer_id"`
-	APIKey     types.String `tfsdk:"api_key"`
-	APISecret  types.String `tfsdk:"api_secret"`
-}
+func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Configuring Uptycs client")
 
-func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	// Retrieve provider data from configuration
-	var config providerData
+	var config uptycsProviderData
 	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -168,8 +176,8 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 		return
 	}
 
-	// Create a new uptycs client and set it to the provider client
-	c, err := uptycs.NewClient(uptycs.Config{
+	// Create a new uptycs client and set it to the provider.client
+	client, err := uptycs.NewClient(uptycs.Config{
 		Host:       host,
 		APIKey:     apiKey,
 		APISecret:  apiSecret,
@@ -183,42 +191,43 @@ func (p *Provider) Configure(ctx context.Context, req provider.ConfigureRequest,
 		return
 	}
 
-	p.client = c
-	p.configured = true
+	resp.DataSourceData = client
+	resp.ResourceData = client
+
+	tflog.Info(ctx, "Configured Uptycs client", map[string]any{"success": true})
+
 }
 
-// GetResources - Defines provider resources
-func (p *Provider) GetResources(_ context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	return map[string]provider.ResourceType{
-		"uptycs_alert_rule":            resourceAlertRuleType{},
-		"uptycs_destination":           resourceDestinationType{},
-		"uptycs_event_exclude_profile": resourceEventExcludeProfileType{},
-		"uptycs_event_rule":            resourceEventRuleType{},
-		"uptycs_file_path_group":       resourceFilePathGroupType{},
-		"uptycs_querypack":             resourceQuerypackType{},
-		"uptycs_registry_path":         resourceRegistryPathType{},
-		"uptycs_role":                  resourceRoleType{},
-		"uptycs_tag":                   resourceTagType{},
-		"uptycs_tag_rule":              resourceTagRuleType{},
-		"uptycs_user":                  resourceUserType{},
-		"uptycs_yara_group_rule":       resourceYaraGroupRuleType{},
-	}, nil
+func (p *UptycsProvider) Resources(_ context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		AlertRuleResource,
+		DestinationResource,
+		EventExcludeProfileResource,
+		EventRuleResource,
+		FilePathGroupResource,
+		QuerypackResource,
+		RegistryPathResource,
+		RoleResource,
+		TagResource,
+		TagRuleResource,
+		UserResource,
+		YaraGroupRuleResource,
+	}
 }
 
-// GetDataSources - Defines provider data sources
-func (p *Provider) GetDataSources(_ context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	return map[string]provider.DataSourceType{
-		"uptycs_alert_rule":            dataSourceAlertRuleType{},
-		"uptycs_audit_configuration":   dataSourceAuditConfigurationType{},
-		"uptycs_destination":           dataSourceDestinationType{},
-		"uptycs_event_exclude_profile": dataSourceEventExcludeProfileType{},
-		"uptycs_file_path_group":       dataSourceFilePathGroupType{},
-		"uptycs_querypack":             dataSourceQuerypackType{},
-		"uptycs_registry_path":         dataSourceRegistryPathType{},
-		"uptycs_role":                  dataSourceRoleType{},
-		"uptycs_tag":                   dataSourceTagType{},
-		"uptycs_tag_rule":              dataSourceTagRuleType{},
-		"uptycs_user":                  dataSourceUserType{},
-		"uptycs_yara_group_rule":       dataSourceYaraGroupRuleType{},
-	}, nil
+func (p *UptycsProvider) DataSources(_ context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		AlertRuleDataSource,
+		AuditConfigurationDataSource,
+		DestinationDataSource,
+		EventExcludeProfileDataSource,
+		FilePathGroupDataSource,
+		QuerypackDataSource,
+		RegistryPathDataSource,
+		RoleDataSource,
+		TagDataSource,
+		TagRuleDataSource,
+		UserDataSource,
+		YaraGroupRuleDataSource,
+	}
 }

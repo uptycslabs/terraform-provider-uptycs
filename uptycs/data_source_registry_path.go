@@ -6,17 +6,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceRegistryPathType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &registryPathDataSource{}
+	_ datasource.DataSourceWithConfigure = &registryPathDataSource{}
+)
+
+func RegistryPathDataSource() datasource.DataSource {
+	return &registryPathDataSource{}
 }
 
-func (r dataSourceRegistryPathType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type registryPathDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *registryPathDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_registry_path"
+}
+
+func (d *registryPathDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *registryPathDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -55,17 +75,11 @@ func (r dataSourceRegistryPathType) GetSchema(_ context.Context) (tfsdk.Schema, 
 	}, nil
 }
 
-func (r dataSourceRegistryPathType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceRegistryPathType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceRegistryPathType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *registryPathDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var registryPathID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &registryPathID)...)
 
-	registryPathResp, err := r.p.client.GetRegistryPath(uptycs.RegistryPath{
+	registryPathResp, err := d.client.GetRegistryPath(uptycs.RegistryPath{
 		ID: registryPathID,
 	})
 	if err != nil {

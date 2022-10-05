@@ -6,17 +6,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceUserType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &userDataSource{}
+	_ datasource.DataSourceWithConfigure = &userDataSource{}
+)
+
+func UserDataSource() datasource.DataSource {
+	return &userDataSource{}
 }
 
-func (r dataSourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type userDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *userDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_user"
+}
+
+func (d *userDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *userDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -75,13 +95,7 @@ func (r dataSourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (r dataSourceUserType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceUserType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceUserType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var userID string
 	var userName string
 
@@ -102,7 +116,7 @@ func (r dataSourceUserType) Read(ctx context.Context, req datasource.ReadRequest
 		}
 	}
 
-	userResp, err := r.p.client.GetUser(userToLookup)
+	userResp, err := d.client.GetUser(userToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -137,7 +151,7 @@ func (r dataSourceUserType) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
+		uogResp, err := d.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Failed to read.",

@@ -5,20 +5,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceEventExcludeProfileType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &eventExcludeProfileDataSource{}
+	_ datasource.DataSourceWithConfigure = &eventExcludeProfileDataSource{}
+)
+
+func EventExcludeProfileDataSource() datasource.DataSource {
+	return &eventExcludeProfileDataSource{}
 }
 
-func (r dataSourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type eventExcludeProfileDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *eventExcludeProfileDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_event_exclude_profile"
+}
+
+func (d *eventExcludeProfileDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *eventExcludeProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -53,17 +72,11 @@ func (r dataSourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.S
 	}, nil
 }
 
-func (r dataSourceEventExcludeProfileType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceEventExcludeProfileType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceEventExcludeProfileType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var eventExcludeProfileID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)...)
 
-	eventExcludeProfileResp, err := r.p.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
+	eventExcludeProfileResp, err := d.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID: eventExcludeProfileID,
 	})
 	if err != nil {

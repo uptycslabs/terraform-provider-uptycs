@@ -6,17 +6,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceAlertRuleType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &alertRuleDataSource{}
+	_ datasource.DataSourceWithConfigure = &alertRuleDataSource{}
+)
+
+func AlertRuleDataSource() datasource.DataSource {
+	return &alertRuleDataSource{}
 }
 
-func (r dataSourceAlertRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type alertRuleDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *alertRuleDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_alert_rule"
+}
+
+func (d *alertRuleDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -128,17 +148,11 @@ func (r dataSourceAlertRuleType) GetSchema(_ context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (r dataSourceAlertRuleType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceAlertRuleType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceAlertRuleType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var alertRuleID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &alertRuleID)...)
 
-	alertRuleResp, err := r.p.client.GetAlertRule(uptycs.AlertRule{
+	alertRuleResp, err := d.client.GetAlertRule(uptycs.AlertRule{
 		ID: alertRuleID,
 	})
 	if err != nil {

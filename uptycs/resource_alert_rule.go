@@ -5,17 +5,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceAlertRuleType struct{}
+var (
+	_ resource.Resource                = &alertRuleResource{}
+	_ resource.ResourceWithConfigure   = &alertRuleResource{}
+	_ resource.ResourceWithImportState = &alertRuleResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceAlertRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func AlertRuleResource() resource.Resource {
+	return &alertRuleResource{}
+}
+
+type alertRuleResource struct {
+	client *uptycs.Client
+}
+
+func (r *alertRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_alert_rule"
+}
+
+// Configure resource instance
+func (r *alertRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -130,22 +153,10 @@ func (r resourceAlertRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 	}, nil
 }
 
-// New resource instance
-func (r resourceAlertRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceAlertRule{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceAlertRule struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceAlertRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var alertRuleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &alertRuleID)...)
-	alertRuleResp, err := r.p.client.GetAlertRule(uptycs.AlertRule{
+	alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{
 		ID: alertRuleID,
 	})
 	if err != nil {
@@ -220,16 +231,7 @@ func (r resourceAlertRule) Read(ctx context.Context, req resource.ReadRequest, r
 
 }
 
-// Create a new resource
-func (r resourceAlertRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan AlertRule
 	diags := req.Plan.Get(ctx, &plan)
@@ -260,7 +262,7 @@ func (r resourceAlertRule) Create(ctx context.Context, req resource.CreateReques
 		})
 	}
 
-	alertRuleResp, err := r.p.client.CreateAlertRule(uptycs.AlertRule{
+	alertRuleResp, err := r.client.CreateAlertRule(uptycs.AlertRule{
 		Name:                plan.Name.Value,
 		Description:         plan.Description.Value,
 		Code:                plan.Code.Value,
@@ -356,8 +358,7 @@ func (r resourceAlertRule) Create(ctx context.Context, req resource.CreateReques
 	}
 }
 
-// Update resource
-func (r resourceAlertRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state AlertRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -397,7 +398,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req resource.UpdateReques
 		})
 	}
 
-	alertRuleResp, err := r.p.client.UpdateAlertRule(uptycs.AlertRule{
+	alertRuleResp, err := r.client.UpdateAlertRule(uptycs.AlertRule{
 		ID:                  alertRuleID,
 		Name:                plan.Name.Value,
 		Description:         plan.Description.Value,
@@ -494,8 +495,7 @@ func (r resourceAlertRule) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// Delete resource
-func (r resourceAlertRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *alertRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state AlertRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -505,7 +505,7 @@ func (r resourceAlertRule) Delete(ctx context.Context, req resource.DeleteReques
 
 	alertRuleID := state.ID.Value
 
-	_, err := r.p.client.DeleteAlertRule(uptycs.AlertRule{
+	_, err := r.client.DeleteAlertRule(uptycs.AlertRule{
 		ID: alertRuleID,
 	})
 	if err != nil {
@@ -520,7 +520,6 @@ func (r resourceAlertRule) Delete(ctx context.Context, req resource.DeleteReques
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceAlertRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *alertRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

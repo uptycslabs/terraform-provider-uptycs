@@ -5,17 +5,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceRoleType struct{}
+var (
+	_ resource.Resource                = &roleResource{}
+	_ resource.ResourceWithConfigure   = &roleResource{}
+	_ resource.ResourceWithImportState = &roleResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func RoleResource() resource.Resource {
+	return &roleResource{}
+}
+
+type roleResource struct {
+	client *uptycs.Client
+}
+
+func (r *roleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_role"
+}
+
+func (r *roleResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *roleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -60,27 +82,8 @@ func (r resourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 	}, nil
 }
 
-// New resource instance
-func (r resourceRoleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceRole{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceRole struct {
-	p Provider
-}
-
 // Create a new resource
-func (r resourceRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan Role
 	diags := req.Plan.Get(ctx, &plan)
@@ -103,7 +106,7 @@ func (r resourceRole) Create(ctx context.Context, req resource.CreateRequest, re
 	//iterate the object_group_names provided
 	for _, _rog := range objectGroupNames {
 		//Attempt to GET the object group by Name provided in the terraform plan
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{
+		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
 			Name: _rog,
 		})
 		// Couldnt get the object group the user provided in object_group_names, error out
@@ -118,7 +121,7 @@ func (r resourceRole) Create(ctx context.Context, req resource.CreateRequest, re
 		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: rogResp.ID})
 	}
 
-	roleResp, err := r.p.client.CreateRole(uptycs.Role{
+	roleResp, err := r.client.CreateRole(uptycs.Role{
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
 		Permissions:          permissions,
@@ -161,7 +164,7 @@ func (r resourceRole) Create(ctx context.Context, req resource.CreateRequest, re
 	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
 		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
+		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
 		if err != nil {
 			// Couldnt find the object group, give an error
 			resp.Diagnostics.AddError(
@@ -182,10 +185,10 @@ func (r resourceRole) Create(ctx context.Context, req resource.CreateRequest, re
 }
 
 // Read resource information
-func (r resourceRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var roleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &roleID)...)
-	roleResp, err := r.p.client.GetRole(uptycs.Role{
+	roleResp, err := r.client.GetRole(uptycs.Role{
 		ID: roleID,
 	})
 	if err != nil {
@@ -216,7 +219,7 @@ func (r resourceRole) Read(ctx context.Context, req resource.ReadRequest, resp *
 	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
 		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
+		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
 		if err != nil {
 			// Couldnt find the object group, give an error
 			resp.Diagnostics.AddError(
@@ -243,7 +246,7 @@ func (r resourceRole) Read(ctx context.Context, req resource.ReadRequest, resp *
 }
 
 // Update resource
-func (r resourceRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state Role
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -275,7 +278,7 @@ func (r resourceRole) Update(ctx context.Context, req resource.UpdateRequest, re
 	//iterate the object_group_names provided
 	for _, _rog := range objectGroupNames {
 		//Attempt to GET the object group by Name provided in the terraform plan
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{
+		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
 			Name: _rog,
 		})
 		// Couldnt get the object group the user provided in object_group_names, error out
@@ -290,7 +293,7 @@ func (r resourceRole) Update(ctx context.Context, req resource.UpdateRequest, re
 		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: rogResp.ID})
 	}
 
-	roleResp, err := r.p.client.UpdateRole(uptycs.Role{
+	roleResp, err := r.client.UpdateRole(uptycs.Role{
 		ID:                   roleID,
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
@@ -333,7 +336,7 @@ func (r resourceRole) Update(ctx context.Context, req resource.UpdateRequest, re
 	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
 		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
+		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
 		if err != nil {
 			// Couldnt find the object group, give an error
 			resp.Diagnostics.AddError(
@@ -354,7 +357,7 @@ func (r resourceRole) Update(ctx context.Context, req resource.UpdateRequest, re
 }
 
 // Delete resource
-func (r resourceRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Role
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -364,7 +367,7 @@ func (r resourceRole) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	roleID := state.ID.Value
 
-	_, err := r.p.client.DeleteRole(uptycs.Role{
+	_, err := r.client.DeleteRole(uptycs.Role{
 		ID: roleID,
 	})
 	if err != nil {
@@ -380,6 +383,6 @@ func (r resourceRole) Delete(ctx context.Context, req resource.DeleteRequest, re
 }
 
 // Import resource
-func (r resourceRole) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

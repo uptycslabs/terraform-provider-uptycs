@@ -5,17 +5,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceRegistryPathType struct{}
+var (
+	_ resource.Resource                = &registryPathResource{}
+	_ resource.ResourceWithConfigure   = &registryPathResource{}
+	_ resource.ResourceWithImportState = &registryPathResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceRegistryPathType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func RegistryPathResource() resource.Resource {
+	return &registryPathResource{}
+}
+
+type registryPathResource struct {
+	client *uptycs.Client
+}
+
+func (r *registryPathResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_registry_path"
+}
+
+func (r *registryPathResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *registryPathResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -62,22 +84,10 @@ func (r resourceRegistryPathType) GetSchema(_ context.Context) (tfsdk.Schema, di
 	}, nil
 }
 
-// New resource instance
-func (r resourceRegistryPathType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceRegistryPath{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceRegistryPath struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceRegistryPath) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *registryPathResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var registryPathID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &registryPathID)...)
-	registryPathResp, err := r.p.client.GetRegistryPath(uptycs.RegistryPath{
+	registryPathResp, err := r.client.GetRegistryPath(uptycs.RegistryPath{
 		ID: registryPathID,
 	})
 	if err != nil {
@@ -121,16 +131,7 @@ func (r resourceRegistryPath) Read(ctx context.Context, req resource.ReadRequest
 
 }
 
-// Create a new resource
-func (r resourceRegistryPath) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan RegistryPath
 	diags := req.Plan.Get(ctx, &plan)
@@ -145,7 +146,7 @@ func (r resourceRegistryPath) Create(ctx context.Context, req resource.CreateReq
 	var excludeRegistryPaths []string
 	plan.ExcludeRegistryPaths.ElementsAs(ctx, &excludeRegistryPaths, false)
 
-	registryPathResp, err := r.p.client.CreateRegistryPath(uptycs.RegistryPath{
+	registryPathResp, err := r.client.CreateRegistryPath(uptycs.RegistryPath{
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
 		Grouping:             plan.Grouping.Value,
@@ -195,8 +196,7 @@ func (r resourceRegistryPath) Create(ctx context.Context, req resource.CreateReq
 	}
 }
 
-// Update resource
-func (r resourceRegistryPath) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state RegistryPath
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -220,7 +220,7 @@ func (r resourceRegistryPath) Update(ctx context.Context, req resource.UpdateReq
 	var excludeRegistryPaths []string
 	plan.ExcludeRegistryPaths.ElementsAs(ctx, &excludeRegistryPaths, false)
 
-	registryPathResp, err := r.p.client.UpdateRegistryPath(uptycs.RegistryPath{
+	registryPathResp, err := r.client.UpdateRegistryPath(uptycs.RegistryPath{
 		ID:                   registryPathID,
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
@@ -271,8 +271,7 @@ func (r resourceRegistryPath) Update(ctx context.Context, req resource.UpdateReq
 	}
 }
 
-// Delete resource
-func (r resourceRegistryPath) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *registryPathResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state RegistryPath
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -282,7 +281,7 @@ func (r resourceRegistryPath) Delete(ctx context.Context, req resource.DeleteReq
 
 	registryPathID := state.ID.Value
 
-	_, err := r.p.client.DeleteRegistryPath(uptycs.RegistryPath{
+	_, err := r.client.DeleteRegistryPath(uptycs.RegistryPath{
 		ID: registryPathID,
 	})
 	if err != nil {
@@ -297,7 +296,6 @@ func (r resourceRegistryPath) Delete(ctx context.Context, req resource.DeleteReq
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceRegistryPath) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *registryPathResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -101,8 +101,9 @@ github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
+github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
@@ -143,8 +144,8 @@ github.com/hashicorp/terraform-json v0.14.0 h1:sh9iZ1Y8IFJLx+xQiKHGud6/TSUCM0N8e
 github.com/hashicorp/terraform-json v0.14.0/go.mod h1:5A9HIWPkk4e5aeeXIBbkcOvaZbIYnAIkEyqP2pNSckM=
 github.com/hashicorp/terraform-plugin-docs v0.8.1 h1:XJC/cDvmE7zJfDFCtOI1bURaencBQC0xYx3DZ5cWbhE=
 github.com/hashicorp/terraform-plugin-docs v0.8.1/go.mod h1:p40z/69HYNUN/G2RDYp8XUCA5B1VzGTZl7/N9V+BWXU=
-github.com/hashicorp/terraform-plugin-framework v0.11.1 h1:rq8f+TLDO4tJu+n9mMYlDrcRoIdrg0gTUvV2Jr0Ya24=
-github.com/hashicorp/terraform-plugin-framework v0.11.1/go.mod h1:GENReHOz6GEt8Jk3UN94vk8BdC6irEHFgN3Z9HPhPUU=
+github.com/hashicorp/terraform-plugin-framework v0.13.0 h1:tGnqttzZwU3FKc+HasHr2Yi5L81FcQbdc8zQhbBD9jQ=
+github.com/hashicorp/terraform-plugin-framework v0.13.0/go.mod h1:wcZdk4+Uef6Ng+BiBJjGAcIPlIs5bhlEV/TA1k6Xkq8=
 github.com/hashicorp/terraform-plugin-framework-validators v0.5.0 h1:eD79idhnJOBajkUMEbm0c8dOyOb/F49STbUEVojT6F4=
 github.com/hashicorp/terraform-plugin-framework-validators v0.5.0/go.mod h1:NfGgclDM3FZqvNVppPKE2aHI1JAyT002ypPRya7ch3I=
 github.com/hashicorp/terraform-plugin-go v0.14.0 h1:ttnSlS8bz3ZPYbMb84DpcPhY4F5DsQtcAS7cHo8uvP4=
@@ -248,8 +249,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8s=
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
-github.com/uptycslabs/uptycs-client-go v0.0.23-0.20220930181445-2e897c2a3630 h1:sVOkWDD3dwDoWB5/BMHXrlZGRwxRLWvsoGcvLxxklzc=
-github.com/uptycslabs/uptycs-client-go v0.0.23-0.20220930181445-2e897c2a3630/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.23-0.20221005234531-414d85703c72 h1:IRNdQMXEdCTS3v7e2w5iurtzAd+6wb/QcUZrX+I5d9E=
+github.com/uptycslabs/uptycs-client-go v0.0.23-0.20221005234531-414d85703c72/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=

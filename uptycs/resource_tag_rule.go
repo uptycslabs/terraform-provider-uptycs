@@ -4,17 +4,39 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceTagRuleType struct{}
+var (
+	_ resource.Resource                = &tagRuleResource{}
+	_ resource.ResourceWithConfigure   = &tagRuleResource{}
+	_ resource.ResourceWithImportState = &tagRuleResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceTagRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func TagRuleResource() resource.Resource {
+	return &tagRuleResource{}
+}
+
+type tagRuleResource struct {
+	client *uptycs.Client
+}
+
+func (r *tagRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_tag_rule"
+}
+
+func (r *tagRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *tagRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -80,22 +102,10 @@ func (r resourceTagRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Di
 	}, nil
 }
 
-// New resource instance
-func (r resourceTagRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceTagRule{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceTagRule struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceTagRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tagRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var tagRuleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &tagRuleID)...)
-	tagRuleResp, err := r.p.client.GetTagRule(uptycs.TagRule{
+	tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
 		ID: tagRuleID,
 	})
 	if err != nil {
@@ -129,16 +139,7 @@ func (r resourceTagRule) Read(ctx context.Context, req resource.ReadRequest, res
 
 }
 
-// Create a new resource
-func (r resourceTagRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan TagRule
 	diags := req.Plan.Get(ctx, &plan)
@@ -146,7 +147,7 @@ func (r resourceTagRule) Create(ctx context.Context, req resource.CreateRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	tagRuleResp, err := r.p.client.CreateTagRule(uptycs.TagRule{
+	tagRuleResp, err := r.client.CreateTagRule(uptycs.TagRule{
 		ID:             plan.ID.Value,
 		Name:           plan.Name.Value,
 		Description:    plan.Description.Value,
@@ -191,8 +192,7 @@ func (r resourceTagRule) Create(ctx context.Context, req resource.CreateRequest,
 	}
 }
 
-// Update resource
-func (r resourceTagRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state TagRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -210,7 +210,7 @@ func (r resourceTagRule) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	tagRuleResp, err := r.p.client.UpdateTagRule(uptycs.TagRule{
+	tagRuleResp, err := r.client.UpdateTagRule(uptycs.TagRule{
 		ID:             tagRuleID,
 		Name:           plan.Name.Value,
 		Description:    plan.Description.Value,
@@ -255,8 +255,7 @@ func (r resourceTagRule) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 }
 
-// Delete resource
-func (r resourceTagRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tagRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state TagRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -266,7 +265,7 @@ func (r resourceTagRule) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	tagRuleID := state.ID.Value
 
-	_, err := r.p.client.DeleteTagRule(uptycs.TagRule{
+	_, err := r.client.DeleteTagRule(uptycs.TagRule{
 		ID: tagRuleID,
 	})
 	if err != nil {
@@ -281,7 +280,6 @@ func (r resourceTagRule) Delete(ctx context.Context, req resource.DeleteRequest,
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceTagRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tagRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

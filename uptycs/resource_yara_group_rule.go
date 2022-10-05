@@ -4,17 +4,39 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceYaraGroupRuleType struct{}
+var (
+	_ resource.Resource                = &yaraGroupRuleResource{}
+	_ resource.ResourceWithConfigure   = &yaraGroupRuleResource{}
+	_ resource.ResourceWithImportState = &yaraGroupRuleResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceYaraGroupRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func YaraGroupRuleResource() resource.Resource {
+	return &yaraGroupRuleResource{}
+}
+
+type yaraGroupRuleResource struct {
+	client *uptycs.Client
+}
+
+func (r *yaraGroupRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_yara_group_rule"
+}
+
+func (r *yaraGroupRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *yaraGroupRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -45,22 +67,10 @@ func (r resourceYaraGroupRuleType) GetSchema(_ context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-// New resource instance
-func (r resourceYaraGroupRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceYaraGroupRule{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceYaraGroupRule struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceYaraGroupRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *yaraGroupRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var yaraGroupRuleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)...)
-	yaraGroupRuleResp, err := r.p.client.GetYaraGroupRule(uptycs.YaraGroupRule{
+	yaraGroupRuleResp, err := r.client.GetYaraGroupRule(uptycs.YaraGroupRule{
 		ID: yaraGroupRuleID,
 	})
 	if err != nil {
@@ -86,16 +96,7 @@ func (r resourceYaraGroupRule) Read(ctx context.Context, req resource.ReadReques
 
 }
 
-// Create a new resource
-func (r resourceYaraGroupRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan YaraGroupRule
 	diags := req.Plan.Get(ctx, &plan)
@@ -104,7 +105,7 @@ func (r resourceYaraGroupRule) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	yaraGroupRuleResp, err := r.p.client.CreateYaraGroupRule(uptycs.YaraGroupRule{
+	yaraGroupRuleResp, err := r.client.CreateYaraGroupRule(uptycs.YaraGroupRule{
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
 		Rules:       plan.Rules.Value,
@@ -134,8 +135,7 @@ func (r resourceYaraGroupRule) Create(ctx context.Context, req resource.CreateRe
 	}
 }
 
-// Update resource
-func (r resourceYaraGroupRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state YaraGroupRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -153,7 +153,7 @@ func (r resourceYaraGroupRule) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	yaraGroupRuleResp, err := r.p.client.UpdateYaraGroupRule(uptycs.YaraGroupRule{
+	yaraGroupRuleResp, err := r.client.UpdateYaraGroupRule(uptycs.YaraGroupRule{
 		ID:          yaraGroupRuleID,
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
@@ -184,8 +184,7 @@ func (r resourceYaraGroupRule) Update(ctx context.Context, req resource.UpdateRe
 	}
 }
 
-// Delete resource
-func (r resourceYaraGroupRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *yaraGroupRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state YaraGroupRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -195,7 +194,7 @@ func (r resourceYaraGroupRule) Delete(ctx context.Context, req resource.DeleteRe
 
 	yaraGroupRuleID := state.ID.Value
 
-	_, err := r.p.client.DeleteYaraGroupRule(uptycs.YaraGroupRule{
+	_, err := r.client.DeleteYaraGroupRule(uptycs.YaraGroupRule{
 		ID: yaraGroupRuleID,
 	})
 	if err != nil {
@@ -210,7 +209,6 @@ func (r resourceYaraGroupRule) Delete(ctx context.Context, req resource.DeleteRe
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceYaraGroupRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *yaraGroupRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

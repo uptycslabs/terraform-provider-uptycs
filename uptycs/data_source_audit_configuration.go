@@ -5,17 +5,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceAuditConfigurationType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &auditConfigurationDataSource{}
+	_ datasource.DataSourceWithConfigure = &auditConfigurationDataSource{}
+)
+
+func AuditConfigurationDataSource() datasource.DataSource {
+	return &auditConfigurationDataSource{}
 }
 
-func (r dataSourceAuditConfigurationType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type auditConfigurationDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *auditConfigurationDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_audit_configuration"
+}
+
+func (d *auditConfigurationDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *auditConfigurationDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -67,17 +87,11 @@ func (r dataSourceAuditConfigurationType) GetSchema(_ context.Context) (tfsdk.Sc
 	}, nil
 }
 
-func (r dataSourceAuditConfigurationType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceAuditConfigurationType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceAuditConfigurationType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *auditConfigurationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var auditConfigurationID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &auditConfigurationID)...)
 
-	auditConfigurationResp, err := r.p.client.GetAuditConfiguration(uptycs.AuditConfiguration{
+	auditConfigurationResp, err := d.client.GetAuditConfiguration(uptycs.AuditConfiguration{
 		ID: auditConfigurationID,
 	})
 	if err != nil {

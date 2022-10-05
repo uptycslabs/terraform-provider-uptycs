@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.12"
+      version = "0.0.13"
     }
   }
 }
@@ -50,6 +50,7 @@ output "test_user_user_object_groups" {
 resource "uptycs_user" "new_user" {
   name               = "someone"
   email              = "some+test@foo.com"
+  phone              = "888-867-5309"
   image_url          = "42"
   max_idle_time_mins = 30
   alert_hidden_columns = [

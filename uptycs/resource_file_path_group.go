@@ -5,16 +5,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceFilePathGroupType struct{}
+var (
+	_ resource.Resource                = &filePathGroupResource{}
+	_ resource.ResourceWithConfigure   = &filePathGroupResource{}
+	_ resource.ResourceWithImportState = &filePathGroupResource{}
+)
 
-func (r resourceFilePathGroupType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func FilePathGroupResource() resource.Resource {
+	return &filePathGroupResource{}
+}
+
+type filePathGroupResource struct {
+	client *uptycs.Client
+}
+
+func (r *filePathGroupResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_file_path_group"
+}
+
+func (r *filePathGroupResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *filePathGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -130,22 +153,10 @@ func (r resourceFilePathGroupType) GetSchema(_ context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-// New resource instance
-func (r resourceFilePathGroupType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceFilePathGroup{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceFilePathGroup struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceFilePathGroup) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var filePathGroupID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &filePathGroupID)...)
-	filePathGroupResp, err := r.p.client.GetFilePathGroup(uptycs.FilePathGroup{
+	filePathGroupResp, err := r.client.GetFilePathGroup(uptycs.FilePathGroup{
 		ID: filePathGroupID,
 	})
 	if err != nil {
@@ -237,16 +248,7 @@ func (r resourceFilePathGroup) Read(ctx context.Context, req resource.ReadReques
 
 }
 
-// Create a new resource
-func (r resourceFilePathGroup) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan FilePathGroup
 	diags := req.Plan.Get(ctx, &plan)
@@ -286,7 +288,7 @@ func (r resourceFilePathGroup) Create(ctx context.Context, req resource.CreateRe
 		})
 	}
 
-	filePathGroupResp, err := r.p.client.CreateFilePathGroup(uptycs.FilePathGroup{
+	filePathGroupResp, err := r.client.CreateFilePathGroup(uptycs.FilePathGroup{
 		Name:                  plan.Name.Value,
 		Description:           plan.Description.Value,
 		Grouping:              plan.Grouping.Value,
@@ -390,8 +392,7 @@ func (r resourceFilePathGroup) Create(ctx context.Context, req resource.CreateRe
 	}
 }
 
-// Update resource
-func (r resourceFilePathGroup) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state FilePathGroup
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -440,7 +441,7 @@ func (r resourceFilePathGroup) Update(ctx context.Context, req resource.UpdateRe
 		})
 	}
 
-	filePathGroupResp, err := r.p.client.UpdateFilePathGroup(uptycs.FilePathGroup{
+	filePathGroupResp, err := r.client.UpdateFilePathGroup(uptycs.FilePathGroup{
 		ID:                    filePathGroupID,
 		Name:                  plan.Name.Value,
 		Description:           plan.Description.Value,
@@ -545,8 +546,7 @@ func (r resourceFilePathGroup) Update(ctx context.Context, req resource.UpdateRe
 	}
 }
 
-// Delete resource
-func (r resourceFilePathGroup) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *filePathGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state FilePathGroup
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -556,7 +556,7 @@ func (r resourceFilePathGroup) Delete(ctx context.Context, req resource.DeleteRe
 
 	filePathGroupID := state.ID.Value
 
-	_, err := r.p.client.DeleteFilePathGroup(uptycs.FilePathGroup{
+	_, err := r.client.DeleteFilePathGroup(uptycs.FilePathGroup{
 		ID: filePathGroupID,
 	})
 	if err != nil {
@@ -571,7 +571,6 @@ func (r resourceFilePathGroup) Delete(ctx context.Context, req resource.DeleteRe
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceFilePathGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *filePathGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

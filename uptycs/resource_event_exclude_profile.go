@@ -6,17 +6,39 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceEventExcludeProfileType struct{}
+var (
+	_ resource.Resource                = &eventExcludeProfileResource{}
+	_ resource.ResourceWithConfigure   = &eventExcludeProfileResource{}
+	_ resource.ResourceWithImportState = &eventExcludeProfileResource{}
+)
 
-// Resource schema
-func (r resourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func EventExcludeProfileResource() resource.Resource {
+	return &eventExcludeProfileResource{}
+}
+
+type eventExcludeProfileResource struct {
+	client *uptycs.Client
+}
+
+func (r *eventExcludeProfileResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_event_exclude_profile"
+}
+
+func (r *eventExcludeProfileResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *eventExcludeProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -51,27 +73,7 @@ func (r resourceEventExcludeProfileType) GetSchema(_ context.Context) (tfsdk.Sch
 	}, nil
 }
 
-// New resource instance
-func (r resourceEventExcludeProfileType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceEventExcludeProfile{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceEventExcludeProfile struct {
-	p Provider
-}
-
-// Create a new resource
-func (r resourceEventExcludeProfile) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan EventExcludeProfile
 	diags := req.Plan.Get(ctx, &plan)
@@ -80,7 +82,7 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	eventExcludeProfileResp, err := r.p.client.CreateEventExcludeProfile(uptycs.EventExcludeProfile{
+	eventExcludeProfileResp, err := r.client.CreateEventExcludeProfile(uptycs.EventExcludeProfile{
 		Name:         plan.Name.Value,
 		Description:  plan.Description.Value,
 		MetadataJSON: plan.Metadata.Value,
@@ -119,11 +121,10 @@ func (r resourceEventExcludeProfile) Create(ctx context.Context, req resource.Cr
 	}
 }
 
-// Read resource information
-func (r resourceEventExcludeProfile) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventExcludeProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var eventExcludeProfileID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)...)
-	eventExcludeProfileResp, err := r.p.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
+	eventExcludeProfileResp, err := r.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID: eventExcludeProfileID,
 	})
 	if err != nil {
@@ -157,8 +158,7 @@ func (r resourceEventExcludeProfile) Read(ctx context.Context, req resource.Read
 
 }
 
-// Update resource
-func (r resourceEventExcludeProfile) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state EventExcludeProfile
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -176,7 +176,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	eventExcludeProfileResp, err := r.p.client.UpdateEventExcludeProfile(uptycs.EventExcludeProfile{
+	eventExcludeProfileResp, err := r.client.UpdateEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID:           eventExcludeProfileID,
 		Name:         plan.Name.Value,
 		Description:  plan.Description.Value,
@@ -216,8 +216,7 @@ func (r resourceEventExcludeProfile) Update(ctx context.Context, req resource.Up
 	}
 }
 
-// Delete resource
-func (r resourceEventExcludeProfile) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventExcludeProfileResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state EventExcludeProfile
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -227,7 +226,7 @@ func (r resourceEventExcludeProfile) Delete(ctx context.Context, req resource.De
 
 	eventExcludeProfileID := state.ID.Value
 
-	_, err := r.p.client.DeleteEventExcludeProfile(uptycs.EventExcludeProfile{
+	_, err := r.client.DeleteEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID: eventExcludeProfileID,
 	})
 	if err != nil {
@@ -243,6 +242,6 @@ func (r resourceEventExcludeProfile) Delete(ctx context.Context, req resource.De
 }
 
 // Import resource
-func (r resourceEventExcludeProfile) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r eventExcludeProfileResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

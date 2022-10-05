@@ -5,17 +5,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceYaraGroupRuleType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &yaraGroupRuleDataSource{}
+	_ datasource.DataSourceWithConfigure = &yaraGroupRuleDataSource{}
+)
+
+func YaraGroupRuleDataSource() datasource.DataSource {
+	return &yaraGroupRuleDataSource{}
 }
 
-func (r dataSourceYaraGroupRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type yaraGroupRuleDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *yaraGroupRuleDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_yara_group_rule"
+}
+
+func (d *yaraGroupRuleDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *yaraGroupRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -42,17 +62,11 @@ func (r dataSourceYaraGroupRuleType) GetSchema(_ context.Context) (tfsdk.Schema,
 	}, nil
 }
 
-func (r dataSourceYaraGroupRuleType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceYaraGroupRuleType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceYaraGroupRuleType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var yaraGroupRuleID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)...)
 
-	yaraGroupRuleResp, err := r.p.client.GetYaraGroupRule(uptycs.YaraGroupRule{
+	yaraGroupRuleResp, err := d.client.GetYaraGroupRule(uptycs.YaraGroupRule{
 		ID: yaraGroupRuleID,
 	})
 	if err != nil {
