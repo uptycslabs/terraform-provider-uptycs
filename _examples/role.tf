@@ -31,7 +31,8 @@ output "admin_role_permissions" {
 }
 
 resource "uptycs_role" "test_role" {
-  name = "test_role"
+  name                   = "test_role"
+  no_minimal_permissions = true
   permissions = [
     "ASSET:READ",
     "ALERT_RULE:READ",
