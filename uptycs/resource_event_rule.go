@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -15,10 +14,33 @@ import (
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceEventRuleType struct{}
+var (
+	_ resource.Resource                = &eventRuleResource{}
+	_ resource.ResourceWithConfigure   = &eventRuleResource{}
+	_ resource.ResourceWithImportState = &eventRuleResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceEventRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func EventRuleResource() resource.Resource {
+	return &eventRuleResource{}
+}
+
+type eventRuleResource struct {
+	client *uptycs.Client
+}
+
+func (r *eventRuleResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_event_rule"
+}
+
+func (r *eventRuleResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -117,27 +139,7 @@ func (r resourceEventRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 	}, nil
 }
 
-// New resource instance
-func (r resourceEventRuleType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceEventRule{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceEventRule struct {
-	p Provider
-}
-
-// Create a new resource
-func (r resourceEventRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan EventRule
 	diags := req.Plan.Get(ctx, &plan)
@@ -149,7 +151,7 @@ func (r resourceEventRule) Create(ctx context.Context, req resource.CreateReques
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	eventRuleResp, err := r.p.client.CreateEventRule(uptycs.EventRule{
+	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
 		Name:        plan.Name.Value,
 		Code:        plan.Code.Value,
 		Description: plan.Description.Value,
@@ -233,11 +235,10 @@ func (r resourceEventRule) Create(ctx context.Context, req resource.CreateReques
 	}
 }
 
-// Read resource information
-func (r resourceEventRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var eventRuleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &eventRuleID)...)
-	eventRuleResp, err := r.p.client.GetEventRule(uptycs.EventRule{
+	eventRuleResp, err := r.client.GetEventRule(uptycs.EventRule{
 		ID: eventRuleID,
 	})
 	if err != nil {
@@ -298,8 +299,7 @@ func (r resourceEventRule) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 }
 
-// Update resource
-func (r resourceEventRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state EventRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -320,7 +320,7 @@ func (r resourceEventRule) Update(ctx context.Context, req resource.UpdateReques
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	eventRuleResp, err := r.p.client.UpdateEventRule(uptycs.EventRule{
+	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
 		ID:          eventRuleID,
 		Name:        plan.Name.Value,
 		Code:        plan.Code.Value,
@@ -402,8 +402,7 @@ func (r resourceEventRule) Update(ctx context.Context, req resource.UpdateReques
 	}
 }
 
-// Delete resource
-func (r resourceEventRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *eventRuleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state EventRule
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -413,7 +412,7 @@ func (r resourceEventRule) Delete(ctx context.Context, req resource.DeleteReques
 
 	eventRuleID := state.ID.Value
 
-	_, err := r.p.client.DeleteEventRule(uptycs.EventRule{
+	_, err := r.client.DeleteEventRule(uptycs.EventRule{
 		ID: eventRuleID,
 	})
 	if err != nil {
@@ -428,7 +427,6 @@ func (r resourceEventRule) Delete(ctx context.Context, req resource.DeleteReques
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceEventRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *eventRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

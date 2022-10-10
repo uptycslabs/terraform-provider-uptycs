@@ -4,17 +4,39 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceDestinationType struct{}
+var (
+	_ resource.Resource                = &destinationResource{}
+	_ resource.ResourceWithConfigure   = &destinationResource{}
+	_ resource.ResourceWithImportState = &destinationResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func DestinationResource() resource.Resource {
+	return &destinationResource{}
+}
+
+type destinationResource struct {
+	client *uptycs.Client
+}
+
+func (r *destinationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_destination"
+}
+
+func (r *destinationResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *destinationResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -43,22 +65,10 @@ func (r resourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-// New resource instance
-func (r resourceDestinationType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceDestination{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceDestination struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceDestination) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *destinationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var destinationID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &destinationID)...)
-	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
+	destinationResp, err := r.client.GetDestination(uptycs.Destination{
 		ID: destinationID,
 	})
 	if err != nil {
@@ -84,16 +94,7 @@ func (r resourceDestination) Read(ctx context.Context, req resource.ReadRequest,
 
 }
 
-// Create a new resource
-func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *destinationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan Destination
 	diags := req.Plan.Get(ctx, &plan)
@@ -102,7 +103,7 @@ func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	destinationResp, err := r.p.client.CreateDestination(uptycs.Destination{
+	destinationResp, err := r.client.CreateDestination(uptycs.Destination{
 		Name:    plan.Name.Value,
 		Type:    plan.Type.Value,
 		Address: plan.Address.Value,
@@ -132,8 +133,7 @@ func (r resourceDestination) Create(ctx context.Context, req resource.CreateRequ
 	}
 }
 
-// Update resource
-func (r resourceDestination) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *destinationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state Destination
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -151,7 +151,7 @@ func (r resourceDestination) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	destinationResp, err := r.p.client.UpdateDestination(uptycs.Destination{
+	destinationResp, err := r.client.UpdateDestination(uptycs.Destination{
 		ID:      destinationID,
 		Name:    plan.Name.Value,
 		Type:    plan.Type.Value,
@@ -182,8 +182,7 @@ func (r resourceDestination) Update(ctx context.Context, req resource.UpdateRequ
 	}
 }
 
-// Delete resource
-func (r resourceDestination) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *destinationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Destination
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -193,7 +192,7 @@ func (r resourceDestination) Delete(ctx context.Context, req resource.DeleteRequ
 
 	destinationID := state.ID.Value
 
-	_, err := r.p.client.DeleteDestination(uptycs.Destination{
+	_, err := r.client.DeleteDestination(uptycs.Destination{
 		ID: destinationID,
 	})
 	if err != nil {
@@ -204,11 +203,9 @@ func (r resourceDestination) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	// Remove resource from state
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceDestination) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *destinationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

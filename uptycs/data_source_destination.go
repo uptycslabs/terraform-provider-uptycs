@@ -5,17 +5,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceDestinationType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &destinationDataSource{}
+	_ datasource.DataSourceWithConfigure = &destinationDataSource{}
+)
+
+func DestinationDataSource() datasource.DataSource {
+	return &destinationDataSource{}
 }
 
-func (r dataSourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type destinationDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *destinationDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_destination"
+}
+
+func (d *destinationDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *destinationDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -43,17 +63,11 @@ func (r dataSourceDestinationType) GetSchema(_ context.Context) (tfsdk.Schema, d
 	}, nil
 }
 
-func (r dataSourceDestinationType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceDestinationType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceDestinationType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *destinationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var destinationID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &destinationID)...)
 
-	destinationResp, err := r.p.client.GetDestination(uptycs.Destination{
+	destinationResp, err := d.client.GetDestination(uptycs.Destination{
 		ID: destinationID,
 	})
 	if err != nil {

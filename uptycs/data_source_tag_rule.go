@@ -5,17 +5,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceTagRuleType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &tagRuleDataSource{}
+	_ datasource.DataSourceWithConfigure = &tagRuleDataSource{}
+)
+
+func TagRuleDataSource() datasource.DataSource {
+	return &tagRuleDataSource{}
 }
 
-func (r dataSourceTagRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type tagRuleDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *tagRuleDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_tag_rule"
+}
+
+func (d *tagRuleDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *tagRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -70,13 +90,7 @@ func (r dataSourceTagRuleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 	}, nil
 }
 
-func (r dataSourceTagRuleType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceTagRuleType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceTagRuleType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *tagRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var tagRuleID string
 	var tagRuleName string
 
@@ -97,7 +111,7 @@ func (r dataSourceTagRuleType) Read(ctx context.Context, req datasource.ReadRequ
 		}
 	}
 
-	tagRuleResp, err := r.p.client.GetTagRule(tagRuleToLookup)
+	tagRuleResp, err := d.client.GetTagRule(tagRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

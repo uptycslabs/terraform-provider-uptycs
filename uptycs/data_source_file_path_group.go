@@ -6,17 +6,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceFilePathGroupType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &filePathGroupDataSource{}
+	_ datasource.DataSourceWithConfigure = &filePathGroupDataSource{}
+)
+
+func FilePathGroupDataSource() datasource.DataSource {
+	return &filePathGroupDataSource{}
 }
 
-func (r dataSourceFilePathGroupType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type filePathGroupDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *filePathGroupDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_file_path_group"
+}
+
+func (d *filePathGroupDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -121,17 +141,11 @@ func (r dataSourceFilePathGroupType) GetSchema(_ context.Context) (tfsdk.Schema,
 	}, nil
 }
 
-func (r dataSourceFilePathGroupType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceFilePathGroupType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceFilePathGroupType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var filePathGroupID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &filePathGroupID)...)
 
-	filePathGroupResp, err := r.p.client.GetFilePathGroup(uptycs.FilePathGroup{
+	filePathGroupResp, err := d.client.GetFilePathGroup(uptycs.FilePathGroup{
 		ID: filePathGroupID,
 	})
 	if err != nil {
@@ -142,7 +156,6 @@ func (r dataSourceFilePathGroupType) Read(ctx context.Context, req datasource.Re
 		return
 	}
 
-	//ID:               types.String{Value: filePathGroupResp.ID},
 	var result = FilePathGroup{
 		ID:          types.String{Value: filePathGroupResp.ID},
 		Name:        types.String{Value: filePathGroupResp.Name},

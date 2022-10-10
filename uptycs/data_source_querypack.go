@@ -7,17 +7,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceQuerypackType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &querypackDataSource{}
+	_ datasource.DataSourceWithConfigure = &querypackDataSource{}
+)
+
+func QuerypackDataSource() datasource.DataSource {
+	return &querypackDataSource{}
 }
 
-func (r dataSourceQuerypackType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type querypackDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *querypackDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_querypack"
+}
+
+func (d *querypackDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *querypackDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -60,17 +80,11 @@ func (r dataSourceQuerypackType) GetSchema(_ context.Context) (tfsdk.Schema, dia
 	}, nil
 }
 
-func (r dataSourceQuerypackType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceQuerypackType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceQuerypackType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var querypackID string
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &querypackID)...)
 
-	querypackResp, err := r.p.client.GetQuerypack(uptycs.Querypack{
+	querypackResp, err := d.client.GetQuerypack(uptycs.Querypack{
 		ID: querypackID,
 	})
 	if err != nil {

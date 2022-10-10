@@ -6,17 +6,37 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceTagType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &tagDataSource{}
+	_ datasource.DataSourceWithConfigure = &tagDataSource{}
+)
+
+func TagDataSource() datasource.DataSource {
+	return &tagDataSource{}
 }
 
-func (r dataSourceTagType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type tagDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *tagDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_tag"
+}
+
+func (d *tagDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -111,13 +131,7 @@ func (r dataSourceTagType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diag
 	}, nil
 }
 
-func (r dataSourceTagType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceTagType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceTagType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var tagID string
 	var tagKey string
 	var tagValue string
@@ -142,7 +156,7 @@ func (r dataSourceTagType) Read(ctx context.Context, req datasource.ReadRequest,
 		}
 	}
 
-	tagResp, err := r.p.client.GetTag(tagToLookup)
+	tagResp, err := d.client.GetTag(tagToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

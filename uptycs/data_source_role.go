@@ -4,20 +4,39 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
-
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type dataSourceRoleType struct {
-	p Provider
+var (
+	_ datasource.DataSource              = &roleDataSource{}
+	_ datasource.DataSourceWithConfigure = &roleDataSource{}
+)
+
+func RoleDataSource() datasource.DataSource {
+	return &roleDataSource{}
 }
 
-func (r dataSourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+type roleDataSource struct {
+	client *uptycs.Client
+}
+
+func (d *roleDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_role"
+}
+
+func (d *roleDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, _ *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	d.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (d *roleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -56,13 +75,7 @@ func (r dataSourceRoleType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (r dataSourceRoleType) NewDataSource(_ context.Context, p provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return dataSourceRoleType{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-func (r dataSourceRoleType) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var roleID string
 	var roleName string
 
@@ -83,7 +96,7 @@ func (r dataSourceRoleType) Read(ctx context.Context, req datasource.ReadRequest
 		}
 	}
 
-	roleResp, err := r.p.client.GetRole(roleToLookup)
+	roleResp, err := d.client.GetRole(roleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -117,7 +130,7 @@ func (r dataSourceRoleType) Read(ctx context.Context, req datasource.ReadRequest
 	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
 		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
+		rogResp, err := d.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
 		if err != nil {
 			// Couldnt find the object group, give an error
 			resp.Diagnostics.AddError(

@@ -6,17 +6,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceUserType struct{}
+var (
+	_ resource.Resource                = &userResource{}
+	_ resource.ResourceWithConfigure   = &userResource{}
+	_ resource.ResourceWithImportState = &userResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func UserResource() resource.Resource {
+	return &userResource{}
+}
+
+type userResource struct {
+	client *uptycs.Client
+}
+
+func (r *userResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_user"
+}
+
+func (r *userResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *userResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -92,27 +114,7 @@ func (r resourceUserType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagn
 	}, nil
 }
 
-// New resource instance
-func (r resourceUserType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceUser{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceUser struct {
-	p Provider
-}
-
-// Create a new resource
-func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan User
 	diags := req.Plan.Get(ctx, &plan)
@@ -129,13 +131,13 @@ func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, re
 
 	roles := make([]uptycs.Role, 0)
 	for _, _r := range roleNames {
-		roleResp, err := r.p.client.GetRole(uptycs.Role{
+		roleResp, err := r.client.GetRole(uptycs.Role{
 			Name: _r,
 		})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating",
-				"Could not create user, role "+_r+" not found: "+err.Error(),
+				"Could not create user, user "+_r+" not found: "+err.Error(),
 			)
 			return
 		}
@@ -147,7 +149,7 @@ func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, re
 
 	userObjectGroups := make([]uptycs.ObjectGroup, 0)
 	for _, _uog := range objectGroupNames {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{
+		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
 			Name: _uog,
 		})
 		if err != nil {
@@ -160,7 +162,7 @@ func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, re
 		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: uogResp.ID})
 	}
 
-	userResp, err := r.p.client.CreateUser(uptycs.User{
+	userResp, err := r.client.CreateUser(uptycs.User{
 		Name:               plan.Name.Value,
 		Email:              plan.Email.Value,
 		Phone:              plan.Phone.Value,
@@ -217,7 +219,7 @@ func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
+		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Failed to read.",
@@ -235,11 +237,10 @@ func (r resourceUser) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 }
 
-// Read resource information
-func (r resourceUser) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var userID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &userID)...)
-	userResp, err := r.p.client.GetUser(uptycs.User{
+	userResp, err := r.client.GetUser(uptycs.User{
 		ID: userID,
 	})
 	if err != nil {
@@ -283,7 +284,7 @@ func (r resourceUser) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
+		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Failed to read.",
@@ -302,8 +303,7 @@ func (r resourceUser) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 }
 
-// Update resource
-func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state User
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -329,13 +329,13 @@ func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	roles := make([]uptycs.Role, 0)
 	for _, _r := range roleNames {
-		roleResp, err := r.p.client.GetRole(uptycs.Role{
+		roleResp, err := r.client.GetRole(uptycs.Role{
 			Name: _r,
 		})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Error creating",
-				"Could not create user, role "+_r+" not found: "+err.Error(),
+				"Could not create user, user "+_r+" not found: "+err.Error(),
 			)
 			return
 		}
@@ -347,7 +347,7 @@ func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	userObjectGroups := make([]uptycs.ObjectGroup, 0)
 	for _, _uog := range objectGroupNames {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{
+		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
 			Name: _uog,
 		})
 		if err != nil {
@@ -360,7 +360,7 @@ func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, re
 		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: uogResp.ID})
 	}
 
-	userResp, err := r.p.client.UpdateUser(uptycs.User{
+	userResp, err := r.client.UpdateUser(uptycs.User{
 		ID:                 userID,
 		Name:               plan.Name.Value,
 		Email:              plan.Email.Value,
@@ -409,7 +409,7 @@ func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, re
 		},
 	}
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.p.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
+		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				"Failed to read.",
@@ -435,8 +435,7 @@ func (r resourceUser) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 }
 
-// Delete resource
-func (r resourceUser) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state User
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -446,7 +445,7 @@ func (r resourceUser) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 	userID := state.ID.Value
 
-	_, err := r.p.client.DeleteUser(uptycs.User{
+	_, err := r.client.DeleteUser(uptycs.User{
 		ID: userID,
 	})
 	if err != nil {
@@ -461,7 +460,6 @@ func (r resourceUser) Delete(ctx context.Context, req resource.DeleteRequest, re
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceUser) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *userResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

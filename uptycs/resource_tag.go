@@ -5,17 +5,39 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
-type resourceTagType struct{}
+var (
+	_ resource.Resource                = &tagResource{}
+	_ resource.ResourceWithConfigure   = &tagResource{}
+	_ resource.ResourceWithImportState = &tagResource{}
+)
 
-// Alert Rule Resource schema
-func (r resourceTagType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func TagResource() resource.Resource {
+	return &tagResource{}
+}
+
+type tagResource struct {
+	client *uptycs.Client
+}
+
+func (r *tagResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_tag"
+}
+
+func (r *tagResource) Configure(_ context.Context, req resource.ConfigureRequest, _ *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	r.client = req.ProviderData.(*uptycs.Client)
+}
+
+func (r *tagResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	return tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -138,22 +160,10 @@ func (r resourceTagType) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagno
 	}, nil
 }
 
-// New resource instance
-func (r resourceTagType) NewResource(_ context.Context, p provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return resourceTag{
-		p: *(p.(*Provider)),
-	}, nil
-}
-
-type resourceTag struct {
-	p Provider
-}
-
-// Read resource information
-func (r resourceTag) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var tagID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &tagID)...)
-	tagResp, err := r.p.client.GetTag(uptycs.Tag{
+	tagResp, err := r.client.GetTag(uptycs.Tag{
 		ID: tagID,
 	})
 	if err != nil {
@@ -238,16 +248,7 @@ func (r resourceTag) Read(ctx context.Context, req resource.ReadRequest, resp *r
 
 }
 
-// Create a new resource
-func (r resourceTag) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	if !r.p.configured {
-		resp.Diagnostics.AddError(
-			"Provider not configured",
-			"The provider hasn't been configured before apply, likely because it depends on an unknown value from another resource. This leads to weird stuff happening, so we'd prefer if you didn't do that. Thanks!",
-		)
-		return
-	}
-
+func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan Tag
 	diags := req.Plan.Get(ctx, &plan)
@@ -310,7 +311,7 @@ func (r resourceTag) Create(ctx context.Context, req resource.CreateRequest, res
 		})
 	}
 
-	tagResp, err := r.p.client.CreateTag(uptycs.Tag{
+	tagResp, err := r.client.CreateTag(uptycs.Tag{
 		Value:                       plan.Value.Value,
 		Key:                         plan.Key.Value,
 		FlagProfileID:               plan.FlagProfileID.Value,
@@ -396,8 +397,7 @@ func (r resourceTag) Create(ctx context.Context, req resource.CreateRequest, res
 	}
 }
 
-// Update resource
-func (r resourceTag) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state Tag
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -469,7 +469,7 @@ func (r resourceTag) Update(ctx context.Context, req resource.UpdateRequest, res
 		})
 	}
 
-	tagResp, err := r.p.client.UpdateTag(uptycs.Tag{
+	tagResp, err := r.client.UpdateTag(uptycs.Tag{
 		ID:                          tagID,
 		Value:                       plan.Value.Value,
 		Key:                         plan.Key.Value,
@@ -556,8 +556,7 @@ func (r resourceTag) Update(ctx context.Context, req resource.UpdateRequest, res
 	}
 }
 
-// Delete resource
-func (r resourceTag) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *tagResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Tag
 	diags := req.State.Get(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -567,7 +566,7 @@ func (r resourceTag) Delete(ctx context.Context, req resource.DeleteRequest, res
 
 	tagID := state.ID.Value
 
-	_, err := r.p.client.DeleteTag(uptycs.Tag{
+	_, err := r.client.DeleteTag(uptycs.Tag{
 		ID: tagID,
 	})
 	if err != nil {
@@ -582,7 +581,6 @@ func (r resourceTag) Delete(ctx context.Context, req resource.DeleteRequest, res
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
-func (r resourceTag) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *tagResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

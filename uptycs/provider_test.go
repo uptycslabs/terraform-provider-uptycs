@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func makeProviderFactoryMap(name string, prov *Provider) map[string]func() (tfprotov6.ProviderServer, error) {
+func makeProviderFactoryMap(name string, prov *UptycsProvider) map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		name: providerserver.NewProtocol6WithError(prov),
 	}
@@ -41,7 +41,7 @@ resource "uptycs_alert_rule" "test" {
 `
 
 	var (
-		prov = new(Provider)
+		prov = new(UptycsProvider)
 	)
 
 	resource.Test(
