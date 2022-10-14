@@ -65,11 +65,26 @@ func (d *destinationDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 
 func (d *destinationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var destinationID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &destinationID)...)
+	var destinationName string
 
-	destinationResp, err := d.client.GetDestination(uptycs.Destination{
-		ID: destinationID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &destinationID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &destinationName)
+
+	var destinationToLookup uptycs.Destination
+
+	if len(destinationID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		destinationToLookup = uptycs.Destination{
+			Name: destinationName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		destinationToLookup = uptycs.Destination{
+			ID: destinationID,
+		}
+	}
+
+	destinationResp, err := d.client.GetDestination(destinationToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
