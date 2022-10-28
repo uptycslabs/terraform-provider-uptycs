@@ -219,6 +219,7 @@ func (p *UptycsProvider) DataSources(_ context.Context) []func() datasource.Data
 	return []func() datasource.DataSource{
 		AlertRuleDataSource,
 		AssetGroupRuleDataSource,
+		AtcQueryDataSource,
 		AuditConfigurationDataSource,
 		DestinationDataSource,
 		EventExcludeProfileDataSource,
