@@ -14,19 +14,10 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-data "uptycs_yara_group_rule" "ygr" {
-  id = "9a5a3262-ee74-417c-ade0-c1948ec8bc27"
+data "uptycs_alert_rule_category" "test" {
+  name = "a_test"
 }
 
-resource "uptycs_yara_group_rule" "new_ygr" {
-  name        = "marc testttt"
-  description = "another marc test"
-}
-
-output "ygr" {
-  value = data.uptycs_yara_group_rule.ygr
-}
-
-output "new_ygr" {
-  value = resource.uptycs_yara_group_rule.new_ygr
+output "test" {
+  value = data.uptycs_alert_rule_category.test
 }

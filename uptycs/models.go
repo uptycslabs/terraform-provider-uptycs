@@ -208,7 +208,7 @@ type FilePathGroup struct {
 	PriorityPaths         types.List               `tfsdk:"priority_paths"`
 	Signatures            []FilePathGroupSignature `tfsdk:"signatures"`
 	YaraGroupRules        []YaraGroupRule          `tfsdk:"yara_group_rules"`
-	//ExcludeProcessPaths   []string                 `json:"excludeProcessPaths"` //TODO this seems broken in the API. returns null or {}
+	//ExcludeProcessPaths   []string                 `tfsdk:"excludeProcessPaths"` //TODO this seems broken in the API. returns null or {}
 }
 
 type FilePathGroupSignature struct {
@@ -279,4 +279,32 @@ type AuditConfiguration struct {
 	Sha256      types.String `tfsdk:"sha256"`
 	Type        types.String `tfsdk:"type"`
 	Checks      int          `tfsdk:"checks"`
+}
+
+type AssetGroupRule struct {
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	Query          types.String `tfsdk:"query"`
+	Interval       int          `tfsdk:"interval"`
+	OsqueryVersion types.String `tfsdk:"osquery_version"`
+	Platform       types.String `tfsdk:"platform"`
+	Enabled        types.Bool   `tfsdk:"enabled"`
+}
+
+type PathStruct struct {
+	Path types.String `tfsdk:"path"`
+}
+
+type AtcQuery struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Query       types.String `tfsdk:"query"`
+}
+
+type AlertRuleCategory struct {
+	ID     types.String `tfsdk:"id"`
+	RuleID types.String `tfsdk:"rule_id"`
+	Name   types.String `tfsdk:"name"`
 }
