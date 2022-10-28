@@ -302,3 +302,9 @@ type AtcQuery struct {
 	Description types.String `tfsdk:"description"`
 	Query       types.String `tfsdk:"query"`
 }
+
+type AlertRuleCategory struct {
+	ID     types.String `tfsdk:"id"`
+	RuleID types.String `tfsdk:"rule_id"`
+	Name   types.String `tfsdk:"name"`
+}
