@@ -59,6 +59,7 @@ type EventRule struct {
 	GroupingL2    types.String  `tfsdk:"grouping_l2"`
 	GroupingL3    types.String  `tfsdk:"grouping_l3"`
 	Enabled       types.Bool    `tfsdk:"enabled"`
+	Lock          types.Bool    `tfsdk:"lock"`
 	EventTags     types.List    `tfsdk:"event_tags"`
 	BuilderConfig BuilderConfig `tfsdk:"builder_config"`
 }
