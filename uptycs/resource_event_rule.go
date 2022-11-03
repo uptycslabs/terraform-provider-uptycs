@@ -82,8 +82,16 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Optional: true,
 			},
 			"enabled": {
-				Type:     types.BoolType,
-				Optional: true,
+				Type:          types.BoolType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+			},
+			"lock": {
+				Type:          types.BoolType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
 			"event_tags": {
 				Type:     types.ListType{ElemType: types.StringType},
@@ -158,6 +166,7 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 		Rule:        plan.Rule.Value,
 		Type:        plan.Type.Value,
 		Enabled:     plan.Enabled.Value,
+		Lock:        plan.Lock.Value,
 		Custom:      true,
 		Grouping:    plan.Grouping.Value,
 		GroupingL2:  plan.GroupingL2.Value,
@@ -194,6 +203,7 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	var result = EventRule{
 		ID:          types.String{Value: eventRuleResp.ID},
 		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
+		Lock:        types.Bool{Value: eventRuleResp.Lock},
 		Name:        types.String{Value: eventRuleResp.Name},
 		Description: types.String{Value: eventRuleResp.Description},
 		Code:        types.String{Value: eventRuleResp.Code},
@@ -257,6 +267,7 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 	var result = EventRule{
 		ID:          types.String{Value: eventRuleResp.ID},
 		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
+		Lock:        types.Bool{Value: eventRuleResp.Lock},
 		Name:        types.String{Value: eventRuleResp.Name},
 		Description: types.String{Value: eventRuleResp.Description},
 		Code:        types.String{Value: eventRuleResp.Code},
@@ -329,6 +340,7 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		Rule:        plan.Rule.Value,
 		Type:        plan.Type.Value,
 		Enabled:     plan.Enabled.Value,
+		Lock:        plan.Lock.Value,
 		Grouping:    plan.Grouping.Value,
 		GroupingL2:  plan.GroupingL2.Value,
 		GroupingL3:  plan.GroupingL3.Value,
@@ -364,6 +376,7 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	var result = EventRule{
 		ID:          types.String{Value: eventRuleResp.ID},
 		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
+		Lock:        types.Bool{Value: eventRuleResp.Lock},
 		Name:        types.String{Value: eventRuleResp.Name},
 		Description: types.String{Value: eventRuleResp.Description},
 		Code:        types.String{Value: eventRuleResp.Code},

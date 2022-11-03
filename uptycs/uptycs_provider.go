@@ -223,6 +223,7 @@ func (p *UptycsProvider) DataSources(_ context.Context) []func() datasource.Data
 		AtcQueryDataSource,
 		AuditConfigurationDataSource,
 		DestinationDataSource,
+		EventRuleDataSource,
 		EventExcludeProfileDataSource,
 		FilePathGroupDataSource,
 		QuerypackDataSource,
