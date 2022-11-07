@@ -262,7 +262,7 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		})
 	}
 
-	alertRuleResp, err := r.client.CreateAlertRule(uptycs.AlertRule{
+	alertRule := uptycs.AlertRule{
 		Name:                plan.Name.Value,
 		Description:         plan.Description.Value,
 		Code:                plan.Code.Value,
@@ -284,7 +284,13 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		SQLConfig: &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
 		},
-	})
+	}
+	if plan.SQLConfig != nil {
+		alertRule.SQLConfig = &uptycs.SQLConfig{
+			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
+		}
+	}
+	alertRuleResp, err := r.client.CreateAlertRule(alertRule)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -398,7 +404,7 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		})
 	}
 
-	alertRuleResp, err := r.client.UpdateAlertRule(uptycs.AlertRule{
+	alertRule := uptycs.AlertRule{
 		ID:                  alertRuleID,
 		Name:                plan.Name.Value,
 		Description:         plan.Description.Value,
@@ -418,10 +424,14 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		AlertNotifyCount:    *plan.AlertNotifyCount,
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
-		SQLConfig: &uptycs.SQLConfig{
+	}
+	if plan.SQLConfig != nil {
+		alertRule.SQLConfig = &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
-		},
-	})
+		}
+	}
+
+	alertRuleResp, err := r.client.UpdateAlertRule(alertRule)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
