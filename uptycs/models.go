@@ -309,3 +309,12 @@ type AlertRuleCategory struct {
 	RuleID types.String `tfsdk:"rule_id"`
 	Name   types.String `tfsdk:"name"`
 }
+
+type CustomProfile struct {
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	QuerySchedules types.String `tfsdk:"query_schedules"`
+	Priority       int          `tfsdk:"priority"`
+	ResourceType   types.String `tfsdk:"resource_type"`
+}

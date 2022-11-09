@@ -201,6 +201,7 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 func (p *UptycsProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		AlertRuleResource,
+		CustomProfileResource,
 		DestinationResource,
 		EventExcludeProfileResource,
 		EventRuleResource,
@@ -222,6 +223,7 @@ func (p *UptycsProvider) DataSources(_ context.Context) []func() datasource.Data
 		AssetGroupRuleDataSource,
 		AtcQueryDataSource,
 		AuditConfigurationDataSource,
+		CustomProfileDataSource,
 		DestinationDataSource,
 		EventRuleDataSource,
 		EventExcludeProfileDataSource,
