@@ -51,27 +51,27 @@ func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnos
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"flag_profile_id": {
+			"flag_profile": {
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom_profile_id": {
+			"custom_profile": {
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"compliance_profile_id": {
+			"compliance_profiled": {
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"process_block_rule_id": {
+			"process_block_rule": {
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"dns_block_rule_id": {
+			"dns_block_rule": {
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"windows_defender_preference_id": {
+			"windows_defender_preference": {
 				Type:     types.StringType,
 				Optional: true,
 			},
@@ -87,7 +87,7 @@ func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnos
 				Type:     types.BoolType,
 				Optional: true,
 			},
-			"tag_rule_id": {
+			"tag_rule": {
 				Type:     types.StringType,
 				Optional: true,
 			},
@@ -166,22 +166,22 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	var result = Tag{
-		ID:                          types.String{Value: tagResp.ID},
-		Value:                       types.String{Value: tagResp.Value},
-		Key:                         types.String{Value: tagResp.Key},
-		FlagProfileID:               types.String{Value: tagResp.FlagProfileID},
-		CustomProfileID:             types.String{Value: tagResp.CustomProfileID},
-		ComplianceProfileID:         types.String{Value: tagResp.ComplianceProfileID},
-		ProcessBlockRuleID:          types.String{Value: tagResp.ProcessBlockRuleID},
-		DNSBlockRuleID:              types.String{Value: tagResp.DNSBlockRuleID},
-		WindowsDefenderPreferenceID: types.String{Value: tagResp.WindowsDefenderPreferenceID},
-		Tag:                         types.String{Value: tagResp.Tag},
-		Custom:                      types.Bool{Value: tagResp.Custom},
-		System:                      types.Bool{Value: tagResp.System},
-		TagRuleID:                   types.String{Value: tagResp.TagRuleID},
-		Status:                      types.String{Value: tagResp.Status},
-		Source:                      types.String{Value: tagResp.Source},
-		ResourceType:                types.String{Value: tagResp.ResourceType},
+		ID:                        types.String{Value: tagResp.ID},
+		Value:                     types.String{Value: tagResp.Value},
+		Key:                       types.String{Value: tagResp.Key},
+		FlagProfile:               types.String{Value: tagResp.FlagProfileID},
+		CustomProfile:             types.String{Value: tagResp.CustomProfileID},
+		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
+		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
+		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
+		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
+		Tag:                       types.String{Value: tagResp.Tag},
+		Custom:                    types.Bool{Value: tagResp.Custom},
+		System:                    types.Bool{Value: tagResp.System},
+		TagRule:                   types.String{Value: tagResp.TagRuleID},
+		Status:                    types.String{Value: tagResp.Status},
+		Source:                    types.String{Value: tagResp.Source},
+		ResourceType:              types.String{Value: tagResp.ResourceType},
 		FilePathGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

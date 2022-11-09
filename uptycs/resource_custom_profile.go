@@ -172,6 +172,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	customProfileResp, err := r.client.UpdateCustomProfile(uptycs.CustomProfile{
 		ID:             customProfileID,
 		Name:           plan.Name.Value,
+		Description:    plan.Description.Value,
 		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.Value),
 		Priority:       plan.Priority,
 		ResourceType:   plan.ResourceType.Value,

@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.21.0
-	github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221109151216-e25dd142754d
+	github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221109202712-b2c8649286f1
 )
 
 require (

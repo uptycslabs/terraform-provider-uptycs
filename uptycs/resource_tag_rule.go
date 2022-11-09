@@ -158,8 +158,8 @@ func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest
 		OSqueryVersion: plan.OSqueryVersion.Value,
 		Platform:       plan.Platform.Value,
 		Enabled:        plan.Enabled.Value,
-		System:         plan.System.Value,
 		ResourceType:   plan.ResourceType.Value,
+		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
 	if err != nil {
@@ -221,8 +221,8 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 		OSqueryVersion: plan.OSqueryVersion.Value,
 		Platform:       plan.Platform.Value,
 		Enabled:        plan.Enabled.Value,
-		System:         plan.System.Value,
 		ResourceType:   plan.ResourceType.Value,
+		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
 	if err != nil {
