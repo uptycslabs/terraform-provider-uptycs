@@ -31,7 +31,7 @@ resource "uptycs_alert_rule" "test_alert_rule" {
     "Privilege Escalation",
     "T1078",
   ]
-  code        = "AWS_THREAT_PRIV_ESC_1_REDDIT_V2_MARCUS"
+  code        = "AWS_THREAT_PRIV_ESC_1_MARCUS"
   description = "Access Key created by an IAM user for another user using CreateAccessKey policy."
   destinations = [
     {
