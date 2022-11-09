@@ -44,7 +44,7 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
 				Type:     types.StringType,
-				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     types.StringType,
