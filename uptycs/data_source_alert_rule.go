@@ -42,7 +42,6 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 			"id": {
 				Type:     types.StringType,
 				Optional: true,
-				Computed: true,
 			},
 			"name": {
 				Type:     types.StringType,

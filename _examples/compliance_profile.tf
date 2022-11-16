@@ -14,10 +14,8 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-data "uptycs_atc_query" "test" {
-  name = "atc_chrome_browser_history"
-}
-
-output "foo" {
-  value = data.uptycs_atc_query.test
+resource "uptycs_compliance_profile" "test" {
+  name        = "marc test"
+  description = ""
+  priority    = 1337
 }

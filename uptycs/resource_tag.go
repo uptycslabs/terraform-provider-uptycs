@@ -55,37 +55,37 @@ func (r *tagResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnosti
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"flag_profile_id": {
+			"flag_profile": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"custom_profile_id": {
+			"custom_profile": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"compliance_profile_id": {
+			"compliance_profile": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"process_block_rule_id": {
+			"process_block_rule": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"dns_block_rule_id": {
+			"dns_block_rule": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"windows_defender_preference_id": {
+			"windows_defender_preference": {
 				Type:          types.StringType,
 				Optional:      true,
 				Computed:      true,
@@ -108,11 +108,10 @@ func (r *tagResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnosti
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"tag_rule_id": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+			"tag_rule": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: true,
 			},
 			"status": {
 				Type:          types.StringType,
@@ -175,22 +174,22 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	var result = Tag{
-		ID:                          types.String{Value: tagResp.ID},
-		Value:                       types.String{Value: tagResp.Value},
-		Key:                         types.String{Value: tagResp.Key},
-		FlagProfileID:               types.String{Value: tagResp.FlagProfileID},
-		CustomProfileID:             types.String{Value: tagResp.CustomProfileID},
-		ComplianceProfileID:         types.String{Value: tagResp.ComplianceProfileID},
-		ProcessBlockRuleID:          types.String{Value: tagResp.ProcessBlockRuleID},
-		DNSBlockRuleID:              types.String{Value: tagResp.DNSBlockRuleID},
-		WindowsDefenderPreferenceID: types.String{Value: tagResp.WindowsDefenderPreferenceID},
-		Tag:                         types.String{Value: tagResp.Tag},
-		Custom:                      types.Bool{Value: tagResp.Custom},
-		System:                      types.Bool{Value: tagResp.System},
-		TagRuleID:                   types.String{Value: tagResp.TagRuleID},
-		Status:                      types.String{Value: tagResp.Status},
-		Source:                      types.String{Value: tagResp.Source},
-		ResourceType:                types.String{Value: tagResp.ResourceType},
+		ID:                        types.String{Value: tagResp.ID},
+		Value:                     types.String{Value: tagResp.Value},
+		Key:                       types.String{Value: tagResp.Key},
+		FlagProfile:               types.String{Value: tagResp.FlagProfileID},
+		CustomProfile:             types.String{Value: tagResp.CustomProfileID},
+		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
+		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
+		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
+		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
+		TagRule:                   types.String{Value: tagResp.TagRuleID},
+		Tag:                       types.String{Value: tagResp.Tag},
+		Custom:                    types.Bool{Value: tagResp.Custom},
+		System:                    types.Bool{Value: tagResp.System},
+		Status:                    types.String{Value: tagResp.Status},
+		Source:                    types.String{Value: tagResp.Source},
+		ResourceType:              types.String{Value: tagResp.ResourceType},
 		FilePathGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -216,8 +215,61 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			Elems:    make([]attr.Value, 0),
 		},
 	}
-	for _, t := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: t.Name})
+	if len(tagResp.CustomProfileID) > 0 {
+		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
+			ID: tagResp.CustomProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.CustomProfile = types.String{Value: customProfileResp.Name}
+	}
+	if len(tagResp.FlagProfileID) > 0 {
+		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
+			ID: tagResp.FlagProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.FlagProfile = types.String{Value: flagProfileResp.Name}
+	}
+	if len(tagResp.ComplianceProfileID) > 0 {
+		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
+			ID: tagResp.ComplianceProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
+	}
+	if len(tagResp.TagRuleID) > 0 {
+		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
+			ID: tagResp.TagRuleID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
+			)
+			return
+		}
+		result.TagRule = types.String{Value: tagRuleResp.Name}
+	}
+
+	for _, fpg := range tagResp.FilePathGroups {
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
 	}
 
 	for _, eep := range tagResp.EventExcludeProfiles {
@@ -312,27 +364,27 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	tagResp, err := r.client.CreateTag(uptycs.Tag{
-		Value:                       plan.Value.Value,
-		Key:                         plan.Key.Value,
-		FlagProfileID:               plan.FlagProfileID.Value,
-		CustomProfileID:             plan.CustomProfileID.Value,
-		ComplianceProfileID:         plan.ComplianceProfileID.Value,
-		ProcessBlockRuleID:          plan.ProcessBlockRuleID.Value,
-		DNSBlockRuleID:              plan.DNSBlockRuleID.Value,
-		WindowsDefenderPreferenceID: plan.WindowsDefenderPreferenceID.Value,
-		Tag:                         plan.Tag.Value,
-		Custom:                      plan.Custom.Value,
-		System:                      plan.System.Value,
-		TagRuleID:                   plan.TagRuleID.Value,
-		Status:                      plan.Status.Value,
-		Source:                      plan.Source.Value,
-		ResourceType:                plan.ResourceType.Value,
-		FilePathGroups:              filePathGroups,
-		EventExcludeProfiles:        eventExcludeProfiles,
-		RegistryPaths:               registryPaths,
-		Querypacks:                  queryPacks,
-		YaraGroupRules:              yaraGroupRules,
-		AuditConfigurations:         auditConfigurations,
+		Value:                     plan.Value.Value,
+		Key:                       plan.Key.Value,
+		FlagProfile:               plan.FlagProfile.Value,
+		CustomProfile:             plan.CustomProfile.Value,
+		ComplianceProfile:         plan.ComplianceProfile.Value,
+		ProcessBlockRule:          plan.ProcessBlockRule.Value,
+		DNSBlockRule:              plan.DNSBlockRule.Value,
+		WindowsDefenderPreference: plan.WindowsDefenderPreference.Value,
+		TagRule:                   plan.TagRule.Value,
+		Tag:                       plan.Tag.Value,
+		Custom:                    plan.Custom.Value,
+		System:                    plan.System.Value,
+		Status:                    plan.Status.Value,
+		Source:                    plan.Source.Value,
+		ResourceType:              plan.ResourceType.Value,
+		FilePathGroups:            filePathGroups,
+		EventExcludeProfiles:      eventExcludeProfiles,
+		RegistryPaths:             registryPaths,
+		Querypacks:                queryPacks,
+		YaraGroupRules:            yaraGroupRules,
+		AuditConfigurations:       auditConfigurations,
 	})
 
 	if err != nil {
@@ -344,22 +396,20 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	var result = Tag{
-		ID:                          types.String{Value: tagResp.ID},
-		Value:                       types.String{Value: tagResp.Value},
-		Key:                         types.String{Value: tagResp.Key},
-		FlagProfileID:               types.String{Value: tagResp.FlagProfileID},
-		CustomProfileID:             types.String{Value: tagResp.CustomProfileID},
-		ComplianceProfileID:         types.String{Value: tagResp.ComplianceProfileID},
-		ProcessBlockRuleID:          types.String{Value: tagResp.ProcessBlockRuleID},
-		DNSBlockRuleID:              types.String{Value: tagResp.DNSBlockRuleID},
-		WindowsDefenderPreferenceID: types.String{Value: tagResp.WindowsDefenderPreferenceID},
-		Tag:                         types.String{Value: tagResp.Tag},
-		Custom:                      types.Bool{Value: tagResp.Custom},
-		System:                      types.Bool{Value: tagResp.System},
-		TagRuleID:                   types.String{Value: tagResp.TagRuleID},
-		Status:                      types.String{Value: tagResp.Status},
-		Source:                      types.String{Value: tagResp.Source},
-		ResourceType:                types.String{Value: tagResp.ResourceType},
+		ID:                        types.String{Value: tagResp.ID},
+		Value:                     types.String{Value: tagResp.Value},
+		Key:                       types.String{Value: tagResp.Key},
+		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
+		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
+		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
+		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
+		TagRule:                   types.String{Value: tagResp.TagRuleID},
+		Tag:                       types.String{Value: tagResp.Tag},
+		Custom:                    types.Bool{Value: tagResp.Custom},
+		System:                    types.Bool{Value: tagResp.System},
+		Status:                    types.String{Value: tagResp.Status},
+		Source:                    types.String{Value: tagResp.Source},
+		ResourceType:              types.String{Value: tagResp.ResourceType},
 		FilePathGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -386,8 +436,81 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		},
 	}
 
-	for _, _fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: _fpg.Name})
+	if len(tagResp.CustomProfileID) > 0 {
+		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
+			ID: tagResp.CustomProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.CustomProfile = types.String{Value: customProfileResp.Name}
+	}
+	if len(tagResp.FlagProfileID) > 0 {
+		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
+			ID: tagResp.FlagProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.FlagProfile = types.String{Value: flagProfileResp.Name}
+	}
+	if len(tagResp.ComplianceProfileID) > 0 {
+		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
+			ID: tagResp.ComplianceProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
+	}
+	if len(tagResp.TagRuleID) > 0 {
+		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
+			ID: tagResp.TagRuleID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
+			)
+			return
+		}
+		result.TagRule = types.String{Value: tagRuleResp.Name}
+	}
+
+	for _, fpg := range tagResp.FilePathGroups {
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
+	}
+
+	for _, eep := range tagResp.EventExcludeProfiles {
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+	}
+
+	for _, qp := range tagResp.Querypacks {
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+	}
+
+	for _, rp := range tagResp.RegistryPaths {
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+	}
+
+	for _, yg := range tagResp.YaraGroupRules {
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+	}
+
+	for _, ac := range tagResp.AuditConfigurations {
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -470,28 +593,28 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	tagResp, err := r.client.UpdateTag(uptycs.Tag{
-		ID:                          tagID,
-		Value:                       plan.Value.Value,
-		Key:                         plan.Key.Value,
-		FlagProfileID:               plan.FlagProfileID.Value,
-		CustomProfileID:             plan.CustomProfileID.Value,
-		ComplianceProfileID:         plan.ComplianceProfileID.Value,
-		ProcessBlockRuleID:          plan.ProcessBlockRuleID.Value,
-		DNSBlockRuleID:              plan.DNSBlockRuleID.Value,
-		WindowsDefenderPreferenceID: plan.WindowsDefenderPreferenceID.Value,
-		Tag:                         plan.Tag.Value,
-		Custom:                      plan.Custom.Value,
-		System:                      plan.System.Value,
-		TagRuleID:                   plan.TagRuleID.Value,
-		Status:                      plan.Status.Value,
-		Source:                      plan.Source.Value,
-		ResourceType:                plan.ResourceType.Value,
-		FilePathGroups:              filePathGroups,
-		EventExcludeProfiles:        eventExcludeProfiles,
-		RegistryPaths:               registryPaths,
-		Querypacks:                  queryPacks,
-		YaraGroupRules:              yaraGroupRules,
-		AuditConfigurations:         auditConfigurations,
+		ID:                        tagID,
+		Value:                     plan.Value.Value,
+		Key:                       plan.Key.Value,
+		FlagProfile:               plan.FlagProfile.Value,
+		CustomProfile:             plan.CustomProfile.Value,
+		ComplianceProfile:         plan.ComplianceProfile.Value,
+		ProcessBlockRule:          plan.ProcessBlockRule.Value,
+		DNSBlockRule:              plan.DNSBlockRule.Value,
+		WindowsDefenderPreference: plan.WindowsDefenderPreference.Value,
+		TagRule:                   plan.TagRule.Value,
+		Tag:                       plan.Tag.Value,
+		Custom:                    plan.Custom.Value,
+		System:                    plan.System.Value,
+		FilePathGroups:            filePathGroups,
+		EventExcludeProfiles:      eventExcludeProfiles,
+		RegistryPaths:             registryPaths,
+		Querypacks:                queryPacks,
+		YaraGroupRules:            yaraGroupRules,
+		AuditConfigurations:       auditConfigurations,
+		//ResourceType:                plan.ResourceType.Value, //│ {"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"resourceType\" is not allowed","developer":""}}}
+		//Status:                      plan.Status.Value,  // {"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"status\" is│ not allowed","developer":""}}}
+		//Source:                      plan.Source.Value,  // {"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"source\" is│ not allowed","developer":""}}}
 	})
 
 	if err != nil {
@@ -503,22 +626,22 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	var result = Tag{
-		ID:                          types.String{Value: tagResp.ID},
-		Value:                       types.String{Value: tagResp.Value},
-		Key:                         types.String{Value: tagResp.Key},
-		FlagProfileID:               types.String{Value: tagResp.FlagProfileID},
-		CustomProfileID:             types.String{Value: tagResp.CustomProfileID},
-		ComplianceProfileID:         types.String{Value: tagResp.ComplianceProfileID},
-		ProcessBlockRuleID:          types.String{Value: tagResp.ProcessBlockRuleID},
-		DNSBlockRuleID:              types.String{Value: tagResp.DNSBlockRuleID},
-		WindowsDefenderPreferenceID: types.String{Value: tagResp.WindowsDefenderPreferenceID},
-		Tag:                         types.String{Value: tagResp.Tag},
-		Custom:                      types.Bool{Value: tagResp.Custom},
-		System:                      types.Bool{Value: tagResp.System},
-		TagRuleID:                   types.String{Value: tagResp.TagRuleID},
-		Status:                      types.String{Value: tagResp.Status},
-		Source:                      types.String{Value: tagResp.Source},
-		ResourceType:                types.String{Value: tagResp.ResourceType},
+		ID:                        types.String{Value: tagResp.ID},
+		Value:                     types.String{Value: tagResp.Value},
+		Key:                       types.String{Value: tagResp.Key},
+		FlagProfile:               types.String{Value: tagResp.FlagProfileID},
+		CustomProfile:             types.String{Value: tagResp.CustomProfileID},
+		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
+		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
+		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
+		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
+		Tag:                       types.String{Value: tagResp.Tag},
+		Custom:                    types.Bool{Value: tagResp.Custom},
+		System:                    types.Bool{Value: tagResp.System},
+		TagRule:                   types.String{Value: tagResp.TagRuleID},
+		Status:                    types.String{Value: tagResp.Status},
+		Source:                    types.String{Value: tagResp.Source},
+		ResourceType:              types.String{Value: tagResp.ResourceType},
 		FilePathGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -545,8 +668,81 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		},
 	}
 
-	for _, _fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: _fpg.Name})
+	if len(tagResp.CustomProfileID) > 0 {
+		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
+			ID: tagResp.CustomProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.CustomProfile = types.String{Value: customProfileResp.Name}
+	}
+	if len(tagResp.FlagProfileID) > 0 {
+		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
+			ID: tagResp.FlagProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.FlagProfile = types.String{Value: flagProfileResp.Name}
+	}
+	if len(tagResp.ComplianceProfileID) > 0 {
+		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
+			ID: tagResp.ComplianceProfileID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
+			)
+			return
+		}
+		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
+	}
+	if len(tagResp.TagRuleID) > 0 {
+		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
+			ID: tagResp.TagRuleID,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Failed to read.",
+				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
+			)
+			return
+		}
+		result.TagRule = types.String{Value: tagRuleResp.Name}
+	}
+
+	for _, fpg := range tagResp.FilePathGroups {
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
+	}
+
+	for _, eep := range tagResp.EventExcludeProfiles {
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+	}
+
+	for _, qp := range tagResp.Querypacks {
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+	}
+
+	for _, rp := range tagResp.RegistryPaths {
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+	}
+
+	for _, yg := range tagResp.YaraGroupRules {
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+	}
+
+	for _, ac := range tagResp.AuditConfigurations {
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
 	}
 
 	diags = resp.State.Set(ctx, result)

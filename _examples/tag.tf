@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.17"
+      version = "0.0.18"
     }
   }
 }
@@ -23,12 +23,47 @@ data "uptycs_tag" "tag_by_key_val" {
   value = "enrolling"
 }
 
-output "tag_by_id_id" {
-  value = data.uptycs_tag.tag_by_id.id
+resource "uptycs_compliance_profile" "test" {
+  name        = "marc test"
+  description = ""
+  priority    = 1337
 }
 
-output "tag_by_key_val_id" {
-  value = data.uptycs_tag.tag_by_id.id
+resource "uptycs_flag_profile" "test" {
+  name          = "marc test"
+  description   = ""
+  priority      = 1337
+  resource_type = "asset"
+  flags         = <<EOT
+{
+  "tls_hostname": "foo.example.com"
+}
+EOT
+  os_flags      = <<EOT
+{}
+EOT
+}
+
+resource "uptycs_tag_rule" "test" {
+  name        = "marcus test"
+  description = "a test tag rule"
+  interval    = 3601 # >3601 on realtime
+  source      = "realtime"
+  platform    = "something" # required if realtime source
+  run_once    = false
+  query       = "select 'sometest=marc' as tag from os_version where name like 'Ubuntu%';"
+}
+
+resource "uptycs_custom_profile" "test" {
+  name            = "marc test"
+  description     = ""
+  priority        = 2
+  resource_type   = "asset"
+  query_schedules = <<EOT
+{
+  "processes": 100
+}
+EOT
 }
 
 resource "uptycs_tag" "new_tag" {
@@ -37,13 +72,12 @@ resource "uptycs_tag" "new_tag" {
   file_path_groups = [
     "FIM - Canary Baseline",
   ]
+  custom_profile         = uptycs_custom_profile.test.name
+  flag_profile           = uptycs_flag_profile.test.name
+  compliance_profile     = uptycs_compliance_profile.test.name
   audit_configurations   = []
   event_exclude_profiles = []
   querypacks             = []
   registry_paths         = []
   yara_group_rules       = []
-}
-
-output "new_tag_id" {
-  value = uptycs_tag.new_tag
 }

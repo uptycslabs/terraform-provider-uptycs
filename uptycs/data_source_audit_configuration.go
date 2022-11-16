@@ -41,7 +41,6 @@ func (d *auditConfigurationDataSource) GetSchema(_ context.Context) (tfsdk.Schem
 			"id": {
 				Type:     types.StringType,
 				Optional: true,
-				Computed: true,
 			},
 			"name": {
 				Type:     types.StringType,

@@ -26,21 +26,21 @@ description: |-
 
 ### Optional
 
-- `compliance_profile_id` (String)
+- `compliance_profile` (String)
 - `custom` (Boolean)
-- `custom_profile_id` (String)
-- `dns_block_rule_id` (String)
-- `flag_profile_id` (String)
+- `custom_profile` (String)
+- `dns_block_rule` (String)
+- `flag_profile` (String)
 - `key` (String)
-- `process_block_rule_id` (String)
+- `process_block_rule` (String)
 - `resource_type` (String)
 - `source` (String)
 - `status` (String)
 - `system` (Boolean)
 - `tag` (String)
-- `tag_rule_id` (String)
+- `tag_rule` (String)
 - `value` (String)
-- `windows_defender_preference_id` (String)
+- `windows_defender_preference` (String)
 
 ### Read-Only
 

@@ -18,15 +18,15 @@ description: |-
 ### Optional
 
 - `audit_configurations` (List of String)
-- `compliance_profile_id` (String)
+- `compliance_profiled` (String)
 - `custom` (Boolean)
-- `custom_profile_id` (String)
-- `dns_block_rule_id` (String)
+- `custom_profile` (String)
+- `dns_block_rule` (String)
 - `event_exclude_profiles` (List of String)
 - `file_path_groups` (List of String)
-- `flag_profile_id` (String)
+- `flag_profile` (String)
 - `key` (String)
-- `process_block_rule_id` (String)
+- `process_block_rule` (String)
 - `querypacks` (List of String)
 - `registry_paths` (List of String)
 - `resource_type` (String)
@@ -34,9 +34,9 @@ description: |-
 - `status` (String)
 - `system` (Boolean)
 - `tag` (String)
-- `tag_rule_id` (String)
+- `tag_rule` (String)
 - `value` (String)
-- `windows_defender_preference_id` (String)
+- `windows_defender_preference` (String)
 - `yara_group_rules` (List of String)
 
 ### Read-Only

@@ -163,28 +163,28 @@ type TagRule struct {
 }
 
 type Tag struct {
-	ID                          types.String `tfsdk:"id"`
-	Value                       types.String `tfsdk:"value"`
-	Key                         types.String `tfsdk:"key"`
-	FlagProfileID               types.String `tfsdk:"flag_profile_id"`
-	CustomProfileID             types.String `tfsdk:"custom_profile_id"`
-	ComplianceProfileID         types.String `tfsdk:"compliance_profile_id"`
-	ProcessBlockRuleID          types.String `tfsdk:"process_block_rule_id"`
-	DNSBlockRuleID              types.String `tfsdk:"dns_block_rule_id"`
-	WindowsDefenderPreferenceID types.String `tfsdk:"windows_defender_preference_id"`
-	Tag                         types.String `tfsdk:"tag"`
-	Custom                      types.Bool   `tfsdk:"custom"`
-	System                      types.Bool   `tfsdk:"system"`
-	TagRuleID                   types.String `tfsdk:"tag_rule_id"`
-	Status                      types.String `tfsdk:"status"`
-	Source                      types.String `tfsdk:"source"`
-	ResourceType                types.String `tfsdk:"resource_type"`
-	FilePathGroups              types.List   `tfsdk:"file_path_groups"`
-	EventExcludeProfiles        types.List   `tfsdk:"event_exclude_profiles"`
-	Querypacks                  types.List   `tfsdk:"querypacks"`
-	RegistryPaths               types.List   `tfsdk:"registry_paths"`
-	YaraGroupRules              types.List   `tfsdk:"yara_group_rules"`
-	AuditConfigurations         types.List   `tfsdk:"audit_configurations"`
+	ID                        types.String `tfsdk:"id"`
+	Value                     types.String `tfsdk:"value"`
+	Key                       types.String `tfsdk:"key"`
+	FlagProfile               types.String `tfsdk:"flag_profile"`
+	CustomProfile             types.String `tfsdk:"custom_profile"`
+	ComplianceProfile         types.String `tfsdk:"compliance_profile"`
+	ProcessBlockRule          types.String `tfsdk:"process_block_rule"`
+	DNSBlockRule              types.String `tfsdk:"dns_block_rule"`
+	WindowsDefenderPreference types.String `tfsdk:"windows_defender_preference"`
+	Tag                       types.String `tfsdk:"tag"`
+	Custom                    types.Bool   `tfsdk:"custom"`
+	System                    types.Bool   `tfsdk:"system"`
+	TagRule                   types.String `tfsdk:"tag_rule"`
+	Status                    types.String `tfsdk:"status"`
+	Source                    types.String `tfsdk:"source"`
+	ResourceType              types.String `tfsdk:"resource_type"`
+	FilePathGroups            types.List   `tfsdk:"file_path_groups"`
+	EventExcludeProfiles      types.List   `tfsdk:"event_exclude_profiles"`
+	Querypacks                types.List   `tfsdk:"querypacks"`
+	RegistryPaths             types.List   `tfsdk:"registry_paths"`
+	YaraGroupRules            types.List   `tfsdk:"yara_group_rules"`
+	AuditConfigurations       types.List   `tfsdk:"audit_configurations"`
 	//ImageLoadExclusions # TODO: cant find any examples of this
 	//AuditGroups         # TODO: cant find any examples of this
 	//Destinations        # TODO: cant find any examples of this
@@ -308,4 +308,32 @@ type AlertRuleCategory struct {
 	ID     types.String `tfsdk:"id"`
 	RuleID types.String `tfsdk:"rule_id"`
 	Name   types.String `tfsdk:"name"`
+}
+
+type CustomProfile struct {
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	Description    types.String `tfsdk:"description"`
+	QuerySchedules types.String `tfsdk:"query_schedules"`
+	Priority       int          `tfsdk:"priority"`
+	ResourceType   types.String `tfsdk:"resource_type"`
+}
+
+type FlagProfile struct {
+	ID           types.String `tfsdk:"id"`
+	Custom       types.Bool   `tfsdk:"custom"`
+	Name         types.String `tfsdk:"name"`
+	Description  types.String `tfsdk:"description"`
+	Priority     int          `tfsdk:"priority"`
+	Flags        types.String `tfsdk:"flags"`
+	OsFlags      types.String `tfsdk:"os_flags"`
+	ResourceType types.String `tfsdk:"resource_type"`
+}
+
+type ComplianceProfile struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	Custom      types.Bool   `tfsdk:"custom"`
+	Priority    int          `tfsdk:"priority"`
 }
