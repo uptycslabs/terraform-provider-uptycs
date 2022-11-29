@@ -143,11 +143,26 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 
 func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var filePathGroupID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &filePathGroupID)...)
+	var filePathGroupName string
 
-	filePathGroupResp, err := d.client.GetFilePathGroup(uptycs.FilePathGroup{
-		ID: filePathGroupID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &filePathGroupID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &filePathGroupName)
+
+	var filePathGroupToLookup uptycs.FilePathGroup
+
+	if len(filePathGroupID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		filePathGroupToLookup = uptycs.FilePathGroup{
+			Name: filePathGroupName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		filePathGroupToLookup = uptycs.FilePathGroup{
+			ID: filePathGroupID,
+		}
+	}
+
+	filePathGroupResp, err := d.client.GetFilePathGroup(filePathGroupToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

@@ -82,109 +82,6 @@ func (r *roleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnost
 	}, nil
 }
 
-// Create a new resource
-func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// Retrieve values from plan
-	var plan Role
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Map the plan permissions list of strings into a straight []string for the upcoming create
-	var permissions []string
-	plan.Permissions.ElementsAs(ctx, &permissions, false)
-
-	// Map the plan object group names list of strings into a straight []string for the upcoming create
-	// We will need to get the IDs of these however so that we can do the create (needs the ID of the object group)
-	var objectGroupNames []string
-	plan.RoleObjectGroups.ElementsAs(ctx, &objectGroupNames, false)
-
-	// init an empty []uptycs.ObjectGroup of size 0
-	roleObjectGroups := make([]uptycs.ObjectGroup, 0)
-	//iterate the object_group_names provided
-	for _, _rog := range objectGroupNames {
-		//Attempt to GET the object group by Name provided in the terraform plan
-		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
-			Name: _rog,
-		})
-		// Couldnt get the object group the user provided in object_group_names, error out
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not create role, objectGroup "+_rog+" not found: "+err.Error(),
-			)
-			return
-		}
-		// Successful GET, so build up an uptycs.ObjectGroup{} with the objectGroupID being the ID of the objectGroup we validated
-		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: rogResp.ID})
-	}
-
-	roleResp, err := r.client.CreateRole(uptycs.Role{
-		Name:                 plan.Name.Value,
-		Description:          plan.Description.Value,
-		Permissions:          permissions,
-		Custom:               plan.Custom.Value,
-		Hidden:               plan.Hidden.Value,
-		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
-		RoleObjectGroups:     roleObjectGroups, // Now we have an []uptycs.ObjectGroup{} with ObjectGroupID being validated ObjectGroups
-	})
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating",
-			"Could not create role, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Custom:               types.Bool{Value: roleResp.Custom},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	// Iterate the response permissions and fill up the list with it
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
-	}
-
-	// Iterate the roleObjectGroups in the GET response
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
-		if err != nil {
-			// Couldnt find the object group, give an error
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with name  "+_rogid.Name+": "+err.Error(),
-			)
-			return
-		}
-		// build up the state object to be the list of strings of objectGroupNames (friendly to the user)
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: rogResp.Name})
-	}
-
-	diags = resp.State.Set(ctx, result)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-}
-
-// Read resource information
 func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var roleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &roleID)...)
@@ -216,23 +113,10 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		},
 	}
 
-	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
-		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
-		if err != nil {
-			// Couldnt find the object group, give an error
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with ID  "+_rogid.ID+": "+err.Error(),
-			)
-			return
-		}
-		// build up the state object to be the list of strings of objectGroupNames (friendly to the user)
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: rogResp.Name})
+		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
 	}
 
-	// Iterate the response permissions and fill up the list with it
 	for _, t := range roleResp.Permissions {
 		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
 	}
@@ -245,7 +129,77 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 }
 
-// Update resource
+func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	// Retrieve values from plan
+	var plan Role
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Map the plan permissions list of strings into a straight []string for the upcoming create
+	var permissions []string
+	plan.Permissions.ElementsAs(ctx, &permissions, false)
+
+	// Need to turn the list of IDs into a specific ObjectGroup object with `ObjectGroupID` as the ID attribute
+	var objectGroupIDs []string
+	plan.RoleObjectGroups.ElementsAs(ctx, &objectGroupIDs, false)
+	roleObjectGroups := make([]uptycs.ObjectGroup, 0)
+	for _, _rog := range objectGroupIDs {
+		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: _rog})
+	}
+
+	roleResp, err := r.client.CreateRole(uptycs.Role{
+		Name:                 plan.Name.Value,
+		Description:          plan.Description.Value,
+		Permissions:          permissions,
+		Custom:               plan.Custom.Value,
+		Hidden:               plan.Hidden.Value,
+		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
+		RoleObjectGroups:     roleObjectGroups,
+	})
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating",
+			"Could not create role, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	var result = Role{
+		ID:          types.String{Value: roleResp.ID},
+		Name:        types.String{Value: roleResp.Name},
+		Description: types.String{Value: roleResp.Description},
+		Permissions: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Custom:               types.Bool{Value: roleResp.Custom},
+		Hidden:               types.Bool{Value: roleResp.Hidden},
+		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		RoleObjectGroups: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+	}
+
+	for _, t := range roleResp.Permissions {
+		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
+	}
+
+	for _, _rogid := range roleResp.RoleObjectGroups {
+		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
+	}
+
+	diags = resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
 func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var state Role
 	diags := req.State.Get(ctx, &state)
@@ -268,29 +222,12 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var permissions []string
 	plan.Permissions.ElementsAs(ctx, &permissions, false)
 
-	// Map the plan object group names list of strings into a straight []string for the upcoming update
-	// We will need to get the IDs of these however so that we can do the update (needs the ID of the object group)
-	var objectGroupNames []string
-	plan.RoleObjectGroups.ElementsAs(ctx, &objectGroupNames, false)
-
-	// init an empty []uptycs.ObjectGroup of size 0
+	// Need to turn the list of IDs into a specific ObjectGroup object with `ObjectGroupID` as the ID attribute
+	var objectGroupIDs []string
+	plan.RoleObjectGroups.ElementsAs(ctx, &objectGroupIDs, false)
 	roleObjectGroups := make([]uptycs.ObjectGroup, 0)
-	//iterate the object_group_names provided
-	for _, _rog := range objectGroupNames {
-		//Attempt to GET the object group by Name provided in the terraform plan
-		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
-			Name: _rog,
-		})
-		// Couldnt get the object group the user provided in object_group_names, error out
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not update role, objectGroup "+_rog+" not found: "+err.Error(),
-			)
-			return
-		}
-		// Successful GET, so build up an uptycs.ObjectGroup{} with the objectGroupID being the ID of the objectGroup we validated
-		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: rogResp.ID})
+	for _, _rog := range objectGroupIDs {
+		roleObjectGroups = append(roleObjectGroups, uptycs.ObjectGroup{ObjectGroupID: _rog})
 	}
 
 	roleResp, err := r.client.UpdateRole(uptycs.Role{
@@ -301,7 +238,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Custom:               plan.Custom.Value,
 		Hidden:               plan.Hidden.Value,
 		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
-		RoleObjectGroups:     roleObjectGroups, // Now we have an []uptycs.ObjectGroup{} with ObjectGroupID being validated ObjectGroups
+		RoleObjectGroups:     roleObjectGroups,
 	})
 
 	if err != nil {
@@ -328,25 +265,12 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		},
 	}
 
-	// Iterate the response permissions and fill up the list with it
 	for _, t := range roleResp.Permissions {
 		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
 	}
 
-	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
-		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
-		if err != nil {
-			// Couldnt find the object group, give an error
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with name  "+_rogid.Name+": "+err.Error(),
-			)
-			return
-		}
-		// build up the state object to be the list of strings of objectGroupNames (friendly to the user)
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: rogResp.Name})
+		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -356,7 +280,6 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 }
 
-// Delete resource
 func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state Role
 	diags := req.State.Get(ctx, &state)
@@ -382,7 +305,6 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	resp.State.RemoveResource(ctx)
 }
 
-// Import resource
 func (r roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -113,6 +113,63 @@ func (r *userResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnost
 		},
 	}, nil
 }
+func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var userID string
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &userID)...)
+	userResp, err := r.client.GetUser(uptycs.User{
+		ID: userID,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading",
+			"Could not get user with ID  "+userID+": "+err.Error(),
+		)
+		return
+	}
+	var result = User{
+		ID:              types.String{Value: userResp.ID},
+		Name:            types.String{Value: userResp.Name},
+		Email:           types.String{Value: userResp.Email},
+		Phone:           types.String{Value: userResp.Phone},
+		Active:          types.Bool{Value: userResp.Active},
+		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
+		ImageURL:        types.String{Value: userResp.ImageURL},
+		Bot:             types.Bool{Value: userResp.Bot},
+		Support:         types.Bool{Value: userResp.Support},
+		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
+		Roles: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		AlertHiddenColumns: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		UserObjectGroups: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+	}
+
+	for _, _r := range userResp.Roles {
+		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
+	}
+
+	for _, _ahc := range userResp.AlertHiddenColumns {
+		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
+	}
+
+	for _, _uogid := range userResp.UserObjectGroups {
+		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
+	}
+
+	diags := resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+}
 
 func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
@@ -126,40 +183,22 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	var alertHiddenColumns []string
 	plan.AlertHiddenColumns.ElementsAs(ctx, &alertHiddenColumns, false)
 
-	var roleNames []string
-	plan.Roles.ElementsAs(ctx, &roleNames, false)
-
+	// Need to turn the list of IDs into a specific Role object with `ID` as the ID attribute
+	var roleIDs []string
+	plan.Roles.ElementsAs(ctx, &roleIDs, false)
 	roles := make([]uptycs.Role, 0)
-	for _, _r := range roleNames {
-		roleResp, err := r.client.GetRole(uptycs.Role{
-			Name: _r,
+	for _, _r := range roleIDs {
+		roles = append(roles, uptycs.Role{
+			ID: _r,
 		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not create user, user "+_r+" not found: "+err.Error(),
-			)
-			return
-		}
-		roles = append(roles, roleResp)
 	}
 
-	var objectGroupNames []string
-	plan.UserObjectGroups.ElementsAs(ctx, &objectGroupNames, false)
-
+	// Need to turn the list of IDs into a specific ObjectGroup object with `ObjectGroupID` as the ID attribute
+	var objectGroupIDs []string
+	plan.UserObjectGroups.ElementsAs(ctx, &objectGroupIDs, false)
 	userObjectGroups := make([]uptycs.ObjectGroup, 0)
-	for _, _uog := range objectGroupNames {
-		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
-			Name: _uog,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not create user, objectGroup "+_uog+" not found: "+err.Error(),
-			)
-			return
-		}
-		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: uogResp.ID})
+	for _, _uog := range objectGroupIDs {
+		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: _uog})
 	}
 
 	userResp, err := r.client.CreateUser(uptycs.User{
@@ -211,7 +250,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.Name})
+		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
 	}
 
 	for _, _ahc := range userResp.AlertHiddenColumns {
@@ -219,15 +258,7 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with name  "+_uogid.Name+": "+err.Error(),
-			)
-			return
-		}
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: uogResp.Name})
+		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -235,72 +266,6 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var userID string
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &userID)...)
-	userResp, err := r.client.GetUser(uptycs.User{
-		ID: userID,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading",
-			"Could not get user with ID  "+userID+": "+err.Error(),
-		)
-		return
-	}
-	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		ImageURL:        types.String{Value: userResp.ImageURL},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
-		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
-		Roles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AlertHiddenColumns: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		UserObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.Name})
-	}
-
-	for _, _ahc := range userResp.AlertHiddenColumns {
-		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
-	}
-
-	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with ID  "+_uogid.ID+": "+err.Error(),
-			)
-			return
-		}
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: uogResp.Name})
-	}
-
-	diags := resp.State.Set(ctx, result)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 }
 
 func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -324,40 +289,22 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var alertHiddenColumns []string
 	plan.AlertHiddenColumns.ElementsAs(ctx, &alertHiddenColumns, false)
 
-	var roleNames []string
-	plan.Roles.ElementsAs(ctx, &roleNames, false)
-
+	// Need to turn the list of IDs into a specific Role object with `ID` as the ID attribute
+	var roleIDs []string
+	plan.Roles.ElementsAs(ctx, &roleIDs, false)
 	roles := make([]uptycs.Role, 0)
-	for _, _r := range roleNames {
-		roleResp, err := r.client.GetRole(uptycs.Role{
-			Name: _r,
+	for _, _r := range roleIDs {
+		roles = append(roles, uptycs.Role{
+			ID: _r,
 		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not create user, user "+_r+" not found: "+err.Error(),
-			)
-			return
-		}
-		roles = append(roles, roleResp)
 	}
 
-	var objectGroupNames []string
-	plan.UserObjectGroups.ElementsAs(ctx, &objectGroupNames, false)
-
+	// Need to turn the list of IDs into a specific ObjectGroup object with `ObjectGroupID` as the ID attribute
+	var objectGroupIDs []string
+	plan.UserObjectGroups.ElementsAs(ctx, &objectGroupIDs, false)
 	userObjectGroups := make([]uptycs.ObjectGroup, 0)
-	for _, _uog := range objectGroupNames {
-		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{
-			Name: _uog,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error creating",
-				"Could not create user, objectGroup "+_uog+" not found: "+err.Error(),
-			)
-			return
-		}
-		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: uogResp.ID})
+	for _, _uog := range objectGroupIDs {
+		userObjectGroups = append(userObjectGroups, uptycs.ObjectGroup{ObjectGroupID: _uog})
 	}
 
 	userResp, err := r.client.UpdateUser(uptycs.User{
@@ -409,19 +356,11 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		},
 	}
 	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := r.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with ID  "+_uogid.ObjectGroupID+": "+err.Error(),
-			)
-			return
-		}
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: uogResp.Name})
+		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
 	}
 
 	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.Name})
+		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
 	}
 
 	for _, _ahc := range userResp.AlertHiddenColumns {

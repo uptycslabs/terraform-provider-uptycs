@@ -64,11 +64,26 @@ func (d *yaraGroupRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 
 func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var yaraGroupRuleID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)...)
+	var yaraGroupRuleName string
 
-	yaraGroupRuleResp, err := d.client.GetYaraGroupRule(uptycs.YaraGroupRule{
-		ID: yaraGroupRuleID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &yaraGroupRuleName)
+
+	var yaraGroupRuleToLookup uptycs.YaraGroupRule
+
+	if len(yaraGroupRuleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		yaraGroupRuleToLookup = uptycs.YaraGroupRule{
+			Name: yaraGroupRuleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		yaraGroupRuleToLookup = uptycs.YaraGroupRule{
+			ID: yaraGroupRuleID,
+		}
+	}
+
+	yaraGroupRuleResp, err := d.client.GetYaraGroupRule(yaraGroupRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

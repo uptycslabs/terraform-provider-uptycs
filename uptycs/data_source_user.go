@@ -150,24 +150,16 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		},
 	}
 
-	for _, _uogid := range userResp.UserObjectGroups {
-		uogResp, err := d.client.GetObjectGroup(uptycs.ObjectGroup{ID: _uogid.ObjectGroupID})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with ID  "+_uogid.ObjectGroupID+": "+err.Error(),
-			)
-			return
-		}
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: uogResp.Name})
+	for _, _r := range userResp.Roles {
+		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
 	}
 
 	for _, _ahc := range userResp.AlertHiddenColumns {
 		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
 	}
 
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.Name})
+	for _, _uogid := range userResp.UserObjectGroups {
+		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
 	}
 
 	diags := resp.State.Set(ctx, result)

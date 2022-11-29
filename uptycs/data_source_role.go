@@ -122,25 +122,12 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		},
 	}
 
-	// Iterate the response permissions and fill up the list with it
 	for _, t := range roleResp.Permissions {
 		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
 	}
 
-	// Iterate the roleObjectGroups in the GET response
 	for _, _rogid := range roleResp.RoleObjectGroups {
-		//Attempt to GET the object group. Note: the objectGroupID attribute is the ID to GET by
-		rogResp, err := d.client.GetObjectGroup(uptycs.ObjectGroup{ID: _rogid.ObjectGroupID})
-		if err != nil {
-			// Couldnt find the object group, give an error
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get object group with ID  "+_rogid.ID+": "+err.Error(),
-			)
-			return
-		}
-		// build up the state object to be the list of strings of objectGroupNames (friendly to the user)
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: rogResp.Name})
+		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
 	}
 
 	diags := resp.State.Set(ctx, result)

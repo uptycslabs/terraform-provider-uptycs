@@ -232,6 +232,7 @@ func (p *UptycsProvider) DataSources(_ context.Context) []func() datasource.Data
 		EventExcludeProfileDataSource,
 		FilePathGroupDataSource,
 		FlagProfileDataSource,
+		ObjectGroupDataSource,
 		QuerypackDataSource,
 		RegistryPathDataSource,
 		RoleDataSource,

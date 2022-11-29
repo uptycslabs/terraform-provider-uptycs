@@ -82,11 +82,26 @@ func (d *querypackDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 
 func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var querypackID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &querypackID)...)
+	var querypackName string
 
-	querypackResp, err := d.client.GetQuerypack(uptycs.Querypack{
-		ID: querypackID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &querypackID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &querypackName)
+
+	var queryPackToLookup uptycs.Querypack
+
+	if len(querypackID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		queryPackToLookup = uptycs.Querypack{
+			Name: querypackName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		queryPackToLookup = uptycs.Querypack{
+			ID: querypackID,
+		}
+	}
+
+	querypackResp, err := d.client.GetQuerypack(queryPackToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

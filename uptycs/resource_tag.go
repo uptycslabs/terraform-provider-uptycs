@@ -215,81 +215,29 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			Elems:    make([]attr.Value, 0),
 		},
 	}
-	if len(tagResp.CustomProfileID) > 0 {
-		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
-			ID: tagResp.CustomProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.CustomProfile = types.String{Value: customProfileResp.Name}
-	}
-	if len(tagResp.FlagProfileID) > 0 {
-		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
-			ID: tagResp.FlagProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.FlagProfile = types.String{Value: flagProfileResp.Name}
-	}
-	if len(tagResp.ComplianceProfileID) > 0 {
-		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
-			ID: tagResp.ComplianceProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
-	}
-	if len(tagResp.TagRuleID) > 0 {
-		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
-			ID: tagResp.TagRuleID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
-			)
-			return
-		}
-		result.TagRule = types.String{Value: tagRuleResp.Name}
-	}
 
 	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
 	}
 
 	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
 	}
 
 	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
 	}
 
 	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
 	}
 
 	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
 	}
 
 	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -310,56 +258,56 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	var filePathGroups = make([]uptycs.TagConfigurationObject, 0)
-	var filePathGroupNames []string
-	plan.FilePathGroups.ElementsAs(ctx, &filePathGroupNames, false)
-	for _, fpg := range filePathGroupNames {
+	var filePathGroupIDs []string
+	plan.FilePathGroups.ElementsAs(ctx, &filePathGroupIDs, false)
+	for _, fpg := range filePathGroupIDs {
 		filePathGroups = append(filePathGroups, uptycs.TagConfigurationObject{
-			Name: fpg,
+			ID: fpg,
 		})
 	}
 
 	var eventExcludeProfiles = make([]uptycs.TagConfigurationObject, 0)
-	var eventExcludeProfileNames []string
-	plan.EventExcludeProfiles.ElementsAs(ctx, &eventExcludeProfileNames, false)
-	for _, eep := range eventExcludeProfileNames {
+	var eventExcludeProfileIDs []string
+	plan.EventExcludeProfiles.ElementsAs(ctx, &eventExcludeProfileIDs, false)
+	for _, eep := range eventExcludeProfileIDs {
 		eventExcludeProfiles = append(eventExcludeProfiles, uptycs.TagConfigurationObject{
-			Name: eep,
+			ID: eep,
 		})
 	}
 
 	var registryPaths = make([]uptycs.TagConfigurationObject, 0)
-	var registryPathNames []string
-	plan.RegistryPaths.ElementsAs(ctx, &registryPathNames, false)
-	for _, rp := range registryPathNames {
+	var registryPathIDs []string
+	plan.RegistryPaths.ElementsAs(ctx, &registryPathIDs, false)
+	for _, rp := range registryPathIDs {
 		registryPaths = append(registryPaths, uptycs.TagConfigurationObject{
-			Name: rp,
+			ID: rp,
 		})
 	}
 
 	var queryPacks = make([]uptycs.TagConfigurationObject, 0)
-	var querypackNames []string
-	plan.Querypacks.ElementsAs(ctx, &querypackNames, false)
-	for _, qp := range querypackNames {
+	var querypackIDs []string
+	plan.Querypacks.ElementsAs(ctx, &querypackIDs, false)
+	for _, qp := range querypackIDs {
 		queryPacks = append(queryPacks, uptycs.TagConfigurationObject{
-			Name: qp,
+			ID: qp,
 		})
 	}
 
 	var yaraGroupRules = make([]uptycs.TagConfigurationObject, 0)
-	var yaraGroupRuleNames []string
-	plan.YaraGroupRules.ElementsAs(ctx, &yaraGroupRuleNames, false)
-	for _, ygr := range yaraGroupRuleNames {
+	var yaraGroupRuleIDs []string
+	plan.YaraGroupRules.ElementsAs(ctx, &yaraGroupRuleIDs, false)
+	for _, ygr := range yaraGroupRuleIDs {
 		yaraGroupRules = append(yaraGroupRules, uptycs.TagConfigurationObject{
-			Name: ygr,
+			ID: ygr,
 		})
 	}
 
 	var auditConfigurations = make([]uptycs.TagConfigurationObject, 0)
-	var auditConfigurationNames []string
-	plan.AuditConfigurations.ElementsAs(ctx, &auditConfigurationNames, false)
-	for _, ac := range auditConfigurationNames {
+	var auditConfigurationIDs []string
+	plan.AuditConfigurations.ElementsAs(ctx, &auditConfigurationIDs, false)
+	for _, ac := range auditConfigurationIDs {
 		auditConfigurations = append(auditConfigurations, uptycs.TagConfigurationObject{
-			Name: ac,
+			ID: ac,
 		})
 	}
 
@@ -401,6 +349,8 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		Key:                       types.String{Value: tagResp.Key},
 		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
 		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
+		FlagProfile:               types.String{Value: tagResp.FlagProfileID},
+		CustomProfile:             types.String{Value: tagResp.CustomProfileID},
 		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
 		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
 		TagRule:                   types.String{Value: tagResp.TagRuleID},
@@ -436,81 +386,28 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		},
 	}
 
-	if len(tagResp.CustomProfileID) > 0 {
-		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
-			ID: tagResp.CustomProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.CustomProfile = types.String{Value: customProfileResp.Name}
-	}
-	if len(tagResp.FlagProfileID) > 0 {
-		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
-			ID: tagResp.FlagProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.FlagProfile = types.String{Value: flagProfileResp.Name}
-	}
-	if len(tagResp.ComplianceProfileID) > 0 {
-		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
-			ID: tagResp.ComplianceProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
-	}
-	if len(tagResp.TagRuleID) > 0 {
-		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
-			ID: tagResp.TagRuleID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
-			)
-			return
-		}
-		result.TagRule = types.String{Value: tagRuleResp.Name}
-	}
-
 	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
 	}
 
 	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
 	}
 
 	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
 	}
 
 	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
 	}
 
 	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
 	}
 
 	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -539,56 +436,56 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	var filePathGroups = make([]uptycs.TagConfigurationObject, 0)
-	var filePathGroupNames []string
-	plan.FilePathGroups.ElementsAs(ctx, &filePathGroupNames, false)
-	for _, fpg := range filePathGroupNames {
+	var filePathGroupIDs []string
+	plan.FilePathGroups.ElementsAs(ctx, &filePathGroupIDs, false)
+	for _, fpg := range filePathGroupIDs {
 		filePathGroups = append(filePathGroups, uptycs.TagConfigurationObject{
-			Name: fpg,
+			ID: fpg,
 		})
 	}
 
 	var eventExcludeProfiles = make([]uptycs.TagConfigurationObject, 0)
-	var eventExcludeProfileNames []string
-	plan.EventExcludeProfiles.ElementsAs(ctx, &eventExcludeProfileNames, false)
-	for _, eep := range eventExcludeProfileNames {
+	var eventExcludeProfileIDs []string
+	plan.EventExcludeProfiles.ElementsAs(ctx, &eventExcludeProfileIDs, false)
+	for _, eep := range eventExcludeProfileIDs {
 		eventExcludeProfiles = append(eventExcludeProfiles, uptycs.TagConfigurationObject{
-			Name: eep,
+			ID: eep,
 		})
 	}
 
 	var registryPaths = make([]uptycs.TagConfigurationObject, 0)
-	var registryPathNames []string
-	plan.RegistryPaths.ElementsAs(ctx, &registryPathNames, false)
-	for _, rp := range registryPathNames {
+	var registryPathIDs []string
+	plan.RegistryPaths.ElementsAs(ctx, &registryPathIDs, false)
+	for _, rp := range registryPathIDs {
 		registryPaths = append(registryPaths, uptycs.TagConfigurationObject{
-			Name: rp,
+			ID: rp,
 		})
 	}
 
 	var queryPacks = make([]uptycs.TagConfigurationObject, 0)
-	var querypackNames []string
-	plan.Querypacks.ElementsAs(ctx, &querypackNames, false)
-	for _, qp := range querypackNames {
+	var querypackIDs []string
+	plan.Querypacks.ElementsAs(ctx, &querypackIDs, false)
+	for _, qp := range querypackIDs {
 		queryPacks = append(queryPacks, uptycs.TagConfigurationObject{
-			Name: qp,
+			ID: qp,
 		})
 	}
 
 	var yaraGroupRules = make([]uptycs.TagConfigurationObject, 0)
-	var yaraGroupRuleNames []string
-	plan.YaraGroupRules.ElementsAs(ctx, &yaraGroupRuleNames, false)
-	for _, ygr := range yaraGroupRuleNames {
+	var yaraGroupRuleIDs []string
+	plan.YaraGroupRules.ElementsAs(ctx, &yaraGroupRuleIDs, false)
+	for _, ygr := range yaraGroupRuleIDs {
 		yaraGroupRules = append(yaraGroupRules, uptycs.TagConfigurationObject{
-			Name: ygr,
+			ID: ygr,
 		})
 	}
 
 	var auditConfigurations = make([]uptycs.TagConfigurationObject, 0)
-	var auditConfigurationNames []string
-	plan.AuditConfigurations.ElementsAs(ctx, &auditConfigurationNames, false)
-	for _, ac := range auditConfigurationNames {
+	var auditConfigurationIDs []string
+	plan.AuditConfigurations.ElementsAs(ctx, &auditConfigurationIDs, false)
+	for _, ac := range auditConfigurationIDs {
 		auditConfigurations = append(auditConfigurations, uptycs.TagConfigurationObject{
-			Name: ac,
+			ID: ac,
 		})
 	}
 
@@ -668,81 +565,28 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		},
 	}
 
-	if len(tagResp.CustomProfileID) > 0 {
-		customProfileResp, err := r.client.GetCustomProfile(uptycs.CustomProfile{
-			ID: tagResp.CustomProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get customProfile with name  "+tagResp.CustomProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.CustomProfile = types.String{Value: customProfileResp.Name}
-	}
-	if len(tagResp.FlagProfileID) > 0 {
-		flagProfileResp, err := r.client.GetFlagProfile(uptycs.FlagProfile{
-			ID: tagResp.FlagProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get flagProfile with name  "+tagResp.FlagProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.FlagProfile = types.String{Value: flagProfileResp.Name}
-	}
-	if len(tagResp.ComplianceProfileID) > 0 {
-		complianceProfileResp, err := r.client.GetComplianceProfile(uptycs.ComplianceProfile{
-			ID: tagResp.ComplianceProfileID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.ComplianceProfile+": "+err.Error(),
-			)
-			return
-		}
-		result.ComplianceProfile = types.String{Value: complianceProfileResp.Name}
-	}
-	if len(tagResp.TagRuleID) > 0 {
-		tagRuleResp, err := r.client.GetTagRule(uptycs.TagRule{
-			ID: tagResp.TagRuleID,
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Failed to read.",
-				"Could not get complianceProfile with name  "+tagResp.TagRule+": "+err.Error(),
-			)
-			return
-		}
-		result.TagRule = types.String{Value: tagRuleResp.Name}
-	}
-
 	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.Name})
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
 	}
 
 	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
 	}
 
 	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
 	}
 
 	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
 	}
 
 	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
 	}
 
 	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
 	}
 
 	diags = resp.State.Set(ctx, result)
