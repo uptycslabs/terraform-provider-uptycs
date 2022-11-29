@@ -48,29 +48,34 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 			},
 			"name": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
 			},
 			"description": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
+			},
+			"score": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: false,
 			},
 			"code": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
 				Computed: false,
 			},
 			"type": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
 				Computed: false,
 			},
 			"rule": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
 			},
 			"grouping": {
 				Type:     types.StringType,
-				Required: true,
+				Optional: true,
 			},
 			"grouping_l2": {
 				Type:     types.StringType,
@@ -94,10 +99,14 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 			},
 			"event_tags": {
 				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+				Optional: true,
+			},
+			"exceptions": {
+				Type:     types.ListType{ElemType: types.StringType},
+				Optional: true,
 			},
 			"builder_config": {
-				Required: true,
+				Optional: true,
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
 					"table_name": {
 						Type:     types.StringType,
@@ -124,19 +133,19 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 						Optional: true,
 					},
 					"filters": {
-						Required: true,
+						Optional: true,
 						Type:     types.StringType,
 					},
 					"auto_alert_config": {
-						Required: true,
+						Optional: true,
 						Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
 							"raise_alert": {
 								Type:     types.BoolType,
-								Required: true,
+								Optional: true,
 							},
 							"disable_alert": {
 								Type:     types.BoolType,
-								Required: true,
+								Optional: true,
 							},
 						}),
 					},
@@ -148,11 +157,26 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 
 func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var eventRuleID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &eventRuleID)...)
+	var eventRuleName string
 
-	eventRuleResp, err := d.client.GetEventRule(uptycs.EventRule{
-		ID: eventRuleID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &eventRuleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &eventRuleName)
+
+	var eventRuleToLookup uptycs.EventRule
+
+	if len(eventRuleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		eventRuleToLookup = uptycs.EventRule{
+			Name: eventRuleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		eventRuleToLookup = uptycs.EventRule{
+			ID: eventRuleID,
+		}
+	}
+
+	eventRuleResp, err := d.client.GetEventRule(eventRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -178,7 +202,12 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Grouping:    types.String{Value: eventRuleResp.Grouping},
 		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
 		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
+		Score:       types.String{Value: eventRuleResp.Score},
 		EventTags: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Exceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
@@ -203,6 +232,10 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	}
+
+	for _, are := range eventRuleResp.Exceptions {
+		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: are.ExceptionID})
 	}
 
 	diags := resp.State.Set(ctx, result)

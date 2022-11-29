@@ -55,6 +55,11 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Type:     types.StringType,
 				Required: true,
 			},
+			"score": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: false,
+			},
 			"code": {
 				Type:     types.StringType,
 				Required: true,
@@ -96,6 +101,10 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 			"event_tags": {
 				Type:     types.ListType{ElemType: types.StringType},
 				Required: true,
+			},
+			"exceptions": {
+				Type:     types.ListType{ElemType: types.StringType},
+				Optional: true,
 			},
 			"builder_config": {
 				Required: true,
@@ -147,104 +156,6 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 	}, nil
 }
 
-func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// Retrieve values from plan
-	var plan EventRule
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var tags []string
-	plan.EventTags.ElementsAs(ctx, &tags, false)
-
-	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
-		Name:        plan.Name.Value,
-		Code:        plan.Code.Value,
-		Description: plan.Description.Value,
-		Rule:        plan.Rule.Value,
-		Type:        plan.Type.Value,
-		Enabled:     plan.Enabled.Value,
-		Lock:        plan.Lock.Value,
-		Custom:      true,
-		Grouping:    plan.Grouping.Value,
-		GroupingL2:  plan.GroupingL2.Value,
-		GroupingL3:  plan.GroupingL3.Value,
-		EventTags:   tags,
-		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
-			TableName:     plan.BuilderConfig.TableName.Value,
-			Added:         plan.BuilderConfig.Added.Value,
-			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
-			Severity:      plan.BuilderConfig.Severity.Value,
-			Key:           plan.BuilderConfig.Key.Value,
-			ValueField:    plan.BuilderConfig.ValueField.Value,
-			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert: plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
-				RaiseAlert:   plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
-			},
-		},
-	})
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating",
-			"Could not create eventRule, unexpected error: "+err.Error(),
-		)
-		return
-	}
-
-	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var result = EventRule{
-		ID:          types.String{Value: eventRuleResp.ID},
-		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
-		Lock:        types.Bool{Value: eventRuleResp.Lock},
-		Name:        types.String{Value: eventRuleResp.Name},
-		Description: types.String{Value: eventRuleResp.Description},
-		Code:        types.String{Value: eventRuleResp.Code},
-		Type:        types.String{Value: eventRuleResp.Type},
-		Rule:        types.String{Value: eventRuleResp.Rule},
-		Grouping:    types.String{Value: eventRuleResp.Grouping},
-		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
-		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
-		EventTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		BuilderConfig: BuilderConfig{
-			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
-			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
-			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
-			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
-			Severity:      types.String{Value: eventRuleResp.BuilderConfig.Severity},
-			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
-			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
-			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
-			},
-		},
-	}
-	if result.Type.Value == "sql" {
-		result.Rule.Value += "\n"
-	}
-
-	for _, t := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
-	}
-
-	diags = resp.State.Set(ctx, result)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-}
-
 func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var eventRuleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &eventRuleID)...)
@@ -276,7 +187,12 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		Grouping:    types.String{Value: eventRuleResp.Grouping},
 		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
 		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
+		Score:       types.String{Value: eventRuleResp.Score},
 		EventTags: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Exceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
@@ -299,8 +215,12 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		result.Rule.Value += "\n"
 	}
 
-	for _, t := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	for _, _et := range eventRuleResp.EventTags {
+		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: _et})
+	}
+
+	for _, _exc := range eventRuleResp.Exceptions {
+		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -310,19 +230,10 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 }
 
-func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state EventRule
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	eventRuleID := state.ID.Value
-
+func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	// Retrieve values from plan
 	var plan EventRule
-	diags = req.Plan.Get(ctx, &plan)
+	diags := req.Plan.Get(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -331,20 +242,30 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
-		ID:          eventRuleID,
+	var exceptions []string
+	plan.Exceptions.ElementsAs(ctx, &exceptions, false)
+	_exceptions := make([]uptycs.RuleException, 0)
+	for _, _re := range exceptions {
+		_exceptions = append(_exceptions, uptycs.RuleException{
+			ExceptionID: _re,
+		})
+	}
+
+	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
 		Name:        plan.Name.Value,
 		Code:        plan.Code.Value,
-		Custom:      true,
 		Description: plan.Description.Value,
 		Rule:        plan.Rule.Value,
 		Type:        plan.Type.Value,
 		Enabled:     plan.Enabled.Value,
 		Lock:        plan.Lock.Value,
+		Custom:      true,
 		Grouping:    plan.Grouping.Value,
 		GroupingL2:  plan.GroupingL2.Value,
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
+		Exceptions:  _exceptions,
+		Score:       plan.Score.Value,
 		BuilderConfig: uptycs.BuilderConfig{
 			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
 			TableName:     plan.BuilderConfig.TableName.Value,
@@ -385,7 +306,140 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		Grouping:    types.String{Value: eventRuleResp.Grouping},
 		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
 		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
+		Score:       types.String{Value: eventRuleResp.Score},
 		EventTags: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Exceptions: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		BuilderConfig: BuilderConfig{
+			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
+			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
+			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
+			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
+			Severity:      types.String{Value: eventRuleResp.BuilderConfig.Severity},
+			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
+			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
+			AutoAlertConfig: AutoAlertConfig{
+				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
+				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+			},
+		},
+	}
+	if result.Type.Value == "sql" {
+		result.Rule.Value += "\n"
+	}
+
+	for _, t := range eventRuleResp.EventTags {
+		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	}
+
+	for _, _exc := range eventRuleResp.Exceptions {
+		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
+	}
+
+	diags = resp.State.Set(ctx, result)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}
+
+func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state EventRule
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	eventRuleID := state.ID.Value
+
+	// Retrieve values from plan
+	var plan EventRule
+	diags = req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var tags []string
+	plan.EventTags.ElementsAs(ctx, &tags, false)
+
+	var exceptions []string
+	plan.Exceptions.ElementsAs(ctx, &exceptions, false)
+	_exceptions := make([]uptycs.RuleException, 0)
+	for _, _re := range exceptions {
+		_exceptions = append(_exceptions, uptycs.RuleException{
+			ExceptionID: _re,
+		})
+	}
+
+	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
+		ID:          eventRuleID,
+		Name:        plan.Name.Value,
+		Code:        plan.Code.Value,
+		Custom:      true,
+		Description: plan.Description.Value,
+		Rule:        plan.Rule.Value,
+		Type:        plan.Type.Value,
+		Enabled:     plan.Enabled.Value,
+		Lock:        plan.Lock.Value,
+		Grouping:    plan.Grouping.Value,
+		GroupingL2:  plan.GroupingL2.Value,
+		GroupingL3:  plan.GroupingL3.Value,
+		EventTags:   tags,
+		Exceptions:  _exceptions,
+		Score:       plan.Score.Value,
+		BuilderConfig: uptycs.BuilderConfig{
+			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
+			TableName:     plan.BuilderConfig.TableName.Value,
+			Added:         plan.BuilderConfig.Added.Value,
+			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
+			Severity:      plan.BuilderConfig.Severity.Value,
+			Key:           plan.BuilderConfig.Key.Value,
+			ValueField:    plan.BuilderConfig.ValueField.Value,
+			AutoAlertConfig: uptycs.AutoAlertConfig{
+				DisableAlert: plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
+				RaiseAlert:   plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
+			},
+		},
+	})
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error creating",
+			"Could not create eventRule, unexpected error: "+err.Error(),
+		)
+		return
+	}
+
+	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var result = EventRule{
+		ID:          types.String{Value: eventRuleResp.ID},
+		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
+		Lock:        types.Bool{Value: eventRuleResp.Lock},
+		Name:        types.String{Value: eventRuleResp.Name},
+		Description: types.String{Value: eventRuleResp.Description},
+		Code:        types.String{Value: eventRuleResp.Code},
+		Type:        types.String{Value: eventRuleResp.Type},
+		Rule:        types.String{Value: eventRuleResp.Rule},
+		Grouping:    types.String{Value: eventRuleResp.Grouping},
+		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
+		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
+		Score:       types.String{Value: eventRuleResp.Score},
+		EventTags: types.List{
+			ElemType: types.StringType,
+			Elems:    make([]attr.Value, 0),
+		},
+		Exceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
@@ -406,6 +460,10 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	}
+
+	for _, _exc := range eventRuleResp.Exceptions {
+		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
 	}
 
 	diags = resp.State.Set(ctx, result)

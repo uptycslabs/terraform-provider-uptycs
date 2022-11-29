@@ -149,11 +149,26 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 
 func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var alertRuleID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &alertRuleID)...)
+	var alertRuleName string
 
-	alertRuleResp, err := d.client.GetAlertRule(uptycs.AlertRule{
-		ID: alertRuleID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &alertRuleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &alertRuleName)
+
+	var alertRuleToLookup uptycs.AlertRule
+
+	if len(alertRuleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		alertRuleToLookup = uptycs.AlertRule{
+			Name: alertRuleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		alertRuleToLookup = uptycs.AlertRule{
+			ID: alertRuleID,
+		}
+	}
+
+	alertRuleResp, err := d.client.GetAlertRule(alertRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

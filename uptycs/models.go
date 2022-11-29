@@ -48,6 +48,19 @@ type SQLConfig struct {
 	IntervalSeconds int `tfsdk:"interval_seconds"`
 }
 
+type Exception struct {
+	ID              types.String `tfsdk:"id"`
+	Name            types.String `tfsdk:"name"`
+	Description     types.String `tfsdk:"description"`
+	ExceptionType   types.String `tfsdk:"exception_type"`
+	TableName       types.String `tfsdk:"table_name"`
+	IsGlobal        types.Bool   `tfsdk:"is_global"`
+	Custom          types.Bool   `tfsdk:"custom"`
+	Disabled        types.Bool   `tfsdk:"disabled"`
+	CloseOpenAlerts types.Bool   `tfsdk:"close_open_alerts"`
+	Rule            types.String `tfsdk:"rule"`
+}
+
 type EventRule struct {
 	ID            types.String  `tfsdk:"id"`
 	Name          types.String  `tfsdk:"name"`
@@ -58,9 +71,11 @@ type EventRule struct {
 	Grouping      types.String  `tfsdk:"grouping"`
 	GroupingL2    types.String  `tfsdk:"grouping_l2"`
 	GroupingL3    types.String  `tfsdk:"grouping_l3"`
+	Score         types.String  `tfsdk:"score"`
 	Enabled       types.Bool    `tfsdk:"enabled"`
 	Lock          types.Bool    `tfsdk:"lock"`
 	EventTags     types.List    `tfsdk:"event_tags"`
+	Exceptions    types.List    `tfsdk:"exceptions"`
 	BuilderConfig BuilderConfig `tfsdk:"builder_config"`
 }
 
