@@ -19,7 +19,6 @@ description: |-
 
 - `additional_logger` (Boolean)
 - `conf` (String)
-- `custom` (Boolean)
 - `description` (String)
 - `is_internal` (Boolean)
 - `name` (String)

@@ -22,7 +22,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `grouping` (String)
 - `name` (String)

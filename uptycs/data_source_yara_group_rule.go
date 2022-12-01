@@ -54,10 +54,6 @@ func (d *yaraGroupRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 		},
 	}, nil
 }
@@ -97,7 +93,6 @@ func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 		Name:        types.String{Value: yaraGroupRuleResp.Name},
 		Description: types.String{Value: yaraGroupRuleResp.Description},
 		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
-		Custom:      types.Bool{Value: yaraGroupRuleResp.Custom},
 	}
 
 	diags := resp.State.Set(ctx, result)

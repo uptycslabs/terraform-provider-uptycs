@@ -68,12 +68,6 @@ func (d *flagProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Type:     types.NumberType,
 				Optional: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
-			},
 		},
 	}, nil
 }
@@ -119,7 +113,6 @@ func (d *flagProfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	var result = FlagProfile{
 		ID:           types.String{Value: flagProfileResp.ID},
-		Custom:       types.Bool{Value: flagProfileResp.Custom},
 		Name:         types.String{Value: flagProfileResp.Name},
 		Description:  types.String{Value: flagProfileResp.Description},
 		Priority:     flagProfileResp.Priority,

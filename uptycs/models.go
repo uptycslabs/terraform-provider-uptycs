@@ -13,13 +13,11 @@ type AlertRule struct {
 	Rule                types.String           `tfsdk:"rule"`
 	Grouping            types.String           `tfsdk:"grouping"`
 	Enabled             types.Bool             `tfsdk:"enabled"`
-	Custom              types.Bool             `tfsdk:"custom"`
 	Throttled           types.Bool             `tfsdk:"throttled"`
 	IsInternal          types.Bool             `tfsdk:"is_internal"`
 	AlertTags           types.List             `tfsdk:"alert_tags"`
 	GroupingL2          types.String           `tfsdk:"grouping_l2"`
 	GroupingL3          types.String           `tfsdk:"grouping_l3"`
-	Lock                types.Bool             `tfsdk:"lock"`
 	AlertNotifyInterval *int                   `tfsdk:"notify_interval"`
 	AlertNotifyCount    *int                   `tfsdk:"notify_count"`
 	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
@@ -55,7 +53,6 @@ type Exception struct {
 	ExceptionType   types.String `tfsdk:"exception_type"`
 	TableName       types.String `tfsdk:"table_name"`
 	IsGlobal        types.Bool   `tfsdk:"is_global"`
-	Custom          types.Bool   `tfsdk:"custom"`
 	Disabled        types.Bool   `tfsdk:"disabled"`
 	CloseOpenAlerts types.Bool   `tfsdk:"close_open_alerts"`
 	Rule            types.String `tfsdk:"rule"`
@@ -73,7 +70,6 @@ type EventRule struct {
 	GroupingL3    types.String  `tfsdk:"grouping_l3"`
 	Score         types.String  `tfsdk:"score"`
 	Enabled       types.Bool    `tfsdk:"enabled"`
-	Lock          types.Bool    `tfsdk:"lock"`
 	EventTags     types.List    `tfsdk:"event_tags"`
 	Exceptions    types.List    `tfsdk:"exceptions"`
 	BuilderConfig BuilderConfig `tfsdk:"builder_config"`
@@ -139,7 +135,6 @@ type Role struct {
 	Name                 types.String `tfsdk:"name"`
 	Description          types.String `tfsdk:"description"`
 	Permissions          types.List   `tfsdk:"permissions"`
-	Custom               types.Bool   `tfsdk:"custom"`
 	Hidden               types.Bool   `tfsdk:"hidden"`
 	NoMinimalPermissions types.Bool   `tfsdk:"no_minimal_permissions"`
 	RoleObjectGroups     types.List   `tfsdk:"role_object_groups"`
@@ -157,7 +152,6 @@ type ObjectGroup struct {
 	Description      types.String `tfsdk:"description"`
 	Secret           types.String `tfsdk:"secret"`
 	ObjectType       types.String `tfsdk:"object_type"`
-	Custom           types.Bool   `tfsdk:"custom"`
 	RetentionDays    int          `tfsdk:"retention_days"`
 	Destinations     types.List   `tfsdk:"destinations"`
 }
@@ -188,7 +182,6 @@ type Tag struct {
 	DNSBlockRule              types.String `tfsdk:"dns_block_rule"`
 	WindowsDefenderPreference types.String `tfsdk:"windows_defender_preference"`
 	Tag                       types.String `tfsdk:"tag"`
-	Custom                    types.Bool   `tfsdk:"custom"`
 	System                    types.Bool   `tfsdk:"system"`
 	TagRule                   types.String `tfsdk:"tag_rule"`
 	Status                    types.String `tfsdk:"status"`
@@ -217,7 +210,6 @@ type FilePathGroup struct {
 	IncludePaths          types.List               `tfsdk:"include_paths"`
 	IncludePathExtensions types.List               `tfsdk:"include_path_extensions"`
 	ExcludePaths          types.List               `tfsdk:"exclude_paths"`
-	Custom                types.Bool               `tfsdk:"custom"`
 	CheckSignature        types.Bool               `tfsdk:"check_signature"`
 	FileAccesses          types.Bool               `tfsdk:"file_accesses"`
 	ExcludeProcessNames   types.List               `tfsdk:"exclude_process_names"`
@@ -239,7 +231,6 @@ type YaraGroupRule struct {
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
 	Rules       types.String `tfsdk:"rules"`
-	Custom      types.Bool   `tfsdk:"custom"`
 }
 
 type RegistryPath struct {
@@ -250,7 +241,6 @@ type RegistryPath struct {
 	IncludeRegistryPaths types.List   `tfsdk:"include_registry_paths"`
 	RegAccesses          types.Bool   `tfsdk:"reg_accesses"`
 	ExcludeRegistryPaths types.List   `tfsdk:"exclude_registry_paths"`
-	Custom               types.Bool   `tfsdk:"custom"`
 }
 
 type Querypack struct {
@@ -259,7 +249,6 @@ type Querypack struct {
 	Description      types.String `tfsdk:"description"`
 	Type             types.String `tfsdk:"type"`
 	AdditionalLogger types.Bool   `tfsdk:"additional_logger"`
-	Custom           types.Bool   `tfsdk:"custom"`
 	IsInternal       types.Bool   `tfsdk:"is_internal"`
 	ResourceType     types.String `tfsdk:"resource_type"`
 	Conf             types.String `tfsdk:"conf"`
@@ -336,7 +325,6 @@ type CustomProfile struct {
 
 type FlagProfile struct {
 	ID           types.String `tfsdk:"id"`
-	Custom       types.Bool   `tfsdk:"custom"`
 	Name         types.String `tfsdk:"name"`
 	Description  types.String `tfsdk:"description"`
 	Priority     int          `tfsdk:"priority"`
@@ -349,6 +337,5 @@ type ComplianceProfile struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	Custom      types.Bool   `tfsdk:"custom"`
 	Priority    int          `tfsdk:"priority"`
 }

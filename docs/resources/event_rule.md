@@ -32,7 +32,6 @@ description: |-
 - `exceptions` (List of String)
 - `grouping_l2` (String)
 - `grouping_l3` (String)
-- `lock` (Boolean)
 - `score` (String)
 
 ### Read-Only

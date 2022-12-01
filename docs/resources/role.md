@@ -23,7 +23,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `hidden` (Boolean)
 - `role_object_groups` (List of String)

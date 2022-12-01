@@ -67,10 +67,6 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"check_signature": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -130,10 +126,6 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 							Type:     types.StringType,
 							Optional: true,
 						},
-						"custom": {
-							Type:     types.BoolType,
-							Optional: true,
-						},
 					},
 				),
 			},
@@ -188,7 +180,6 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:         types.Bool{Value: filePathGroupResp.Custom},
 		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
 		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
 		ExcludeProcessNames: types.List{
@@ -239,7 +230,6 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 			Name:        types.String{Value: ygr.Name},
 			Description: types.String{Value: ygr.Description},
 			Rules:       types.String{Value: ygr.Rules},
-			Custom:      types.Bool{Value: ygr.Custom},
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules

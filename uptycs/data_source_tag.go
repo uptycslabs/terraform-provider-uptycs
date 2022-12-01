@@ -79,10 +79,6 @@ func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnos
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"system": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -176,7 +172,6 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
 		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
 		Tag:                       types.String{Value: tagResp.Tag},
-		Custom:                    types.Bool{Value: tagResp.Custom},
 		System:                    types.Bool{Value: tagResp.System},
 		TagRule:                   types.String{Value: tagResp.TagRuleID},
 		Status:                    types.String{Value: tagResp.Status},

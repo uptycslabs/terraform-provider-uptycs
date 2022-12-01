@@ -74,12 +74,6 @@ func (r *registryPathResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.
 				Type:     types.ListType{ElemType: types.StringType},
 				Required: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
 		},
 	}, nil
 }
@@ -112,7 +106,6 @@ func (r *registryPathResource) Read(ctx context.Context, req resource.ReadReques
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom: types.Bool{Value: registryPathResp.Custom},
 	}
 
 	for _, _irp := range registryPathResp.IncludeRegistryPaths {
@@ -153,7 +146,6 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 		IncludeRegistryPaths: includeRegistryPaths,
 		RegAccesses:          plan.RegAccesses.Value,
 		ExcludeRegistryPaths: excludeRegistryPaths,
-		Custom:               plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -178,7 +170,6 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom: types.Bool{Value: registryPathResp.Custom},
 	}
 
 	for _, _irp := range registryPathResp.IncludeRegistryPaths {
@@ -228,7 +219,6 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 		IncludeRegistryPaths: includeRegistryPaths,
 		RegAccesses:          plan.RegAccesses.Value,
 		ExcludeRegistryPaths: excludeRegistryPaths,
-		Custom:               plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -253,7 +243,6 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom: types.Bool{Value: registryPathResp.Custom},
 	}
 
 	for _, _irp := range registryPathResp.IncludeRegistryPaths {

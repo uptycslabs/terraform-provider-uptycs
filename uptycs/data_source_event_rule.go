@@ -91,12 +91,6 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"lock": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
-			},
 			"event_tags": {
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
@@ -193,7 +187,6 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 	var result = EventRule{
 		ID:          types.String{Value: eventRuleResp.ID},
 		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
-		Lock:        types.Bool{Value: eventRuleResp.Lock},
 		Name:        types.String{Value: eventRuleResp.Name},
 		Description: types.String{Value: eventRuleResp.Description},
 		Code:        types.String{Value: eventRuleResp.Code},

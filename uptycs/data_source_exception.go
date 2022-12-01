@@ -64,10 +64,6 @@ func (d *exceptionDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.BoolType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"disabled": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -125,7 +121,6 @@ func (d *exceptionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
 		TableName:       types.String{Value: exceptionResp.TableName},
 		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Custom:          types.Bool{Value: exceptionResp.Custom},
 		Disabled:        types.Bool{Value: exceptionResp.Disabled},
 		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
 		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},

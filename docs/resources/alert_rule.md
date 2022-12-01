@@ -26,7 +26,6 @@ description: |-
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `is_internal` (Boolean)
-- `lock` (Boolean)
 - `name` (String)
 - `rule` (String)
 - `rule_exceptions` (List of String)
@@ -35,7 +34,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `notify_count` (Number)
 - `notify_interval` (Number)
 - `sql_config` (Attributes) (see [below for nested schema](#nestedatt--sql_config))

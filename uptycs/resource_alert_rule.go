@@ -75,12 +75,6 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Type:     types.BoolType,
 				Required: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
 			"throttled": {
 				Type:     types.BoolType,
 				Required: true,
@@ -99,10 +93,6 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 			},
 			"grouping_l3": {
 				Type:     types.StringType,
-				Required: true,
-			},
-			"lock": {
-				Type:     types.BoolType,
 				Required: true,
 			},
 			"notify_interval": {
@@ -176,7 +166,6 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		Rule:        types.String{Value: alertRuleResp.Rule},
 		Grouping:    types.String{Value: alertRuleResp.Grouping},
 		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Custom:      types.Bool{Value: alertRuleResp.Custom},
 		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
 		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
 		AlertTags: types.List{
@@ -185,7 +174,6 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		},
 		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
 		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		Lock:       types.Bool{Value: alertRuleResp.Lock},
 		AlertRuleExceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -270,21 +258,22 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		Rule:                plan.Rule.Value,
 		Grouping:            plan.Grouping.Value,
 		Enabled:             plan.Enabled.Value,
-		Custom:              plan.Custom.Value,
 		Throttled:           plan.Throttled.Value,
 		IsInternal:          plan.IsInternal.Value,
 		AlertTags:           tags,
 		GroupingL2:          plan.GroupingL2.Value,
 		GroupingL3:          plan.GroupingL3.Value,
-		Lock:                plan.Lock.Value,
-		AlertNotifyInterval: *plan.AlertNotifyInterval,
-		AlertNotifyCount:    *plan.AlertNotifyCount,
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
-		SQLConfig: &uptycs.SQLConfig{
-			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
-		},
 	}
+	if plan.AlertNotifyInterval != nil {
+		alertRule.AlertNotifyInterval = *plan.AlertNotifyInterval
+	}
+
+	if plan.AlertNotifyCount != nil {
+		alertRule.AlertNotifyCount = *plan.AlertNotifyCount
+	}
+
 	if plan.SQLConfig != nil {
 		alertRule.SQLConfig = &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
@@ -309,7 +298,6 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		Rule:        types.String{Value: alertRuleResp.Rule},
 		Grouping:    types.String{Value: alertRuleResp.Grouping},
 		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Custom:      types.Bool{Value: alertRuleResp.Custom},
 		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
 		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
 		AlertTags: types.List{
@@ -318,7 +306,6 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		},
 		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
 		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		Lock:       types.Bool{Value: alertRuleResp.Lock},
 		AlertRuleExceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -413,18 +400,22 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		Rule:                plan.Rule.Value,
 		Grouping:            plan.Grouping.Value,
 		Enabled:             plan.Enabled.Value,
-		Custom:              plan.Custom.Value,
 		Throttled:           plan.Throttled.Value,
 		IsInternal:          plan.IsInternal.Value,
 		AlertTags:           tags,
 		GroupingL2:          plan.GroupingL2.Value,
 		GroupingL3:          plan.GroupingL3.Value,
-		Lock:                plan.Lock.Value,
-		AlertNotifyInterval: *plan.AlertNotifyInterval,
-		AlertNotifyCount:    *plan.AlertNotifyCount,
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
 	}
+	if plan.AlertNotifyInterval != nil {
+		alertRule.AlertNotifyInterval = *plan.AlertNotifyInterval
+	}
+
+	if plan.AlertNotifyCount != nil {
+		alertRule.AlertNotifyCount = *plan.AlertNotifyCount
+	}
+
 	if plan.SQLConfig != nil {
 		alertRule.SQLConfig = &uptycs.SQLConfig{
 			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
@@ -450,7 +441,6 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		Rule:        types.String{Value: alertRuleResp.Rule},
 		Grouping:    types.String{Value: alertRuleResp.Grouping},
 		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Custom:      types.Bool{Value: alertRuleResp.Custom},
 		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
 		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
 		AlertTags: types.List{
@@ -459,7 +449,6 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		},
 		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
 		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		Lock:       types.Bool{Value: alertRuleResp.Lock},
 		AlertRuleExceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

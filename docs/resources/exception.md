@@ -18,7 +18,6 @@ description: |-
 ### Optional
 
 - `close_open_alerts` (Boolean)
-- `custom` (Boolean)
 - `description` (String)
 - `disabled` (Boolean)
 - `exception_type` (String)

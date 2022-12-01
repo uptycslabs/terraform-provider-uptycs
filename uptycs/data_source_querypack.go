@@ -60,10 +60,6 @@ func (d *querypackDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.BoolType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"is_internal": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -120,7 +116,6 @@ func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Description:      types.String{Value: querypackResp.Description},
 		Type:             types.String{Value: querypackResp.Type},
 		AdditionalLogger: types.Bool{Value: querypackResp.AdditionalLogger},
-		Custom:           types.Bool{Value: querypackResp.Custom},
 		IsInternal:       types.Bool{Value: querypackResp.IsInternal},
 		ResourceType:     types.String{Value: querypackResp.ResourceType},
 		Conf:             types.String{Value: string([]byte(queryPackConfJSON)) + "\n"},

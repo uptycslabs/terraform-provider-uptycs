@@ -58,12 +58,6 @@ func (r *roleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnost
 				Type:     types.ListType{ElemType: types.StringType},
 				Required: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
 			"hidden": {
 				Type:          types.BoolType,
 				Optional:      true,
@@ -104,7 +98,6 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:               types.Bool{Value: roleResp.Custom},
 		Hidden:               types.Bool{Value: roleResp.Hidden},
 		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
 		RoleObjectGroups: types.List{
@@ -154,7 +147,6 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
 		Permissions:          permissions,
-		Custom:               plan.Custom.Value,
 		Hidden:               plan.Hidden.Value,
 		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
 		RoleObjectGroups:     roleObjectGroups,
@@ -176,7 +168,6 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:               types.Bool{Value: roleResp.Custom},
 		Hidden:               types.Bool{Value: roleResp.Hidden},
 		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
 		RoleObjectGroups: types.List{
@@ -235,7 +226,6 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Name:                 plan.Name.Value,
 		Description:          plan.Description.Value,
 		Permissions:          permissions,
-		Custom:               plan.Custom.Value,
 		Hidden:               plan.Hidden.Value,
 		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
 		RoleObjectGroups:     roleObjectGroups,
@@ -256,7 +246,6 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:               types.Bool{Value: roleResp.Custom},
 		Hidden:               types.Bool{Value: roleResp.Hidden},
 		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
 		RoleObjectGroups: types.List{

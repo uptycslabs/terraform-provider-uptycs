@@ -46,12 +46,6 @@ func (d *complianceProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
-			},
 			"description": {
 				Type:     types.StringType,
 				Optional: true,
@@ -97,7 +91,6 @@ func (d *complianceProfileDataSource) Read(ctx context.Context, req datasource.R
 	var result = ComplianceProfile{
 		ID:          types.String{Value: complianceProfileResp.ID},
 		Name:        types.String{Value: complianceProfileResp.Name},
-		Custom:      types.Bool{Value: complianceProfileResp.Custom},
 		Description: types.String{Value: complianceProfileResp.Description},
 		Priority:    complianceProfileResp.Priority,
 	}

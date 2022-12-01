@@ -22,7 +22,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `name` (String)
 - `priority` (Number)

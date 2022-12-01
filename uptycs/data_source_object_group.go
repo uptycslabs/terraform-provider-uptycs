@@ -83,10 +83,6 @@ func (d *objectGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"retention_days": {
 				Type:     types.NumberType,
 				Optional: true,
@@ -141,7 +137,6 @@ func (d *objectGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Description:      types.String{Value: objectGroupResp.Description},
 		Secret:           types.String{Value: objectGroupResp.Secret},
 		ObjectType:       types.String{Value: objectGroupResp.ObjectType},
-		Custom:           types.Bool{Value: objectGroupResp.Custom},
 		RetentionDays:    0,
 		Destinations: types.List{
 			ElemType: types.StringType,

@@ -67,10 +67,6 @@ func (d *registryPathDataSource) GetSchema(_ context.Context) (tfsdk.Schema, dia
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 		},
 	}, nil
 }
@@ -104,7 +100,6 @@ func (d *registryPathDataSource) Read(ctx context.Context, req datasource.ReadRe
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom: types.Bool{Value: registryPathResp.Custom},
 	}
 
 	for _, _irp := range registryPathResp.IncludeRegistryPaths {

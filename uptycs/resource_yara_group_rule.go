@@ -57,12 +57,6 @@ func (r *yaraGroupRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
 		},
 	}, nil
 }
@@ -85,7 +79,6 @@ func (r *yaraGroupRuleResource) Read(ctx context.Context, req resource.ReadReque
 		Name:        types.String{Value: yaraGroupRuleResp.Name},
 		Description: types.String{Value: yaraGroupRuleResp.Description},
 		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
-		Custom:      types.Bool{Value: yaraGroupRuleResp.Custom},
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -109,7 +102,6 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
 		Rules:       plan.Rules.Value,
-		Custom:      plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -125,7 +117,6 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 		Name:        types.String{Value: yaraGroupRuleResp.Name},
 		Description: types.String{Value: yaraGroupRuleResp.Description},
 		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
-		Custom:      types.Bool{Value: yaraGroupRuleResp.Custom},
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -158,7 +149,6 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
 		Rules:       plan.Rules.Value,
-		Custom:      plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -174,7 +164,6 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 		Name:        types.String{Value: yaraGroupRuleResp.Name},
 		Description: types.String{Value: yaraGroupRuleResp.Description},
 		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
-		Custom:      types.Bool{Value: yaraGroupRuleResp.Custom},
 	}
 
 	diags = resp.State.Set(ctx, result)

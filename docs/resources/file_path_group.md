@@ -23,7 +23,6 @@ description: |-
 ### Optional
 
 - `check_signature` (Boolean)
-- `custom` (Boolean)
 - `description` (String)
 - `exclude_paths` (List of String)
 - `exclude_process_names` (List of String)
@@ -54,7 +53,6 @@ Required:
 
 Required:
 
-- `custom` (Boolean)
 - `description` (String)
 - `id` (String)
 - `name` (String)

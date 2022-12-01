@@ -55,10 +55,6 @@ func (d *roleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagno
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"hidden": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -113,7 +109,6 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:               types.Bool{Value: roleResp.Custom},
 		Hidden:               types.Bool{Value: roleResp.Hidden},
 		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
 		RoleObjectGroups: types.List{

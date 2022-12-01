@@ -18,7 +18,6 @@ description: |-
 ### Optional
 
 - `asset_group_rule_id` (String)
-- `custom` (Boolean)
 - `description` (String)
 - `destinations` (List of String)
 - `key` (String)

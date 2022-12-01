@@ -19,7 +19,6 @@ description: |-
 
 - `alert_tags` (List of String)
 - `code` (String)
-- `custom` (Boolean)
 - `description` (String)
 - `destinations` (Attributes List) (see [below for nested schema](#nestedatt--destinations))
 - `enabled` (Boolean)
@@ -27,7 +26,6 @@ description: |-
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `is_internal` (Boolean)
-- `lock` (Boolean)
 - `name` (String)
 - `notify_count` (Number)
 - `notify_interval` (Number)

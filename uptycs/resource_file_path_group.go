@@ -71,12 +71,6 @@ func (r *filePathGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
 			"check_signature": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -141,11 +135,6 @@ func (r *filePathGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag
 							Type:     types.StringType,
 							Optional: true,
 						},
-						"custom": {
-							Type:     types.BoolType,
-							Optional: true,
-							Computed: true,
-						},
 					},
 				),
 			},
@@ -184,7 +173,6 @@ func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:         types.Bool{Value: filePathGroupResp.Custom},
 		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
 		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
 		ExcludeProcessNames: types.List{
@@ -235,7 +223,6 @@ func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadReque
 			Name:        types.String{Value: ygr.Name},
 			Description: types.String{Value: ygr.Description},
 			Rules:       types.String{Value: ygr.Rules},
-			Custom:      types.Bool{Value: ygr.Custom},
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
@@ -295,7 +282,6 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 		IncludePaths:          includePaths,
 		IncludePathExtensions: includePathExtensions,
 		ExcludePaths:          excludePaths,
-		Custom:                plan.Custom.Value,
 		CheckSignature:        plan.CheckSignature.Value,
 		FileAccesses:          plan.FileAccesses.Value,
 		ExcludeProcessNames:   excludeProcessNames,
@@ -329,7 +315,6 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:         types.Bool{Value: filePathGroupResp.Custom},
 		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
 		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
 		ExcludeProcessNames: types.List{
@@ -380,7 +365,6 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 			Name:        types.String{Value: ygr.Name},
 			Description: types.String{Value: ygr.Description},
 			Rules:       types.String{Value: ygr.Rules},
-			Custom:      types.Bool{Value: ygr.Custom},
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
@@ -449,7 +433,6 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 		IncludePaths:          includePaths,
 		IncludePathExtensions: includePathExtensions,
 		ExcludePaths:          excludePaths,
-		Custom:                plan.Custom.Value,
 		CheckSignature:        plan.CheckSignature.Value,
 		FileAccesses:          plan.FileAccesses.Value,
 		ExcludeProcessNames:   excludeProcessNames,
@@ -483,7 +466,6 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:         types.Bool{Value: filePathGroupResp.Custom},
 		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
 		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
 		ExcludeProcessNames: types.List{
@@ -534,7 +516,6 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 			Name:        types.String{Value: ygr.Name},
 			Description: types.String{Value: ygr.Description},
 			Rules:       types.String{Value: ygr.Rules},
-			Custom:      types.Bool{Value: ygr.Custom},
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
