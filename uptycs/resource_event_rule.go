@@ -138,6 +138,10 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 								Type:     types.BoolType,
 								Required: true,
 							},
+							"metadata_sources": {
+								Type:     types.StringType,
+								Optional: true,
+							},
 						}),
 					},
 				}),
@@ -161,6 +165,11 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -190,8 +199,9 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
 			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
 			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				DisableAlert:    types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
+				RaiseAlert:      types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				MetadataSources: types.String{Value: string([]byte(metadataJSON)) + "\n"},
 			},
 		},
 	}
@@ -244,8 +254,9 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 			Key:           plan.BuilderConfig.Key.Value,
 			ValueField:    plan.BuilderConfig.ValueField.Value,
 			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert: plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
-				RaiseAlert:   plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
+				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
+				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
+				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.Value),
 			},
 		},
 	})
@@ -259,6 +270,11 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -288,8 +304,9 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
 			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
 			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				DisableAlert:    types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
+				RaiseAlert:      types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				MetadataSources: types.String{Value: string([]byte(metadataJSON)) + "\n"},
 			},
 		},
 	}
@@ -351,8 +368,9 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			Key:           plan.BuilderConfig.Key.Value,
 			ValueField:    plan.BuilderConfig.ValueField.Value,
 			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert: plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
-				RaiseAlert:   plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
+				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
+				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
+				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.Value),
 			},
 		},
 	})
@@ -366,6 +384,11 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -395,8 +418,9 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
 			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
 			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				RaiseAlert:      types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				DisableAlert:    types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
+				MetadataSources: types.String{Value: string([]byte(metadataJSON)) + "\n"},
 			},
 		},
 	}
