@@ -22,7 +22,6 @@ description: |-
 - `description` (String)
 - `enabled` (Boolean)
 - `event_tags` (List of String)
-- `exceptions` (List of String)
 - `grouping` (String)
 - `grouping_l2` (String)
 - `grouping_l3` (String)

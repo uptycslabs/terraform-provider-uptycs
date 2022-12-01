@@ -71,7 +71,6 @@ type EventRule struct {
 	Score         types.String  `tfsdk:"score"`
 	Enabled       types.Bool    `tfsdk:"enabled"`
 	EventTags     types.List    `tfsdk:"event_tags"`
-	Exceptions    types.List    `tfsdk:"exceptions"`
 	BuilderConfig BuilderConfig `tfsdk:"builder_config"`
 }
 

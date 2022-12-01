@@ -29,7 +29,6 @@ description: |-
 ### Optional
 
 - `enabled` (Boolean)
-- `exceptions` (List of String)
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `score` (String)

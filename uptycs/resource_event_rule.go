@@ -96,10 +96,6 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Type:     types.ListType{ElemType: types.StringType},
 				Required: true,
 			},
-			"exceptions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
 			"builder_config": {
 				Required: true,
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
@@ -185,10 +181,6 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Exceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
 		BuilderConfig: BuilderConfig{
 			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
@@ -212,10 +204,6 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: _et})
 	}
 
-	for _, _exc := range eventRuleResp.Exceptions {
-		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
-	}
-
 	diags := resp.State.Set(ctx, result)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -235,15 +223,6 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	var exceptions []string
-	plan.Exceptions.ElementsAs(ctx, &exceptions, false)
-	_exceptions := make([]uptycs.RuleException, 0)
-	for _, _re := range exceptions {
-		_exceptions = append(_exceptions, uptycs.RuleException{
-			ExceptionID: _re,
-		})
-	}
-
 	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
 		Name:        plan.Name.Value,
 		Code:        plan.Code.Value,
@@ -255,7 +234,6 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 		GroupingL2:  plan.GroupingL2.Value,
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
-		Exceptions:  _exceptions,
 		Score:       plan.Score.Value,
 		BuilderConfig: uptycs.BuilderConfig{
 			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
@@ -301,10 +279,6 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Exceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
 		BuilderConfig: BuilderConfig{
 			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
@@ -325,10 +299,6 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
-	}
-
-	for _, _exc := range eventRuleResp.Exceptions {
-		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -359,15 +329,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	var exceptions []string
-	plan.Exceptions.ElementsAs(ctx, &exceptions, false)
-	_exceptions := make([]uptycs.RuleException, 0)
-	for _, _re := range exceptions {
-		_exceptions = append(_exceptions, uptycs.RuleException{
-			ExceptionID: _re,
-		})
-	}
-
 	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
 		ID:          eventRuleID,
 		Name:        plan.Name.Value,
@@ -380,7 +341,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		GroupingL2:  plan.GroupingL2.Value,
 		GroupingL3:  plan.GroupingL3.Value,
 		EventTags:   tags,
-		Exceptions:  _exceptions,
 		Score:       plan.Score.Value,
 		BuilderConfig: uptycs.BuilderConfig{
 			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
@@ -426,10 +386,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Exceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
 		BuilderConfig: BuilderConfig{
 			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
@@ -447,10 +403,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
-	}
-
-	for _, _exc := range eventRuleResp.Exceptions {
-		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: _exc.ExceptionID})
 	}
 
 	diags = resp.State.Set(ctx, result)

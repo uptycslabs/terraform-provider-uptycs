@@ -95,10 +95,6 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"exceptions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
 			"builder_config": {
 				Optional: true,
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
@@ -200,10 +196,6 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Exceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
 		BuilderConfig: BuilderConfig{
 			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
 			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
@@ -225,10 +217,6 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	for _, t := range eventRuleResp.EventTags {
 		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
-	}
-
-	for _, are := range eventRuleResp.Exceptions {
-		result.Exceptions.Elems = append(result.Exceptions.Elems, types.String{Value: are.ExceptionID})
 	}
 
 	diags := resp.State.Set(ctx, result)
