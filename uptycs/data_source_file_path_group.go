@@ -67,10 +67,6 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 				Type:     types.ListType{ElemType: types.StringType},
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"check_signature": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -130,10 +126,6 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 							Type:     types.StringType,
 							Optional: true,
 						},
-						"custom": {
-							Type:     types.BoolType,
-							Optional: true,
-						},
 					},
 				),
 			},
@@ -143,11 +135,26 @@ func (d *filePathGroupDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 
 func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var filePathGroupID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &filePathGroupID)...)
+	var filePathGroupName string
 
-	filePathGroupResp, err := d.client.GetFilePathGroup(uptycs.FilePathGroup{
-		ID: filePathGroupID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &filePathGroupID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &filePathGroupName)
+
+	var filePathGroupToLookup uptycs.FilePathGroup
+
+	if len(filePathGroupID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		filePathGroupToLookup = uptycs.FilePathGroup{
+			Name: filePathGroupName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		filePathGroupToLookup = uptycs.FilePathGroup{
+			ID: filePathGroupID,
+		}
+	}
+
+	filePathGroupResp, err := d.client.GetFilePathGroup(filePathGroupToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -173,7 +180,6 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Custom:         types.Bool{Value: filePathGroupResp.Custom},
 		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
 		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
 		ExcludeProcessNames: types.List{
@@ -224,7 +230,6 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 			Name:        types.String{Value: ygr.Name},
 			Description: types.String{Value: ygr.Description},
 			Rules:       types.String{Value: ygr.Rules},
-			Custom:      types.Bool{Value: ygr.Custom},
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules

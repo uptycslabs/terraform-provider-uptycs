@@ -47,12 +47,6 @@ func (r *complianceProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, 
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
-			},
 			"description": {
 				Type:     types.StringType,
 				Optional: true,
@@ -84,7 +78,6 @@ func (r *complianceProfileResource) Read(ctx context.Context, req resource.ReadR
 		Name:        types.String{Value: complianceProfileResp.Name},
 		Description: types.String{Value: complianceProfileResp.Description},
 		Priority:    complianceProfileResp.Priority,
-		Custom:      types.Bool{Value: complianceProfileResp.Custom},
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -108,7 +101,6 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
 		Priority:    plan.Priority,
-		Custom:      plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -124,7 +116,6 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 		Name:        types.String{Value: complianceProfileResp.Name},
 		Description: types.String{Value: complianceProfileResp.Description},
 		Priority:    complianceProfileResp.Priority,
-		Custom:      types.Bool{Value: complianceProfileResp.Custom},
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -157,7 +148,6 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		Name:        plan.Name.Value,
 		Description: plan.Description.Value,
 		Priority:    plan.Priority,
-		Custom:      plan.Custom.Value,
 	})
 
 	if err != nil {
@@ -173,7 +163,6 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		Name:        types.String{Value: complianceProfileResp.Name},
 		Description: types.String{Value: complianceProfileResp.Description},
 		Priority:    complianceProfileResp.Priority,
-		Custom:      types.Bool{Value: complianceProfileResp.Custom},
 	}
 
 	diags = resp.State.Set(ctx, result)

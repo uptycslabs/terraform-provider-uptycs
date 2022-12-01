@@ -79,10 +79,6 @@ func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnos
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"system": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -176,7 +172,6 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
 		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
 		Tag:                       types.String{Value: tagResp.Tag},
-		Custom:                    types.Bool{Value: tagResp.Custom},
 		System:                    types.Bool{Value: tagResp.System},
 		TagRule:                   types.String{Value: tagResp.TagRuleID},
 		Status:                    types.String{Value: tagResp.Status},
@@ -208,28 +203,28 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		},
 	}
 
-	for _, t := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: t.Name})
+	for _, fpg := range tagResp.FilePathGroups {
+		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
 	}
 
 	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.Name})
+		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
 	}
 
 	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.Name})
+		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
 	}
 
 	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.Name})
+		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
 	}
 
 	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.Name})
+		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
 	}
 
 	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.Name})
+		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
 	}
 
 	diags := resp.State.Set(ctx, result)

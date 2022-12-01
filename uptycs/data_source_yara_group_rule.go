@@ -54,21 +54,32 @@ func (d *yaraGroupRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, di
 				Type:     types.StringType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 		},
 	}, nil
 }
 
 func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var yaraGroupRuleID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)...)
+	var yaraGroupRuleName string
 
-	yaraGroupRuleResp, err := d.client.GetYaraGroupRule(uptycs.YaraGroupRule{
-		ID: yaraGroupRuleID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &yaraGroupRuleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &yaraGroupRuleName)
+
+	var yaraGroupRuleToLookup uptycs.YaraGroupRule
+
+	if len(yaraGroupRuleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		yaraGroupRuleToLookup = uptycs.YaraGroupRule{
+			Name: yaraGroupRuleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		yaraGroupRuleToLookup = uptycs.YaraGroupRule{
+			ID: yaraGroupRuleID,
+		}
+	}
+
+	yaraGroupRuleResp, err := d.client.GetYaraGroupRule(yaraGroupRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -82,7 +93,6 @@ func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 		Name:        types.String{Value: yaraGroupRuleResp.Name},
 		Description: types.String{Value: yaraGroupRuleResp.Description},
 		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
-		Custom:      types.Bool{Value: yaraGroupRuleResp.Custom},
 	}
 
 	diags := resp.State.Set(ctx, result)

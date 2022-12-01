@@ -17,7 +17,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `hidden` (Boolean)
 - `name` (String)

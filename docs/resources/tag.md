@@ -27,7 +27,6 @@ description: |-
 ### Optional
 
 - `compliance_profile` (String)
-- `custom` (Boolean)
 - `custom_profile` (String)
 - `dns_block_rule` (String)
 - `flag_profile` (String)

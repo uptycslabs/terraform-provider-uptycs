@@ -17,7 +17,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `flags` (String)
 - `name` (String)

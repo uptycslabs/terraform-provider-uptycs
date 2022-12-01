@@ -19,7 +19,6 @@ description: |-
 
 - `audit_configurations` (List of String)
 - `compliance_profiled` (String)
-- `custom` (Boolean)
 - `custom_profile` (String)
 - `dns_block_rule` (String)
 - `event_exclude_profiles` (List of String)

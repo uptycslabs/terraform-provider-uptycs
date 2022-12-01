@@ -88,11 +88,26 @@ func (d *auditConfigurationDataSource) GetSchema(_ context.Context) (tfsdk.Schem
 
 func (d *auditConfigurationDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var auditConfigurationID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &auditConfigurationID)...)
+	var auditConfigurationName string
 
-	auditConfigurationResp, err := d.client.GetAuditConfiguration(uptycs.AuditConfiguration{
-		ID: auditConfigurationID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &auditConfigurationID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &auditConfigurationName)
+
+	var auditConfigurationToLookup uptycs.AuditConfiguration
+
+	if len(auditConfigurationID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		auditConfigurationToLookup = uptycs.AuditConfiguration{
+			Name: auditConfigurationName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		auditConfigurationToLookup = uptycs.AuditConfiguration{
+			ID: auditConfigurationID,
+		}
+	}
+
+	auditConfigurationResp, err := d.client.GetAuditConfiguration(auditConfigurationToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

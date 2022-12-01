@@ -17,7 +17,6 @@ description: |-
 
 ### Optional
 
-- `custom` (Boolean)
 - `description` (String)
 - `exclude_registry_paths` (List of String)
 - `grouping` (String)

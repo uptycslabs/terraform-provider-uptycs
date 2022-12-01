@@ -24,7 +24,6 @@ description: |-
 ### Optional
 
 - `additional_logger` (Boolean)
-- `custom` (Boolean)
 - `is_internal` (Boolean)
 - `name` (String)
 - `resource_type` (String)

@@ -71,10 +71,6 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.BoolType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"throttled": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -93,10 +89,6 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 			},
 			"grouping_l3": {
 				Type:     types.StringType,
-				Optional: true,
-			},
-			"lock": {
-				Type:     types.BoolType,
 				Optional: true,
 			},
 			"notify_interval": {
@@ -149,11 +141,26 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 
 func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var alertRuleID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &alertRuleID)...)
+	var alertRuleName string
 
-	alertRuleResp, err := d.client.GetAlertRule(uptycs.AlertRule{
-		ID: alertRuleID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &alertRuleID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &alertRuleName)
+
+	var alertRuleToLookup uptycs.AlertRule
+
+	if len(alertRuleID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		alertRuleToLookup = uptycs.AlertRule{
+			Name: alertRuleName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		alertRuleToLookup = uptycs.AlertRule{
+			ID: alertRuleID,
+		}
+	}
+
+	alertRuleResp, err := d.client.GetAlertRule(alertRuleToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -171,7 +178,6 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Rule:        types.String{Value: alertRuleResp.Rule},
 		Grouping:    types.String{Value: alertRuleResp.Grouping},
 		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Custom:      types.Bool{Value: alertRuleResp.Custom},
 		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
 		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
 		AlertTags: types.List{
@@ -180,7 +186,6 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		},
 		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
 		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		Lock:       types.Bool{Value: alertRuleResp.Lock},
 		AlertRuleExceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

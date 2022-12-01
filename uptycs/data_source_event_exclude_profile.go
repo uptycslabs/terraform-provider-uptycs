@@ -74,11 +74,26 @@ func (d *eventExcludeProfileDataSource) GetSchema(_ context.Context) (tfsdk.Sche
 
 func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var eventExcludeProfileID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)...)
+	var eventExcludeProfileName string
 
-	eventExcludeProfileResp, err := d.client.GetEventExcludeProfile(uptycs.EventExcludeProfile{
-		ID: eventExcludeProfileID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &eventExcludeProfileID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &eventExcludeProfileName)
+
+	var eventExcludeProfileToLookup uptycs.EventExcludeProfile
+
+	if len(eventExcludeProfileID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		eventExcludeProfileToLookup = uptycs.EventExcludeProfile{
+			Name: eventExcludeProfileName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		eventExcludeProfileToLookup = uptycs.EventExcludeProfile{
+			ID: eventExcludeProfileID,
+		}
+	}
+
+	eventExcludeProfileResp, err := d.client.GetEventExcludeProfile(eventExcludeProfileToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",

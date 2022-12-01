@@ -60,10 +60,6 @@ func (d *querypackDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.BoolType,
 				Optional: true,
 			},
-			"custom": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
 			"is_internal": {
 				Type:     types.BoolType,
 				Optional: true,
@@ -82,11 +78,26 @@ func (d *querypackDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 
 func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var querypackID string
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &querypackID)...)
+	var querypackName string
 
-	querypackResp, err := d.client.GetQuerypack(uptycs.Querypack{
-		ID: querypackID,
-	})
+	idAttr := req.Config.GetAttribute(ctx, path.Root("id"), &querypackID)
+	nameAttr := req.Config.GetAttribute(ctx, path.Root("name"), &querypackName)
+
+	var queryPackToLookup uptycs.Querypack
+
+	if len(querypackID) == 0 {
+		resp.Diagnostics.Append(nameAttr...)
+		queryPackToLookup = uptycs.Querypack{
+			Name: querypackName,
+		}
+	} else {
+		resp.Diagnostics.Append(idAttr...)
+		queryPackToLookup = uptycs.Querypack{
+			ID: querypackID,
+		}
+	}
+
+	querypackResp, err := d.client.GetQuerypack(queryPackToLookup)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Failed to read.",
@@ -105,7 +116,6 @@ func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Description:      types.String{Value: querypackResp.Description},
 		Type:             types.String{Value: querypackResp.Type},
 		AdditionalLogger: types.Bool{Value: querypackResp.AdditionalLogger},
-		Custom:           types.Bool{Value: querypackResp.Custom},
 		IsInternal:       types.Bool{Value: querypackResp.IsInternal},
 		ResourceType:     types.String{Value: querypackResp.ResourceType},
 		Conf:             types.String{Value: string([]byte(queryPackConfJSON)) + "\n"},

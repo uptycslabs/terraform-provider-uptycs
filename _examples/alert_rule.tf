@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.18"
+      version = "0.0.19"
     }
   }
 }
@@ -46,7 +46,6 @@ resource "uptycs_alert_rule" "test_alert_rule" {
   grouping_l2     = "Privilege Escalation"
   grouping_l3     = "T1078"
   is_internal     = false
-  lock            = false
   name            = "marcus test"
   notify_count    = 0
   notify_interval = 0

@@ -69,12 +69,6 @@ func (r *flagProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Type:     types.NumberType,
 				Optional: true,
 			},
-			"custom": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
-			},
 		},
 	}, nil
 }
@@ -106,7 +100,6 @@ func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest
 		ID:           types.String{Value: flagProfileResp.ID},
 		Name:         types.String{Value: flagProfileResp.Name},
 		Description:  types.String{Value: flagProfileResp.Description},
-		Custom:       types.Bool{Value: flagProfileResp.Custom},
 		Priority:     flagProfileResp.Priority,
 		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
 		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
@@ -133,7 +126,6 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 	flagProfileResp, err := r.client.CreateFlagProfile(uptycs.FlagProfile{
 		Name:         plan.Name.Value,
 		Description:  plan.Description.Value,
-		Custom:       plan.Custom.Value,
 		Flags:        uptycs.CustomJSONString(plan.Flags.Value),
 		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.Value),
 		Priority:     plan.Priority,
@@ -162,7 +154,6 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 		ID:           types.String{Value: flagProfileResp.ID},
 		Name:         types.String{Value: flagProfileResp.Name},
 		Description:  types.String{Value: flagProfileResp.Description},
-		Custom:       types.Bool{Value: flagProfileResp.Custom},
 		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
 		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
 		Priority:     flagProfileResp.Priority,
@@ -226,7 +217,6 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		ID:           types.String{Value: flagProfileResp.ID},
 		Name:         types.String{Value: flagProfileResp.Name},
 		Description:  types.String{Value: flagProfileResp.Description},
-		Custom:       types.Bool{Value: flagProfileResp.Custom},
 		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
 		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
 		Priority:     flagProfileResp.Priority,
