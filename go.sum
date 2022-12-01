@@ -251,6 +251,10 @@ github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
 github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201190850-e79af9cbd1b6 h1:DQ9MBYeicfh58I1HQANzQ/egGFRS9mriIISvnT6epsc=
 github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201190850-e79af9cbd1b6/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201212412-ce7d9317221b h1:5RwQB/QO/J0XRULLN4ahPyU6nccAqztjg8U18P/1xT8=
+github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201212412-ce7d9317221b/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201220835-f677f50b56b5 h1:m0RVEknb0H2B09AoEnsh5wxv9AYdEIzKrNYFsnV1H0M=
+github.com/uptycslabs/uptycs-client-go v0.0.26-0.20221201220835-f677f50b56b5/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=

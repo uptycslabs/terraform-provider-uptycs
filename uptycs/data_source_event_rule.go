@@ -137,6 +137,10 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 								Type:     types.BoolType,
 								Optional: true,
 							},
+							"metadata_sources": {
+								Type:     types.StringType,
+								Optional: true,
+							},
 						}),
 					},
 				}),
@@ -180,6 +184,11 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		fmt.Println(err)
 	}
 
+	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	var result = EventRule{
 		ID:          types.String{Value: eventRuleResp.ID},
 		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
@@ -205,8 +214,9 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
 			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
 			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert: types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:   types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				DisableAlert:    types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
+				RaiseAlert:      types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
+				MetadataSources: types.String{Value: string([]byte(metadataJSON)) + "\n"},
 			},
 		},
 	}

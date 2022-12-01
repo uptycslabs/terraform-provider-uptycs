@@ -86,8 +86,9 @@ type BuilderConfig struct {
 }
 
 type AutoAlertConfig struct {
-	RaiseAlert   types.Bool `tfsdk:"raise_alert"`
-	DisableAlert types.Bool `tfsdk:"disable_alert"`
+	RaiseAlert      types.Bool   `tfsdk:"raise_alert"`
+	DisableAlert    types.Bool   `tfsdk:"disable_alert"`
+	MetadataSources types.String `tfsdk:"metadata_sources"`
 }
 
 type Destination struct {
@@ -95,11 +96,11 @@ type Destination struct {
 	Name    types.String `tfsdk:"name"`
 	Type    types.String `tfsdk:"type"`
 	Address types.String `tfsdk:"address"`
+	Enabled types.Bool   `tfsdk:"enabled"`
 	//Config TODO
 	//"config": {
 	//  "sender": null
 	//},
-	Enabled types.Bool `tfsdk:"enabled"`
 	//Template TODO
 }
 

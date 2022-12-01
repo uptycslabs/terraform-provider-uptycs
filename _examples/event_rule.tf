@@ -36,8 +36,20 @@ resource "uptycs_event_rule" "Access_Key_Created" {
     key            = "upt_tenant_id"
     value_field    = "user_identity_user_name"
     auto_alert_config = {
-      raise_alert   = true
-      disable_alert = false
+      raise_alert      = true
+      disable_alert    = false
+      metadata_sources = <<EOT
+[
+  {
+    "as": "eventTime",
+    "field": "event_time",
+    "lookupSource": {
+      "type": "VALUE",
+      "table_name": {}
+    }
+  }
+]
+EOT
     }
     filters = <<EOT
 {

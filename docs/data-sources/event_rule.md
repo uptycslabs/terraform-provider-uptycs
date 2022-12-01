@@ -54,6 +54,7 @@ Optional:
 Optional:
 
 - `disable_alert` (Boolean)
+- `metadata_sources` (String)
 - `raise_alert` (Boolean)
 
 
