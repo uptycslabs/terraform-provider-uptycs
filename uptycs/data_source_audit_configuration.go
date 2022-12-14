@@ -117,16 +117,16 @@ func (d *auditConfigurationDataSource) Read(ctx context.Context, req datasource.
 	}
 
 	var result = AuditConfiguration{
-		ID:          types.String{Value: auditConfigurationResp.ID},
-		Name:        types.String{Value: auditConfigurationResp.Name},
-		Description: types.String{Value: auditConfigurationResp.Description},
-		Framework:   types.String{Value: auditConfigurationResp.Framework},
-		Version:     types.String{Value: auditConfigurationResp.Version},
-		OsVersion:   types.String{Value: auditConfigurationResp.OsVersion},
-		Platform:    types.String{Value: auditConfigurationResp.Platform},
-		TableName:   types.String{Value: auditConfigurationResp.TableName},
-		Sha256:      types.String{Value: auditConfigurationResp.Sha256},
-		Type:        types.String{Value: auditConfigurationResp.Type},
+		ID:          types.StringValue(auditConfigurationResp.ID),
+		Name:        types.StringValue(auditConfigurationResp.Name),
+		Description: types.StringValue(auditConfigurationResp.Description),
+		Framework:   types.StringValue(auditConfigurationResp.Framework),
+		Version:     types.StringValue(auditConfigurationResp.Version),
+		OsVersion:   types.StringValue(auditConfigurationResp.OsVersion),
+		Platform:    types.StringValue(auditConfigurationResp.Platform),
+		TableName:   types.StringValue(auditConfigurationResp.TableName),
+		Sha256:      types.StringValue(auditConfigurationResp.Sha256),
+		Type:        types.StringValue(auditConfigurationResp.Type),
 		Checks:      auditConfigurationResp.Checks,
 	}
 

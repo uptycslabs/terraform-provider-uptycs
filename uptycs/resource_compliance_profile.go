@@ -74,9 +74,9 @@ func (r *complianceProfileResource) Read(ctx context.Context, req resource.ReadR
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 
@@ -112,9 +112,9 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 
@@ -159,9 +159,9 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 

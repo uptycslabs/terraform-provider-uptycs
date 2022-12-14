@@ -94,11 +94,11 @@ func (d *destinationDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	var result = Destination{
-		ID:      types.String{Value: destinationResp.ID},
-		Name:    types.String{Value: destinationResp.Name},
-		Type:    types.String{Value: destinationResp.Type},
-		Address: types.String{Value: destinationResp.Address},
-		Enabled: types.Bool{Value: destinationResp.Enabled},
+		ID:      types.StringValue(destinationResp.ID),
+		Name:    types.StringValue(destinationResp.Name),
+		Type:    types.StringValue(destinationResp.Type),
+		Address: types.StringValue(destinationResp.Address),
+		Enabled: types.BoolValue(destinationResp.Enabled),
 	}
 
 	diags := resp.State.Set(ctx, result)

@@ -126,17 +126,17 @@ func (d *objectGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	var result = ObjectGroup{
-		ID:               types.String{Value: objectGroupResp.ID},
-		Name:             types.String{Value: objectGroupResp.Name},
-		Key:              types.String{Value: objectGroupResp.Key},
-		Value:            types.String{Value: objectGroupResp.Value},
-		AssetGroupRuleID: types.String{Value: objectGroupResp.AssetGroupRuleID},
-		ObjectGroupID:    types.String{Value: objectGroupResp.ObjectGroupID},
-		UserID:           types.String{Value: objectGroupResp.UserID},
-		RoleID:           types.String{Value: objectGroupResp.RoleID},
-		Description:      types.String{Value: objectGroupResp.Description},
-		Secret:           types.String{Value: objectGroupResp.Secret},
-		ObjectType:       types.String{Value: objectGroupResp.ObjectType},
+		ID:               types.StringValue(objectGroupResp.ID),
+		Name:             types.StringValue(objectGroupResp.Name),
+		Key:              types.StringValue(objectGroupResp.Key),
+		Value:            types.StringValue(objectGroupResp.Value),
+		AssetGroupRuleID: types.StringValue(objectGroupResp.AssetGroupRuleID),
+		ObjectGroupID:    types.StringValue(objectGroupResp.ObjectGroupID),
+		UserID:           types.StringValue(objectGroupResp.UserID),
+		RoleID:           types.StringValue(objectGroupResp.RoleID),
+		Description:      types.StringValue(objectGroupResp.Description),
+		Secret:           types.StringValue(objectGroupResp.Secret),
+		ObjectType:       types.StringValue(objectGroupResp.ObjectType),
 		RetentionDays:    0,
 		Destinations: types.List{
 			ElemType: types.StringType,

@@ -89,12 +89,12 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -136,12 +136,12 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -192,12 +192,12 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)

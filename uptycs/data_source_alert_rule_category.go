@@ -85,9 +85,9 @@ func (d *alertRuleCategoryDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var result = AlertRuleCategory{
-		ID:     types.String{Value: alertRuleCategoryResp.ID},
-		RuleID: types.String{Value: alertRuleCategoryResp.RuleID},
-		Name:   types.String{Value: alertRuleCategoryResp.Name},
+		ID:     types.StringValue(alertRuleCategoryResp.ID),
+		RuleID: types.StringValue(alertRuleCategoryResp.RuleID),
+		Name:   types.StringValue(alertRuleCategoryResp.Name),
 	}
 
 	diags := resp.State.Set(ctx, result)

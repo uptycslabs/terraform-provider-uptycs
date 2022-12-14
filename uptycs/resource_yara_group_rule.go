@@ -75,10 +75,10 @@ func (r *yaraGroupRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -113,10 +113,10 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -160,10 +160,10 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags = resp.State.Set(ctx, result)

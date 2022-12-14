@@ -170,22 +170,22 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var result = AlertRule{
-		ID:          types.String{Value: alertRuleResp.ID},
-		Name:        types.String{Value: alertRuleResp.Name},
-		Description: types.String{Value: alertRuleResp.Description},
-		Code:        types.String{Value: alertRuleResp.Code},
-		Type:        types.String{Value: alertRuleResp.Type},
-		Rule:        types.String{Value: alertRuleResp.Rule},
-		Grouping:    types.String{Value: alertRuleResp.Grouping},
-		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
+		ID:          types.StringValue(alertRuleResp.ID),
+		Name:        types.StringValue(alertRuleResp.Name),
+		Description: types.StringValue(alertRuleResp.Description),
+		Code:        types.StringValue(alertRuleResp.Code),
+		Type:        types.StringValue(alertRuleResp.Type),
+		Rule:        types.StringValue(alertRuleResp.Rule),
+		Grouping:    types.StringValue(alertRuleResp.Grouping),
+		Enabled:     types.BoolValue(alertRuleResp.Enabled),
+		Throttled:   types.BoolValue(alertRuleResp.Throttled),
+		IsInternal:  types.BoolValue(alertRuleResp.IsInternal),
 		AlertTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
-		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
+		GroupingL2: types.StringValue(alertRuleResp.GroupingL2),
+		GroupingL3: types.StringValue(alertRuleResp.GroupingL3),
 		AlertRuleExceptions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -216,10 +216,10 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 	destinations := make([]AlertRuleDestination, 0)
 	for _, d := range alertRuleResp.Destinations {
 		destinations = append(destinations, AlertRuleDestination{
-			Severity:           types.String{Value: d.Severity},
-			DestinationID:      types.String{Value: d.DestinationID},
-			NotifyEveryAlert:   types.Bool{Value: d.NotifyEveryAlert},
-			CloseAfterDelivery: types.Bool{Value: d.CloseAfterDelivery},
+			Severity:           types.StringValue(d.Severity),
+			DestinationID:      types.StringValue(d.DestinationID),
+			NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+			CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
 		})
 	}
 	result.Destinations = destinations

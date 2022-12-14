@@ -79,11 +79,11 @@ func (r *destinationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 	var result = Destination{
-		ID:      types.String{Value: destinationResp.ID},
-		Name:    types.String{Value: destinationResp.Name},
-		Type:    types.String{Value: destinationResp.Type},
-		Address: types.String{Value: destinationResp.Address},
-		Enabled: types.Bool{Value: destinationResp.Enabled},
+		ID:      types.StringValue(destinationResp.ID),
+		Name:    types.StringValue(destinationResp.Name),
+		Type:    types.StringValue(destinationResp.Type),
+		Address: types.StringValue(destinationResp.Address),
+		Enabled: types.BoolValue(destinationResp.Enabled),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -119,11 +119,11 @@ func (r *destinationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var result = Destination{
-		ID:      types.String{Value: destinationResp.ID},
-		Name:    types.String{Value: destinationResp.Name},
-		Type:    types.String{Value: destinationResp.Type},
-		Address: types.String{Value: destinationResp.Address},
-		Enabled: types.Bool{Value: destinationResp.Enabled},
+		ID:      types.StringValue(destinationResp.ID),
+		Name:    types.StringValue(destinationResp.Name),
+		Type:    types.StringValue(destinationResp.Type),
+		Address: types.StringValue(destinationResp.Address),
+		Enabled: types.BoolValue(destinationResp.Enabled),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -168,11 +168,11 @@ func (r *destinationResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	var result = Destination{
-		ID:      types.String{Value: destinationResp.ID},
-		Name:    types.String{Value: destinationResp.Name},
-		Type:    types.String{Value: destinationResp.Type},
-		Address: types.String{Value: destinationResp.Address},
-		Enabled: types.Bool{Value: destinationResp.Enabled},
+		ID:      types.StringValue(destinationResp.ID),
+		Name:    types.StringValue(destinationResp.Name),
+		Type:    types.StringValue(destinationResp.Type),
+		Address: types.StringValue(destinationResp.Address),
+		Enabled: types.BoolValue(destinationResp.Enabled),
 	}
 
 	diags = resp.State.Set(ctx, result)

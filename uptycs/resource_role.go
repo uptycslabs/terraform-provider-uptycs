@@ -91,15 +91,15 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -161,15 +161,15 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -239,15 +239,15 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

@@ -89,10 +89,10 @@ func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags := resp.State.Set(ctx, result)

@@ -109,15 +109,15 @@ func (r *exceptionResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -162,15 +162,15 @@ func (r *exceptionResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -224,15 +224,15 @@ func (r *exceptionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)

@@ -93,15 +93,15 @@ func (r *registryPathResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -157,15 +157,15 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -230,15 +230,15 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

@@ -89,10 +89,10 @@ func (d *atcQueryDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var result = AtcQuery{
-		ID:          types.String{Value: atcQueryResp.ID},
-		Name:        types.String{Value: atcQueryResp.Name},
-		Description: types.String{Value: atcQueryResp.Description},
-		Query:       types.String{Value: atcQueryResp.Query},
+		ID:          types.StringValue(atcQueryResp.ID),
+		Name:        types.StringValue(atcQueryResp.Name),
+		Description: types.StringValue(atcQueryResp.Description),
+		Query:       types.StringValue(atcQueryResp.Query),
 	}
 
 	diags := resp.State.Set(ctx, result)

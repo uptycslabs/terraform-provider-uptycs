@@ -105,14 +105,14 @@ func (d *assetGroupRuleDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	var result = AssetGroupRule{
-		ID:             types.String{Value: assetGroupRuleResp.ID},
-		Name:           types.String{Value: assetGroupRuleResp.Name},
-		Description:    types.String{Value: assetGroupRuleResp.Description},
-		Query:          types.String{Value: assetGroupRuleResp.Query},
+		ID:             types.StringValue(assetGroupRuleResp.ID),
+		Name:           types.StringValue(assetGroupRuleResp.Name),
+		Description:    types.StringValue(assetGroupRuleResp.Description),
+		Query:          types.StringValue(assetGroupRuleResp.Query),
 		Interval:       assetGroupRuleResp.Interval,
-		OsqueryVersion: types.String{Value: assetGroupRuleResp.OsqueryVersion},
-		Platform:       types.String{Value: assetGroupRuleResp.Platform},
-		Enabled:        types.Bool{Value: assetGroupRuleResp.Enabled},
+		OsqueryVersion: types.StringValue(assetGroupRuleResp.OsqueryVersion),
+		Platform:       types.StringValue(assetGroupRuleResp.Platform),
+		Enabled:        types.BoolValue(assetGroupRuleResp.Enabled),
 	}
 
 	diags := resp.State.Set(ctx, result)

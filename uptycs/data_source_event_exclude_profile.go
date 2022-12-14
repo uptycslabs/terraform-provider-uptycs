@@ -108,13 +108,13 @@ func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource
 	}
 
 	var result = EventExcludeProfile{
-		ID:           types.String{Value: eventExcludeProfileResp.ID},
-		Name:         types.String{Value: eventExcludeProfileResp.Name},
-		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
+		ID:           types.StringValue(eventExcludeProfileResp.ID),
+		Name:         types.StringValue(eventExcludeProfileResp.Name),
+		Description:  types.StringValue(eventExcludeProfileResp.Description),
+		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
-		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
-		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
+		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
+		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
 
 	diags := resp.State.Set(ctx, result)

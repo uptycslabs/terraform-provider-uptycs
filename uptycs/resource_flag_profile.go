@@ -97,13 +97,13 @@ func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
 		Priority:     flagProfileResp.Priority,
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -151,13 +151,13 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
 		Priority:     flagProfileResp.Priority,
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -214,13 +214,13 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
 		Priority:     flagProfileResp.Priority,
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)

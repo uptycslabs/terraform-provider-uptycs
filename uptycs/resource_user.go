@@ -127,15 +127,15 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		ImageURL:        types.String{Value: userResp.ImageURL},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		ImageURL:        types.StringValue(userResp.ImageURL),
+		Bot:             types.BoolValue(userResp.Bot),
+		Support:         types.BoolValue(userResp.Support),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,
@@ -225,15 +225,15 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
-		ImageURL:        types.String{Value: userResp.ImageURL},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		Bot:             types.BoolValue(userResp.Bot),
+		Support:         types.BoolValue(userResp.Support),
+		ImageURL:        types.StringValue(userResp.ImageURL),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,
@@ -332,15 +332,15 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		Bot:             types.Bool{Value: userResp.Bot},
-		ImageURL:        types.String{Value: userResp.ImageURL},
-		Support:         types.Bool{Value: userResp.Support},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		Bot:             types.BoolValue(userResp.Bot),
+		ImageURL:        types.StringValue(userResp.ImageURL),
+		Support:         types.BoolValue(userResp.Support),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,

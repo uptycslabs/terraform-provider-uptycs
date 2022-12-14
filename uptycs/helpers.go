@@ -7,6 +7,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+func Map[T, U any](f func(T) U, xs []T) []U {
+	ys := make([]U, len(xs))
+
+	for i, x := range xs {
+		ys[i] = f(x)
+	}
+
+	return ys
+}
+
+func StringsFromFn[T any](f func(T) string, xs []T) []types.String {
+	return Map(func(x T) types.String { return types.StringValue(f(x)) }, xs)
+}
+
 func stringDefault(defaultValue string) stringDefaultModifier {
 	return stringDefaultModifier{
 		Default: defaultValue,

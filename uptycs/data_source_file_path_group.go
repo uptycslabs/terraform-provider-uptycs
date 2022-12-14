@@ -164,10 +164,10 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = FilePathGroup{
-		ID:          types.String{Value: filePathGroupResp.ID},
-		Name:        types.String{Value: filePathGroupResp.Name},
-		Description: types.String{Value: filePathGroupResp.Description},
-		Grouping:    types.String{Value: filePathGroupResp.Grouping},
+		ID:          types.StringValue(filePathGroupResp.ID),
+		Name:        types.StringValue(filePathGroupResp.Name),
+		Description: types.StringValue(filePathGroupResp.Description),
+		Grouping:    types.StringValue(filePathGroupResp.Grouping),
 		IncludePaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -180,8 +180,8 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
-		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
+		CheckSignature: types.BoolValue(filePathGroupResp.CheckSignature),
+		FileAccesses:   types.BoolValue(filePathGroupResp.FileAccesses),
 		ExcludeProcessNames: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -215,9 +215,9 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 	var signatures []FilePathGroupSignature
 	for _, s := range filePathGroupResp.Signatures {
 		signatures = append(signatures, FilePathGroupSignature{
-			ID:          types.String{Value: s.ID},
-			Name:        types.String{Value: s.Name},
-			Description: types.String{Value: s.Description},
+			ID:          types.StringValue(s.ID),
+			Name:        types.StringValue(s.Name),
+			Description: types.StringValue(s.Description),
 			//Paths:       types.List{}, //TODO we dont have any signatures
 		})
 	}
@@ -226,10 +226,10 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 	var yaraGroupRules []YaraGroupRule
 	for _, ygr := range filePathGroupResp.YaraGroupRules {
 		yaraGroupRules = append(yaraGroupRules, YaraGroupRule{
-			ID:          types.String{Value: ygr.ID},
-			Name:        types.String{Value: ygr.Name},
-			Description: types.String{Value: ygr.Description},
-			Rules:       types.String{Value: ygr.Rules},
+			ID:          types.StringValue(ygr.ID),
+			Name:        types.StringValue(ygr.Name),
+			Description: types.StringValue(ygr.Description),
+			Rules:       types.StringValue(ygr.Rules),
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules

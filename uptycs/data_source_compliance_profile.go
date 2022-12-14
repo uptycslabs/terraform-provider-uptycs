@@ -89,9 +89,9 @@ func (d *complianceProfileDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 

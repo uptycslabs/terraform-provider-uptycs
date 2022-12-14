@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -102,30 +101,22 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                   types.StringValue(roleResp.ID),
+		Name:                 types.StringValue(roleResp.Name),
+		Description:          types.StringValue(roleResp.Description),
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 	}
 
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
-	}
+	var diags diag.Diagnostics
+	result.Permissions, diags = types.ListValueFrom(ctx, types.StringType, roleResp.Permissions)
+	result.RoleObjectGroups, diags = types.ListValueFrom(
+		ctx,
+		types.StringType,
+		StringsFromFn(func(_rogid ObjectGroup) string { return _rogid.ObjectGroupID.String() }, roleResp.RoleObjectGroups),
+	)
 
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
-	}
-
-	diags := resp.State.Set(ctx, result)
+	diags = resp.State.Set(ctx, result)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

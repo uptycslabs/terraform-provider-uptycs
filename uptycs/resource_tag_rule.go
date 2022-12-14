@@ -117,18 +117,18 @@ func (r *tagRuleResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -171,18 +171,18 @@ func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -234,18 +234,18 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)

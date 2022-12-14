@@ -104,12 +104,12 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
