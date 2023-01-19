@@ -2,6 +2,7 @@ package uptycs
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -62,6 +63,9 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Type:     types.StringType,
 				Required: true,
 				Computed: false,
+				Validators: []tfsdk.AttributeValidator{
+					stringvalidator.OneOfCaseInsensitive([]string{"sql"}...),
+				},
 			},
 			"rule": {
 				Type:     types.StringType,
@@ -73,7 +77,8 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 			},
 			"enabled": {
 				Type:     types.BoolType,
-				Required: true,
+				Required: false,
+				Computed: true,
 			},
 			"throttled": {
 				Type:     types.BoolType,
@@ -85,7 +90,7 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 			},
 			"alert_tags": {
 				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+				Optional: true,
 			},
 			"grouping_l2": {
 				Type:     types.StringType,
@@ -96,12 +101,12 @@ func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Required: true,
 			},
 			"notify_interval": {
-				Type:     types.NumberType,
-				Optional: true,
+				Type:     types.Int64Type,
+				Required: true,
 			},
 			"notify_count": {
-				Type:     types.NumberType,
-				Optional: true,
+				Type:     types.Int64Type,
+				Required: true,
 			},
 			"rule_exceptions": {
 				Type:     types.ListType{ElemType: types.StringType},
@@ -158,16 +163,18 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var result = AlertRule{
-		ID:          types.String{Value: alertRuleResp.ID},
-		Name:        types.String{Value: alertRuleResp.Name},
-		Description: types.String{Value: alertRuleResp.Description},
-		Code:        types.String{Value: alertRuleResp.Code},
-		Type:        types.String{Value: alertRuleResp.Type},
-		Rule:        types.String{Value: alertRuleResp.Rule},
-		Grouping:    types.String{Value: alertRuleResp.Grouping},
-		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
+		ID:                  types.String{Value: alertRuleResp.ID},
+		Name:                types.String{Value: alertRuleResp.Name},
+		Description:         types.String{Value: alertRuleResp.Description},
+		Code:                types.String{Value: alertRuleResp.Code},
+		Type:                types.String{Value: alertRuleResp.Type},
+		Rule:                types.String{Value: alertRuleResp.Rule},
+		Grouping:            types.String{Value: alertRuleResp.Grouping},
+		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
+		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
+		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
+		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
+		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
 		AlertTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -180,12 +187,6 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		},
 	}
 
-	if alertRuleResp.AlertNotifyInterval != 0 {
-		result.AlertNotifyInterval = &alertRuleResp.AlertNotifyInterval
-	}
-	if alertRuleResp.AlertNotifyCount != 0 {
-		result.AlertNotifyCount = &alertRuleResp.AlertNotifyCount
-	}
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
 			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
@@ -265,13 +266,8 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		GroupingL3:          plan.GroupingL3.Value,
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
-	}
-	if plan.AlertNotifyInterval != nil {
-		alertRule.AlertNotifyInterval = *plan.AlertNotifyInterval
-	}
-
-	if plan.AlertNotifyCount != nil {
-		alertRule.AlertNotifyCount = *plan.AlertNotifyCount
+		AlertNotifyInterval: int(plan.AlertNotifyInterval.Value),
+		AlertNotifyCount:    int(plan.AlertNotifyCount.Value),
 	}
 
 	if plan.SQLConfig != nil {
@@ -290,16 +286,18 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var result = AlertRule{
-		ID:          types.String{Value: alertRuleResp.ID},
-		Name:        types.String{Value: alertRuleResp.Name},
-		Description: types.String{Value: alertRuleResp.Description},
-		Code:        types.String{Value: alertRuleResp.Code},
-		Type:        types.String{Value: alertRuleResp.Type},
-		Rule:        types.String{Value: alertRuleResp.Rule},
-		Grouping:    types.String{Value: alertRuleResp.Grouping},
-		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
+		ID:                  types.String{Value: alertRuleResp.ID},
+		Name:                types.String{Value: alertRuleResp.Name},
+		Description:         types.String{Value: alertRuleResp.Description},
+		Code:                types.String{Value: alertRuleResp.Code},
+		Type:                types.String{Value: alertRuleResp.Type},
+		Rule:                types.String{Value: alertRuleResp.Rule},
+		Grouping:            types.String{Value: alertRuleResp.Grouping},
+		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
+		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
+		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
+		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
+		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
 		AlertTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -310,13 +308,6 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-	}
-
-	if alertRuleResp.AlertNotifyInterval != 0 {
-		result.AlertNotifyInterval = &alertRuleResp.AlertNotifyInterval
-	}
-	if alertRuleResp.AlertNotifyCount != 0 {
-		result.AlertNotifyCount = &alertRuleResp.AlertNotifyCount
 	}
 
 	if alertRuleResp.SQLConfig != nil {
@@ -402,18 +393,13 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		Enabled:             plan.Enabled.Value,
 		Throttled:           plan.Throttled.Value,
 		IsInternal:          plan.IsInternal.Value,
+		AlertNotifyInterval: int(plan.AlertNotifyInterval.Value),
+		AlertNotifyCount:    int(plan.AlertNotifyCount.Value),
 		AlertTags:           tags,
 		GroupingL2:          plan.GroupingL2.Value,
 		GroupingL3:          plan.GroupingL3.Value,
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
-	}
-	if plan.AlertNotifyInterval != nil {
-		alertRule.AlertNotifyInterval = *plan.AlertNotifyInterval
-	}
-
-	if plan.AlertNotifyCount != nil {
-		alertRule.AlertNotifyCount = *plan.AlertNotifyCount
 	}
 
 	if plan.SQLConfig != nil {
@@ -433,16 +419,18 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	var result = AlertRule{
-		ID:          types.String{Value: alertRuleResp.ID},
-		Name:        types.String{Value: alertRuleResp.Name},
-		Description: types.String{Value: alertRuleResp.Description},
-		Code:        types.String{Value: alertRuleResp.Code},
-		Type:        types.String{Value: alertRuleResp.Type},
-		Rule:        types.String{Value: alertRuleResp.Rule},
-		Grouping:    types.String{Value: alertRuleResp.Grouping},
-		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
+		ID:                  types.String{Value: alertRuleResp.ID},
+		Name:                types.String{Value: alertRuleResp.Name},
+		Description:         types.String{Value: alertRuleResp.Description},
+		Code:                types.String{Value: alertRuleResp.Code},
+		Type:                types.String{Value: alertRuleResp.Type},
+		Rule:                types.String{Value: alertRuleResp.Rule},
+		Grouping:            types.String{Value: alertRuleResp.Grouping},
+		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
+		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
+		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
+		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
+		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
 		AlertTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -453,13 +441,6 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-	}
-
-	if alertRuleResp.AlertNotifyInterval != 0 {
-		result.AlertNotifyInterval = &alertRuleResp.AlertNotifyInterval
-	}
-	if alertRuleResp.AlertNotifyCount != 0 {
-		result.AlertNotifyCount = &alertRuleResp.AlertNotifyCount
 	}
 
 	if alertRuleResp.SQLConfig != nil {

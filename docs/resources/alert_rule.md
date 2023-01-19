@@ -17,16 +17,16 @@ description: |-
 
 ### Required
 
-- `alert_tags` (List of String)
 - `code` (String)
 - `description` (String)
 - `destinations` (Attributes List) (see [below for nested schema](#nestedatt--destinations))
-- `enabled` (Boolean)
 - `grouping` (String)
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `is_internal` (Boolean)
 - `name` (String)
+- `notify_count` (Number)
+- `notify_interval` (Number)
 - `rule` (String)
 - `rule_exceptions` (List of String)
 - `throttled` (Boolean)
@@ -34,12 +34,12 @@ description: |-
 
 ### Optional
 
-- `notify_count` (Number)
-- `notify_interval` (Number)
+- `alert_tags` (List of String)
 - `sql_config` (Attributes) (see [below for nested schema](#nestedatt--sql_config))
 
 ### Read-Only
 
+- `enabled` (Boolean)
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--destinations"></a>

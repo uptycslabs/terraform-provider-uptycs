@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.19"
+      version = "0.0.20"
     }
   }
 }

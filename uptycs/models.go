@@ -18,21 +18,11 @@ type AlertRule struct {
 	AlertTags           types.List             `tfsdk:"alert_tags"`
 	GroupingL2          types.String           `tfsdk:"grouping_l2"`
 	GroupingL3          types.String           `tfsdk:"grouping_l3"`
-	AlertNotifyInterval *int                   `tfsdk:"notify_interval"`
-	AlertNotifyCount    *int                   `tfsdk:"notify_count"`
+	AlertNotifyInterval types.Int64            `tfsdk:"notify_interval"`
+	AlertNotifyCount    types.Int64            `tfsdk:"notify_count"`
 	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
 	Destinations        []AlertRuleDestination `tfsdk:"destinations"`
 	SQLConfig           *SQLConfig             `tfsdk:"sql_config"`
-	//ScriptConfig        *ScriptConfig          `tfsdk:"script_config"` //TODO cant find any examples
-}
-
-type ScriptConfig struct {
-	ID               types.String `tfsdk:"id"`
-	QueryPackID      types.String `tfsdk:"querypack_id"`
-	TableName        types.String `tfsdk:"table_name"`
-	EventCode        types.String `tfsdk:"event_code"`
-	EventMinSeverity types.String `tfsdk:"event_min_severity"`
-	Added            types.Bool   `tfsdk:"added"`
 }
 
 type AlertRuleDestination struct {
