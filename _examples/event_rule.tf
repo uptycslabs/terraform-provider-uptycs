@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.19"
+      version = "0.0.20"
     }
   }
 }
@@ -45,7 +45,7 @@ resource "uptycs_event_rule" "Access_Key_Created" {
     "field": "event_time",
     "lookupSource": {
       "type": "VALUE",
-      "table_name": {}
+      "table_name": null
     }
   }
 ]
@@ -91,48 +91,4 @@ EOT
 }
 EOT
   }
-}
-
-resource "uptycs_event_rule" "a_different_rule" {
-  name        = "Access Key Created"
-  description = "Access Key created by an IAM user for another user using CreateAccessKey policy."
-  enabled     = false
-  grouping    = "ATTACK"
-  grouping_l2 = "Privilege Escalation"
-  grouping_l3 = "T1078"
-  code        = "AWS_THREAT_PRIV_ESC_1"
-  type        = "builder"
-  rule        = "builder"
-  event_tags = [
-    "ATTACK",
-    "AWS",
-    "Cloud",
-    "IAM",
-    "Privilege Escalation",
-    "T1078",
-    "THREAT",
-    "elastalert"
-  ]
-  builder_config = <<EOT
-{
-  "tableName": "process_open_sockets",
-  "added": true,
-  "matchesFilter": true,
-  "filters": {
-    "and": [
-      {
-        "not": true,
-        "name": "remote_address",
-        "value": "^172.(1[6-9]|2[0-9]|3[01])|^10.|^192.168.",
-        "operator": "MATCHES_REGEX"
-      }
-    ]
-  },
-  "severity": "low",
-  "key": "Test",
-  "valueField": "pid",
-  "autoAlertConfig": {},
-  "addedStr": "true"
-}
-EOT
 }

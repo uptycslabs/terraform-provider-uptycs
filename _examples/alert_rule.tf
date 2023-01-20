@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.19"
+      version = "0.0.20"
     }
   }
 }
@@ -23,6 +23,8 @@ output "test_rule" {
 }
 
 resource "uptycs_alert_rule" "test_alert_rule" {
+  code        = "AWS_THREAT_PRIV_ESC_1_MARCUS"
+  description = "Access Key created by an IAM user for another user using CreateAccessKey policy."
   alert_tags = [
     "ATTACK",
     "AWS",
@@ -31,8 +33,6 @@ resource "uptycs_alert_rule" "test_alert_rule" {
     "Privilege Escalation",
     "T1078",
   ]
-  code        = "AWS_THREAT_PRIV_ESC_1_MARCUS"
-  description = "Access Key created by an IAM user for another user using CreateAccessKey policy."
   destinations = [
     {
       close_after_delivery = true
@@ -41,7 +41,6 @@ resource "uptycs_alert_rule" "test_alert_rule" {
       severity             = ""
     },
   ]
-  enabled         = true
   grouping        = "ATTACK"
   grouping_l2     = "Privilege Escalation"
   grouping_l3     = "T1078"

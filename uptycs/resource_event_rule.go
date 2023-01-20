@@ -56,9 +56,10 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Required: true,
 			},
 			"score": {
-				Type:     types.StringType,
-				Optional: true,
-				Computed: false,
+				Type:          types.StringType,
+				Optional:      true,
+				Computed:      true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
 			"code": {
 				Type:     types.StringType,
@@ -90,7 +91,7 @@ func (r *eventRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Dia
 				Type:          types.BoolType,
 				Optional:      true,
 				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
 			"event_tags": {
 				Type:     types.ListType{ElemType: types.StringType},

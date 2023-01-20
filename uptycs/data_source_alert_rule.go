@@ -92,11 +92,11 @@ func (d *alertRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 				Optional: true,
 			},
 			"notify_interval": {
-				Type:     types.NumberType,
+				Type:     types.Int64Type,
 				Optional: true,
 			},
 			"notify_count": {
-				Type:     types.NumberType,
+				Type:     types.Int64Type,
 				Optional: true,
 			},
 			"rule_exceptions": {
@@ -170,16 +170,18 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var result = AlertRule{
-		ID:          types.String{Value: alertRuleResp.ID},
-		Name:        types.String{Value: alertRuleResp.Name},
-		Description: types.String{Value: alertRuleResp.Description},
-		Code:        types.String{Value: alertRuleResp.Code},
-		Type:        types.String{Value: alertRuleResp.Type},
-		Rule:        types.String{Value: alertRuleResp.Rule},
-		Grouping:    types.String{Value: alertRuleResp.Grouping},
-		Enabled:     types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:   types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:  types.Bool{Value: alertRuleResp.IsInternal},
+		ID:                  types.String{Value: alertRuleResp.ID},
+		Name:                types.String{Value: alertRuleResp.Name},
+		Description:         types.String{Value: alertRuleResp.Description},
+		Code:                types.String{Value: alertRuleResp.Code},
+		Type:                types.String{Value: alertRuleResp.Type},
+		Rule:                types.String{Value: alertRuleResp.Rule},
+		Grouping:            types.String{Value: alertRuleResp.Grouping},
+		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
+		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
+		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
+		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
+		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
 		AlertTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -190,13 +192,6 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-	}
-
-	if alertRuleResp.AlertNotifyInterval != 0 {
-		result.AlertNotifyInterval = &alertRuleResp.AlertNotifyInterval
-	}
-	if alertRuleResp.AlertNotifyCount != 0 {
-		result.AlertNotifyCount = &alertRuleResp.AlertNotifyCount
 	}
 
 	if alertRuleResp.SQLConfig != nil {
