@@ -3,18 +3,11 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &registryPathResource{}
-	_ resource.ResourceWithConfigure   = &registryPathResource{}
-	_ resource.ResourceWithImportState = &registryPathResource{}
 )
 
 func RegistryPathResource() resource.Resource {
@@ -37,45 +30,33 @@ func (r *registryPathResource) Configure(_ context.Context, req resource.Configu
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *registryPathResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:          types.StringType,
-				Optional:      true,
+func (r *registryPathResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":   schema.StringAttribute{Computed: true},
+			"name": schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"grouping": {
-				Type:          types.StringType,
-				Optional:      true,
+			"grouping": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"include_registry_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+			"include_registry_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
-			"reg_accesses": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"reg_accesses": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"exclude_registry_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+			"exclude_registry_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *registryPathResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -93,15 +74,15 @@ func (r *registryPathResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -157,15 +138,15 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -230,15 +211,15 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
+		ID:          types.StringValue(registryPathResp.ID),
+		Name:        types.StringValue(registryPathResp.Name),
+		Description: types.StringValue(registryPathResp.Description),
+		Grouping:    types.StringValue(registryPathResp.Grouping),
 		IncludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
+		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
 		ExcludeRegistryPaths: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

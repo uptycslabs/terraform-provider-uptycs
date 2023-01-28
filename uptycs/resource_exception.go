@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &exceptionResource{}
-	_ resource.ResourceWithConfigure   = &exceptionResource{}
-	_ resource.ResourceWithImportState = &exceptionResource{}
 )
 
 func ExceptionResource() resource.Resource {
@@ -38,55 +31,32 @@ func (r *exceptionResource) Configure(_ context.Context, req resource.ConfigureR
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *exceptionResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"exception_type": {
-				Type:          types.StringType,
-				Optional:      true,
+func (r *exceptionResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Computed: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"exception_type": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("sift")},
 			},
-			"table_name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"is_global": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"table_name": schema.StringAttribute{Optional: true},
+			"is_global": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"disabled": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"disabled": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"close_open_alerts": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"close_open_alerts": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"rule": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+			"rule": schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (r *exceptionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -109,15 +79,15 @@ func (r *exceptionResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -162,15 +132,15 @@ func (r *exceptionResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -224,15 +194,15 @@ func (r *exceptionResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	var result = Exception{
-		ID:              types.String{Value: exceptionResp.ID},
-		Name:            types.String{Value: exceptionResp.Name},
-		Description:     types.String{Value: exceptionResp.Description},
-		ExceptionType:   types.String{Value: exceptionResp.ExceptionType},
-		TableName:       types.String{Value: exceptionResp.TableName},
-		IsGlobal:        types.Bool{Value: exceptionResp.IsGlobal},
-		Disabled:        types.Bool{Value: exceptionResp.Disabled},
-		CloseOpenAlerts: types.Bool{Value: exceptionResp.CloseOpenAlerts},
-		Rule:            types.String{Value: string([]byte(ruleJSON)) + "\n"},
+		ID:              types.StringValue(exceptionResp.ID),
+		Name:            types.StringValue(exceptionResp.Name),
+		Description:     types.StringValue(exceptionResp.Description),
+		ExceptionType:   types.StringValue(exceptionResp.ExceptionType),
+		TableName:       types.StringValue(exceptionResp.TableName),
+		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
+		Disabled:        types.BoolValue(exceptionResp.Disabled),
+		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
+		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)

@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &customProfileResource{}
-	_ resource.ResourceWithConfigure   = &customProfileResource{}
-	_ resource.ResourceWithImportState = &customProfileResource{}
 )
 
 func CustomProfileResource() resource.Resource {
@@ -38,35 +31,17 @@ func (r *customProfileResource) Configure(_ context.Context, req resource.Config
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *customProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"query_schedules": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+func (r *customProfileResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":              schema.StringAttribute{Computed: true},
+			"name":            schema.StringAttribute{Optional: true},
+			"description":     schema.StringAttribute{Optional: true},
+			"query_schedules": schema.StringAttribute{Optional: true},
+			"priority":        schema.NumberAttribute{Optional: true},
+			"resource_type":   schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (r *customProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -89,12 +64,12 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -136,12 +111,12 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -192,12 +167,12 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)

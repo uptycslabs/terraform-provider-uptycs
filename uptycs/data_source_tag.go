@@ -4,16 +4,10 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &tagDataSource{}
-	_ datasource.DataSourceWithConfigure = &tagDataSource{}
 )
 
 func TagDataSource() datasource.DataSource {
@@ -36,95 +30,50 @@ func (d *tagDataSource) Configure(_ context.Context, req datasource.ConfigureReq
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *tagDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
+func (d *tagDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":                          schema.StringAttribute{Optional: true},
+			"value":                       schema.StringAttribute{Optional: true},
+			"key":                         schema.StringAttribute{Optional: true},
+			"flag_profile":                schema.StringAttribute{Optional: true},
+			"custom_profile":              schema.StringAttribute{Optional: true},
+			"compliance_profiled":         schema.StringAttribute{Optional: true},
+			"process_block_rule":          schema.StringAttribute{Optional: true},
+			"dns_block_rule":              schema.StringAttribute{Optional: true},
+			"windows_defender_preference": schema.StringAttribute{Optional: true},
+			"tag":                         schema.StringAttribute{Optional: true},
+			"system":                      schema.BoolAttribute{Optional: true},
+			"tag_rule":                    schema.StringAttribute{Optional: true},
+			"status":                      schema.StringAttribute{Optional: true},
+			"source":                      schema.StringAttribute{Optional: true},
+			"resource_type":               schema.StringAttribute{Optional: true},
+			"file_path_groups": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"value": {
-				Type:     types.StringType,
-				Optional: true,
+			"event_exclude_profiles": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"key": {
-				Type:     types.StringType,
-				Optional: true,
+			"querypacks": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"flag_profile": {
-				Type:     types.StringType,
-				Optional: true,
+			"registry_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"custom_profile": {
-				Type:     types.StringType,
-				Optional: true,
+			"yara_group_rules": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"compliance_profiled": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"process_block_rule": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"dns_block_rule": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"windows_defender_preference": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"tag": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"system": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"tag_rule": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"status": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"source": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"file_path_groups": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"event_exclude_profiles": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"querypacks": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"registry_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"yara_group_rules": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"audit_configurations": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"audit_configurations": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -162,21 +111,21 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 	}
 
 	var result = Tag{
-		ID:                        types.String{Value: tagResp.ID},
-		Value:                     types.String{Value: tagResp.Value},
-		Key:                       types.String{Value: tagResp.Key},
-		FlagProfile:               types.String{Value: tagResp.FlagProfileID},
-		CustomProfile:             types.String{Value: tagResp.CustomProfileID},
-		ComplianceProfile:         types.String{Value: tagResp.ComplianceProfileID},
-		ProcessBlockRule:          types.String{Value: tagResp.ProcessBlockRuleID},
-		DNSBlockRule:              types.String{Value: tagResp.DNSBlockRuleID},
-		WindowsDefenderPreference: types.String{Value: tagResp.WindowsDefenderPreferenceID},
-		Tag:                       types.String{Value: tagResp.Tag},
-		System:                    types.Bool{Value: tagResp.System},
-		TagRule:                   types.String{Value: tagResp.TagRuleID},
-		Status:                    types.String{Value: tagResp.Status},
-		Source:                    types.String{Value: tagResp.Source},
-		ResourceType:              types.String{Value: tagResp.ResourceType},
+		ID:                        types.StringValue(tagResp.ID),
+		Value:                     types.StringValue(tagResp.Value),
+		Key:                       types.StringValue(tagResp.Key),
+		FlagProfile:               types.StringValue(tagResp.FlagProfileID),
+		CustomProfile:             types.StringValue(tagResp.CustomProfileID),
+		ComplianceProfile:         types.StringValue(tagResp.ComplianceProfileID),
+		ProcessBlockRule:          types.StringValue(tagResp.ProcessBlockRuleID),
+		DNSBlockRule:              types.StringValue(tagResp.DNSBlockRuleID),
+		WindowsDefenderPreference: types.StringValue(tagResp.WindowsDefenderPreferenceID),
+		Tag:                       types.StringValue(tagResp.Tag),
+		System:                    types.BoolValue(tagResp.System),
+		TagRule:                   types.StringValue(tagResp.TagRuleID),
+		Status:                    types.StringValue(tagResp.Status),
+		Source:                    types.StringValue(tagResp.Source),
+		ResourceType:              types.StringValue(tagResp.ResourceType),
 		FilePathGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

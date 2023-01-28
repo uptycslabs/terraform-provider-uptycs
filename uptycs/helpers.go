@@ -3,9 +3,28 @@ package uptycs
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func makeListStringAttribute(in []string) types.List {
+	values := make([]attr.Value, len(in))
+	for i, v := range in {
+		values[i] = types.StringValue(v)
+	}
+	return types.ListValueMust(types.StringType, values)
+}
+
+func makeListStringAttributeFn[T any](in []T, fn func(T) (string, bool)) types.List {
+	values := make([]attr.Value, 0)
+	for _, v := range in {
+		if s, ok := fn(v); ok {
+			values = append(values, types.StringValue(s))
+		}
+	}
+	return types.ListValueMust(types.StringType, values)
+}
 
 func stringDefault(defaultValue string) stringDefaultModifier {
 	return stringDefaultModifier{
@@ -32,27 +51,27 @@ func (m stringDefaultModifier) MarkdownDescription(ctx context.Context) string {
 	return fmt.Sprintf("If value is not configured, defaults to `%s`", m.Default)
 }
 
-// Modify runs the logic of the plan modifier.
+// PlanModifyString runs the logic of the plan modifier.
 // Access to the configuration, plan, and state is available in `req`, while
 // `resp` contains fields for updating the planned value, triggering resource
 // replacement, and returning diagnostics.
-func (m stringDefaultModifier) Modify(ctx context.Context, req tfsdk.ModifyAttributePlanRequest, resp *tfsdk.ModifyAttributePlanResponse) {
+func (m stringDefaultModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
 	// types.String must be the attr.Value produced by the attr.Type in the schema for this attribute
 	// for generic plan modifiers, use
 	// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework/tfsdk#ConvertValue
 	// to convert into a known type.
 	var str types.String
-	diags := tfsdk.ValueAs(ctx, req.AttributePlan, &str)
+	diags := tfsdk.ValueAs(ctx, req.PlanValue, &str)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	if !str.Null {
+	if !str.IsNull() {
 		return
 	}
 
-	resp.AttributePlan = types.String{Value: m.Default}
+	resp.PlanValue = types.StringValue(m.Default)
 }
 
 type boolDefaultModifier struct {
@@ -65,23 +84,23 @@ func boolDefault(defaultValue bool) boolDefaultModifier {
 	}
 }
 
-func (m boolDefaultModifier) Modify(ctx context.Context, req tfsdk.ModifyAttributePlanRequest, resp *tfsdk.ModifyAttributePlanResponse) {
+func (m boolDefaultModifier) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
 	// types.Bool must be the attr.Value produced by the attr.Type in the schema for this attribute
 	// for generic plan modifiers, use
 	// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-framework/tfsdk#ConvertValue
 	// to convert into a known type.
 	var str types.Bool
-	diags := tfsdk.ValueAs(ctx, req.AttributePlan, &str)
+	diags := tfsdk.ValueAs(ctx, req.PlanValue, &str)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	if !str.Null {
+	if !str.IsNull() {
 		return
 	}
 
-	resp.AttributePlan = types.Bool{Value: m.Default}
+	resp.PlanValue = types.BoolValue(m.Default)
 }
 
 // Description returns a plain text description of the validator's behavior, suitable for a practitioner to understand its impact.

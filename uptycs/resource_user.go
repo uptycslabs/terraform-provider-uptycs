@@ -4,18 +4,11 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &userResource{}
-	_ resource.ResourceWithConfigure   = &userResource{}
-	_ resource.ResourceWithImportState = &userResource{}
 )
 
 func UserResource() resource.Resource {
@@ -38,80 +31,57 @@ func (r *userResource) Configure(_ context.Context, req resource.ConfigureReques
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *userResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"email": {
-				Type:          types.StringType,
-				Optional:      true,
+func (r *userResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":   schema.StringAttribute{Computed: true},
+			"name": schema.StringAttribute{Required: true},
+			"email": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"phone": {
-				Type:          types.StringType,
-				Optional:      true,
+			"phone": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"active": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"active": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"super_admin": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"super_admin": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"bot": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"bot": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"support": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"support": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"image_url": {
-				Type:          types.StringType,
-				Optional:      true,
+			"image_url": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 				Validators: []tfsdk.AttributeValidator{
 					stringvalidator.LengthBetween(1, 512),
 				},
 			},
-			"max_idle_time_mins": {
-				Type:     types.NumberType,
-				Required: true,
+			"max_idle_time_mins": schema.NumberAttribute{Required: true},
+			"alert_hidden_columns": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
-			"alert_hidden_columns": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+			"roles": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
-			"roles": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
-			},
-			"user_object_groups": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"user_object_groups": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var userID string
@@ -127,15 +97,15 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		ImageURL:        types.String{Value: userResp.ImageURL},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		ImageURL:        types.StringValue(userResp.ImageURL),
+		Bot:             types.BoolValue(userResp.Bot),
+		Support:         types.BoolValue(userResp.Support),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,
@@ -225,15 +195,15 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
-		ImageURL:        types.String{Value: userResp.ImageURL},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		Bot:             types.BoolValue(userResp.Bot),
+		Support:         types.BoolValue(userResp.Support),
+		ImageURL:        types.StringValue(userResp.ImageURL),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,
@@ -332,15 +302,15 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		Bot:             types.Bool{Value: userResp.Bot},
-		ImageURL:        types.String{Value: userResp.ImageURL},
-		Support:         types.Bool{Value: userResp.Support},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		Bot:             types.BoolValue(userResp.Bot),
+		ImageURL:        types.StringValue(userResp.ImageURL),
+		Support:         types.BoolValue(userResp.Support),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		Roles: types.List{
 			ElemType: types.StringType,

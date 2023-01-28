@@ -4,18 +4,12 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"os"
-
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ provider.Provider = &UptycsProvider{}
+	"os"
 )
 
 func New() provider.Provider {
@@ -35,33 +29,15 @@ func (p *UptycsProvider) Metadata(_ context.Context, _ provider.MetadataRequest,
 	resp.TypeName = "uptycs"
 }
 
-func (p *UptycsProvider) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"host": {
-				Type:     types.StringType,
-				Optional: true,
-				Computed: true,
-			},
-			"api_key": {
-				Type:     types.StringType,
-				Optional: true,
-				Computed: true,
-			},
-			"api_secret": {
-				Type:      types.StringType,
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
-			"customer_id": {
-				Type:      types.StringType,
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
-			},
+func (p *UptycsProvider) Schema(_ context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"host":        schema.StringAttribute{Optional: true},
+			"api_key":     schema.StringAttribute{Optional: true},
+			"api_secret":  schema.StringAttribute{Optional: true, Sensitive: true},
+			"customer_id": schema.StringAttribute{Optional: true, Sensitive: true},
 		},
-	}, nil
+	}
 }
 
 func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
@@ -76,7 +52,7 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	var customerID string
-	if config.CustomerID.Unknown {
+	if config.CustomerID.IsUnknown() {
 		resp.Diagnostics.AddWarning(
 			"Unable to create client",
 			"Cannot use unknown value as customerID",
@@ -84,10 +60,10 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	if config.CustomerID.Null {
+	if config.CustomerID.IsNull() {
 		customerID = os.Getenv("UPTYCS_CUSTOMER_ID")
 	} else {
-		customerID = config.CustomerID.Value
+		customerID = config.CustomerID.ValueString()
 	}
 
 	if customerID == "" {
@@ -100,7 +76,7 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	var apiKey string
-	if config.APIKey.Unknown {
+	if config.APIKey.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddWarning(
 			"Unable to create client",
@@ -109,10 +85,10 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	if config.APIKey.Null {
+	if config.APIKey.IsNull() {
 		apiKey = os.Getenv("UPTYCS_API_KEY")
 	} else {
-		apiKey = config.APIKey.Value
+		apiKey = config.APIKey.ValueString()
 	}
 
 	if apiKey == "" {
@@ -126,7 +102,7 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	// User must provide an api secret to the provider
 	var apiSecret string
-	if config.APISecret.Unknown {
+	if config.APISecret.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddError(
 			"Unable to create client",
@@ -135,10 +111,10 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	if config.APISecret.Null {
+	if config.APISecret.IsNull() {
 		apiSecret = os.Getenv("UPTYCS_API_SECRET")
 	} else {
-		apiSecret = config.APISecret.Value
+		apiSecret = config.APISecret.ValueString()
 	}
 
 	if apiSecret == "" {
@@ -152,7 +128,7 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	// User must specify a host
 	var host string
-	if config.Host.Unknown {
+	if config.Host.IsUnknown() {
 		// Cannot connect to client with an unknown value
 		resp.Diagnostics.AddError(
 			"Unable to create client",
@@ -161,10 +137,10 @@ func (p *UptycsProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	if config.Host.Null {
+	if config.Host.IsNull() {
 		host = os.Getenv("UPTYCS_HOST")
 	} else {
-		host = config.Host.Value
+		host = config.Host.ValueString()
 	}
 
 	if host == "" {

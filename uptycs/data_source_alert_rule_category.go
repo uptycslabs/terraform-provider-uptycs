@@ -3,16 +3,10 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &alertRuleCategoryDataSource{}
-	_ datasource.DataSourceWithConfigure = &alertRuleCategoryDataSource{}
 )
 
 func AlertRuleCategoryDataSource() datasource.DataSource {
@@ -35,23 +29,14 @@ func (d *alertRuleCategoryDataSource) Configure(_ context.Context, req datasourc
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *alertRuleCategoryDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"rule_id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+func (d *alertRuleCategoryDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":      schema.StringAttribute{Optional: true},
+			"rule_id": schema.StringAttribute{Optional: true},
+			"name":    schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *alertRuleCategoryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -85,9 +70,9 @@ func (d *alertRuleCategoryDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var result = AlertRuleCategory{
-		ID:     types.String{Value: alertRuleCategoryResp.ID},
-		RuleID: types.String{Value: alertRuleCategoryResp.RuleID},
-		Name:   types.String{Value: alertRuleCategoryResp.Name},
+		ID:     types.StringValue(alertRuleCategoryResp.ID),
+		RuleID: types.StringValue(alertRuleCategoryResp.RuleID),
+		Name:   types.StringValue(alertRuleCategoryResp.Name),
 	}
 
 	diags := resp.State.Set(ctx, result)

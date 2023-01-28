@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &querypackResource{}
-	_ resource.ResourceWithConfigure   = &querypackResource{}
-	_ resource.ResourceWithImportState = &querypackResource{}
 )
 
 func QuerypackResource() resource.Resource {
@@ -38,50 +31,30 @@ func (r *querypackResource) Configure(_ context.Context, req resource.ConfigureR
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *querypackResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
+func (r *querypackResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Computed: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Required: true},
+			"type": schema.StringAttribute{Description: "Should be one of: compliance default hardware incident system vulnerability",
 				Required: true,
 			},
-			"type": {
-				Type:        types.StringType,
-				Description: "Should be one of: compliance default hardware incident system vulnerability",
-				Required:    true,
-			},
-			"additional_logger": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"additional_logger": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"is_internal": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"is_internal": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"resource_type": {
-				Type:          types.StringType,
-				Optional:      true,
+			"resource_type": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("asset")},
 			},
-			"conf": {
-				Type:     types.StringType,
-				Required: true,
-			},
+			"conf": schema.StringAttribute{Required: true},
 		},
-	}, nil
+	}
 }
 
 func (r *querypackResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -104,14 +77,14 @@ func (r *querypackResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var result = Querypack{
-		ID:               types.String{Value: querypackResp.ID},
-		Name:             types.String{Value: querypackResp.Name},
-		Description:      types.String{Value: querypackResp.Description},
-		Type:             types.String{Value: querypackResp.Type},
-		AdditionalLogger: types.Bool{Value: querypackResp.AdditionalLogger},
-		IsInternal:       types.Bool{Value: querypackResp.IsInternal},
-		ResourceType:     types.String{Value: querypackResp.ResourceType},
-		Conf:             types.String{Value: string([]byte(queryPackConfJSON)) + "\n"},
+		ID:               types.StringValue(querypackResp.ID),
+		Name:             types.StringValue(querypackResp.Name),
+		Description:      types.StringValue(querypackResp.Description),
+		Type:             types.StringValue(querypackResp.Type),
+		AdditionalLogger: types.BoolValue(querypackResp.AdditionalLogger),
+		IsInternal:       types.BoolValue(querypackResp.IsInternal),
+		ResourceType:     types.StringValue(querypackResp.ResourceType),
+		Conf:             types.StringValue(string([]byte(queryPackConfJSON)) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -156,14 +129,14 @@ func (r *querypackResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var result = Querypack{
-		ID:               types.String{Value: querypackResp.ID},
-		Name:             types.String{Value: querypackResp.Name},
-		Description:      types.String{Value: querypackResp.Description},
-		Type:             types.String{Value: querypackResp.Type},
-		AdditionalLogger: types.Bool{Value: querypackResp.AdditionalLogger},
-		IsInternal:       types.Bool{Value: querypackResp.IsInternal},
-		ResourceType:     types.String{Value: querypackResp.ResourceType},
-		Conf:             types.String{Value: string([]byte(queryPackConfJSON)) + "\n"},
+		ID:               types.StringValue(querypackResp.ID),
+		Name:             types.StringValue(querypackResp.Name),
+		Description:      types.StringValue(querypackResp.Description),
+		Type:             types.StringValue(querypackResp.Type),
+		AdditionalLogger: types.BoolValue(querypackResp.AdditionalLogger),
+		IsInternal:       types.BoolValue(querypackResp.IsInternal),
+		ResourceType:     types.StringValue(querypackResp.ResourceType),
+		Conf:             types.StringValue(string([]byte(queryPackConfJSON)) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -204,7 +177,7 @@ func (r *querypackResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	var result = Querypack{
-		ID: types.String{Value: querypackResp.ID},
+		ID: types.StringValue(querypackResp.ID),
 	}
 
 	diags = resp.State.Set(ctx, result)

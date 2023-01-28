@@ -4,16 +4,10 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &userDataSource{}
-	_ datasource.DataSourceWithConfigure = &userDataSource{}
 )
 
 func UserDataSource() datasource.DataSource {
@@ -36,63 +30,33 @@ func (d *userDataSource) Configure(_ context.Context, req datasource.ConfigureRe
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *userDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
+func (d *userDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":                 schema.StringAttribute{Optional: true},
+			"name":               schema.StringAttribute{Optional: true},
+			"email":              schema.StringAttribute{Optional: true},
+			"phone":              schema.StringAttribute{Optional: true},
+			"active":             schema.BoolAttribute{Optional: true},
+			"super_admin":        schema.BoolAttribute{Optional: true},
+			"bot":                schema.BoolAttribute{Optional: true},
+			"support":            schema.BoolAttribute{Optional: true},
+			"image_url":          schema.StringAttribute{Optional: true},
+			"max_idle_time_mins": schema.NumberAttribute{Optional: true},
+			"alert_hidden_columns": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
+			"roles": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"email": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"phone": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"active": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"super_admin": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"bot": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"support": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"image_url": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"max_idle_time_mins": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"alert_hidden_columns": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"roles": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"user_object_groups": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"user_object_groups": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -126,15 +90,15 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	var result = User{
-		ID:              types.String{Value: userResp.ID},
-		Name:            types.String{Value: userResp.Name},
-		Email:           types.String{Value: userResp.Email},
-		Phone:           types.String{Value: userResp.Phone},
-		Active:          types.Bool{Value: userResp.Active},
-		SuperAdmin:      types.Bool{Value: userResp.SuperAdmin},
-		Bot:             types.Bool{Value: userResp.Bot},
-		Support:         types.Bool{Value: userResp.Support},
-		ImageURL:        types.String{Value: userResp.ImageURL},
+		ID:              types.StringValue(userResp.ID),
+		Name:            types.StringValue(userResp.Name),
+		Email:           types.StringValue(userResp.Email),
+		Phone:           types.StringValue(userResp.Phone),
+		Active:          types.BoolValue(userResp.Active),
+		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
+		Bot:             types.BoolValue(userResp.Bot),
+		Support:         types.BoolValue(userResp.Support),
+		ImageURL:        types.StringValue(userResp.ImageURL),
 		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
 		AlertHiddenColumns: types.List{
 			ElemType: types.StringType,

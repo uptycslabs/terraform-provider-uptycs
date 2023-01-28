@@ -5,16 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &eventExcludeProfileDataSource{}
-	_ datasource.DataSourceWithConfigure = &eventExcludeProfileDataSource{}
 )
 
 func EventExcludeProfileDataSource() datasource.DataSource {
@@ -37,39 +31,18 @@ func (d *eventExcludeProfileDataSource) Configure(_ context.Context, req datasou
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *eventExcludeProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"platform": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"metadata": {
-				Optional: true,
-				Type:     types.StringType,
-			},
+func (d *eventExcludeProfileDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            schema.StringAttribute{Optional: true},
+			"name":          schema.StringAttribute{Optional: true},
+			"description":   schema.StringAttribute{Optional: true},
+			"priority":      schema.NumberAttribute{Optional: true},
+			"resource_type": schema.StringAttribute{Optional: true},
+			"platform":      schema.StringAttribute{Optional: true},
+			"metadata":      schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -108,13 +81,13 @@ func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource
 	}
 
 	var result = EventExcludeProfile{
-		ID:           types.String{Value: eventExcludeProfileResp.ID},
-		Name:         types.String{Value: eventExcludeProfileResp.Name},
-		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
+		ID:           types.StringValue(eventExcludeProfileResp.ID),
+		Name:         types.StringValue(eventExcludeProfileResp.Name),
+		Description:  types.StringValue(eventExcludeProfileResp.Description),
+		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
-		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
-		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
+		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
+		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
 
 	diags := resp.State.Set(ctx, result)

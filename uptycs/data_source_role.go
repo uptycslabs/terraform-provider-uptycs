@@ -4,16 +4,10 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &roleDataSource{}
-	_ datasource.DataSourceWithConfigure = &roleDataSource{}
 )
 
 func RoleDataSource() datasource.DataSource {
@@ -36,39 +30,24 @@ func (d *roleDataSource) Configure(_ context.Context, req datasource.ConfigureRe
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *roleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
+func (d *roleDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"permissions": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"permissions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"hidden": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"no_minimal_permissions": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"role_object_groups": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"hidden":                 schema.BoolAttribute{Optional: true},
+			"no_minimal_permissions": schema.BoolAttribute{Optional: true},
+			"role_object_groups": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -102,15 +81,15 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

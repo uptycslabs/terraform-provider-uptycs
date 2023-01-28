@@ -6,17 +6,11 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &eventRuleDataSource{}
-	_ datasource.DataSourceWithConfigure = &eventRuleDataSource{}
 )
 
 func EventRuleDataSource() datasource.DataSource {
@@ -39,89 +33,42 @@ func (d *eventRuleDataSource) Configure(_ context.Context, req datasource.Config
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"score": {
-				Type:     types.StringType,
-				Optional: true,
+func (d *eventRuleDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"score": schema.StringAttribute{Optional: true,
 				Computed: false,
 			},
-			"code": {
-				Type:     types.StringType,
-				Optional: true,
+			"code": schema.StringAttribute{Optional: true,
 				Computed: false,
 			},
-			"type": {
-				Type:     types.StringType,
-				Optional: true,
+			"type": schema.StringAttribute{Optional: true,
 				Computed: false,
 			},
-			"rule": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"grouping": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"grouping_l2": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"grouping_l3": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"enabled": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"rule":        schema.StringAttribute{Optional: true},
+			"grouping":    schema.StringAttribute{Optional: true},
+			"grouping_l2": schema.StringAttribute{Optional: true},
+			"grouping_l3": schema.StringAttribute{Optional: true},
+			"enabled": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
 			},
-			"event_tags": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"event_tags": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 			"builder_config": {
 				Optional: true,
 				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-					"table_name": {
-						Type:     types.StringType,
-						Optional: true,
-					},
-					"added": {
-						Type:     types.BoolType,
-						Optional: true,
-					},
-					"matches_filter": {
-						Type:     types.BoolType,
-						Optional: true,
-					},
-					"severity": {
-						Type:     types.StringType,
-						Optional: true,
-					},
-					"key": {
-						Type:     types.StringType,
-						Optional: true,
-					},
-					"value_field": {
-						Type:     types.StringType,
-						Optional: true,
-					},
+					"table_name":     schema.StringAttribute{Optional: true},
+					"added":          schema.BoolAttribute{Optional: true},
+					"matches_filter": schema.BoolAttribute{Optional: true},
+					"severity":       schema.StringAttribute{Optional: true},
+					"key":            schema.StringAttribute{Optional: true},
+					"value_field":    schema.StringAttribute{Optional: true},
 					"filters": {
 						Optional: true,
 						Type:     types.StringType,
@@ -129,24 +76,15 @@ func (d *eventRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.D
 					"auto_alert_config": {
 						Optional: true,
 						Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-							"raise_alert": {
-								Type:     types.BoolType,
-								Optional: true,
-							},
-							"disable_alert": {
-								Type:     types.BoolType,
-								Optional: true,
-							},
-							"metadata_sources": {
-								Type:     types.StringType,
-								Optional: true,
-							},
+							"raise_alert":      schema.BoolAttribute{Optional: true},
+							"disable_alert":    schema.BoolAttribute{Optional: true},
+							"metadata_sources": schema.StringAttribute{Optional: true},
 						}),
 					},
 				}),
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -190,33 +128,33 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	var result = EventRule{
-		ID:          types.String{Value: eventRuleResp.ID},
-		Enabled:     types.Bool{Value: eventRuleResp.Enabled},
-		Name:        types.String{Value: eventRuleResp.Name},
-		Description: types.String{Value: eventRuleResp.Description},
-		Code:        types.String{Value: eventRuleResp.Code},
-		Type:        types.String{Value: eventRuleResp.Type},
-		Rule:        types.String{Value: eventRuleResp.Rule},
-		Grouping:    types.String{Value: eventRuleResp.Grouping},
-		GroupingL2:  types.String{Value: eventRuleResp.GroupingL2},
-		GroupingL3:  types.String{Value: eventRuleResp.GroupingL3},
-		Score:       types.String{Value: eventRuleResp.Score},
+		ID:          types.StringValue(eventRuleResp.ID),
+		Enabled:     types.BoolValue(eventRuleResp.Enabled),
+		Name:        types.StringValue(eventRuleResp.Name),
+		Description: types.StringValue(eventRuleResp.Description),
+		Code:        types.StringValue(eventRuleResp.Code),
+		Type:        types.StringValue(eventRuleResp.Type),
+		Rule:        types.StringValue(eventRuleResp.Rule),
+		Grouping:    types.StringValue(eventRuleResp.Grouping),
+		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
+		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
+		Score:       types.StringValue(eventRuleResp.Score),
 		EventTags: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
 		BuilderConfig: BuilderConfig{
-			Filters:       types.String{Value: string([]byte(filtersJSON)) + "\n"},
-			TableName:     types.String{Value: eventRuleResp.BuilderConfig.TableName},
-			Added:         types.Bool{Value: eventRuleResp.BuilderConfig.Added},
-			MatchesFilter: types.Bool{Value: eventRuleResp.BuilderConfig.MatchesFilter},
-			Severity:      types.String{Value: eventRuleResp.BuilderConfig.Severity},
-			Key:           types.String{Value: eventRuleResp.BuilderConfig.Key},
-			ValueField:    types.String{Value: eventRuleResp.BuilderConfig.ValueField},
+			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
+			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
+			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
+			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
+			Severity:      types.StringValue(eventRuleResp.BuilderConfig.Severity),
+			Key:           types.StringValue(eventRuleResp.BuilderConfig.Key),
+			ValueField:    types.StringValue(eventRuleResp.BuilderConfig.ValueField),
 			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert:    types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert},
-				RaiseAlert:      types.Bool{Value: eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert},
-				MetadataSources: types.String{Value: string([]byte(metadataJSON)) + "\n"},
+				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
+				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
+				MetadataSources: types.StringValue(string([]byte(metadataJSON)) + "\n"),
 			},
 		},
 	}

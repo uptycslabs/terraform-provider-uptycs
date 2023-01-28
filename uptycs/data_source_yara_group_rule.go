@@ -3,16 +3,10 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &yaraGroupRuleDataSource{}
-	_ datasource.DataSourceWithConfigure = &yaraGroupRuleDataSource{}
 )
 
 func YaraGroupRuleDataSource() datasource.DataSource {
@@ -35,27 +29,15 @@ func (d *yaraGroupRuleDataSource) Configure(_ context.Context, req datasource.Co
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *yaraGroupRuleDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"rules": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+func (d *yaraGroupRuleDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"rules":       schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -89,10 +71,10 @@ func (d *yaraGroupRuleDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags := resp.State.Set(ctx, result)

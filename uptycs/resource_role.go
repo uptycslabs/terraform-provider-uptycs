@@ -3,18 +3,11 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &roleResource{}
-	_ resource.ResourceWithConfigure   = &roleResource{}
-	_ resource.ResourceWithImportState = &roleResource{}
 )
 
 func RoleResource() resource.Resource {
@@ -37,43 +30,30 @@ func (r *roleResource) Configure(_ context.Context, req resource.ConfigureReques
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *roleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"description": {
-				Type:          types.StringType,
-				Optional:      true,
+func (r *roleResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":   schema.StringAttribute{Computed: true},
+			"name": schema.StringAttribute{Required: true},
+			"description": schema.StringAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
 			},
-			"permissions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
+			"permissions": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
-			"hidden": {
-				Type:          types.BoolType,
-				Optional:      true,
+			"hidden": schema.BoolAttribute{Optional: true,
 				Computed:      true,
 				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
 			},
-			"no_minimal_permissions": {
-				Type:     types.BoolType,
-				Required: true,
-			},
-			"role_object_groups": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"no_minimal_permissions": schema.BoolAttribute{Required: true},
+			"role_object_groups": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -91,15 +71,15 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -161,15 +141,15 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
@@ -239,15 +219,15 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 	var result = Role{
-		ID:          types.String{Value: roleResp.ID},
-		Name:        types.String{Value: roleResp.Name},
-		Description: types.String{Value: roleResp.Description},
+		ID:          types.StringValue(roleResp.ID),
+		Name:        types.StringValue(roleResp.Name),
+		Description: types.StringValue(roleResp.Description),
 		Permissions: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),
 		},
-		Hidden:               types.Bool{Value: roleResp.Hidden},
-		NoMinimalPermissions: types.Bool{Value: roleResp.NoMinimalPermissions},
+		Hidden:               types.BoolValue(roleResp.Hidden),
+		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
 		RoleObjectGroups: types.List{
 			ElemType: types.StringType,
 			Elems:    make([]attr.Value, 0),

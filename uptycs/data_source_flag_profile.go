@@ -5,16 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &flagProfileDataSource{}
-	_ datasource.DataSourceWithConfigure = &flagProfileDataSource{}
 )
 
 func FlagProfileDataSource() datasource.DataSource {
@@ -37,39 +31,18 @@ func (d *flagProfileDataSource) Configure(_ context.Context, req datasource.Conf
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *flagProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"flags": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"os_flags": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
+func (d *flagProfileDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            schema.StringAttribute{Optional: true},
+			"name":          schema.StringAttribute{Optional: true},
+			"description":   schema.StringAttribute{Optional: true},
+			"flags":         schema.StringAttribute{Optional: true},
+			"os_flags":      schema.StringAttribute{Optional: true},
+			"resource_type": schema.StringAttribute{Optional: true},
+			"priority":      schema.NumberAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *flagProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -112,13 +85,13 @@ func (d *flagProfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
 		Priority:     flagProfileResp.Priority,
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)

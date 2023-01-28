@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &flagProfileResource{}
-	_ resource.ResourceWithConfigure   = &flagProfileResource{}
-	_ resource.ResourceWithImportState = &flagProfileResource{}
 )
 
 func FlagProfileResource() resource.Resource {
@@ -38,39 +31,18 @@ func (r *flagProfileResource) Configure(_ context.Context, req resource.Configur
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *flagProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"flags": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"os_flags": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
+func (r *flagProfileResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            schema.StringAttribute{Computed: true},
+			"name":          schema.StringAttribute{Optional: true},
+			"description":   schema.StringAttribute{Optional: true},
+			"flags":         schema.StringAttribute{Required: true},
+			"os_flags":      schema.StringAttribute{Required: true},
+			"resource_type": schema.StringAttribute{Optional: true},
+			"priority":      schema.NumberAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -97,13 +69,13 @@ func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
 		Priority:     flagProfileResp.Priority,
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -151,13 +123,13 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
 		Priority:     flagProfileResp.Priority,
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -214,13 +186,13 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	var result = FlagProfile{
-		ID:           types.String{Value: flagProfileResp.ID},
-		Name:         types.String{Value: flagProfileResp.Name},
-		Description:  types.String{Value: flagProfileResp.Description},
-		Flags:        types.String{Value: string([]byte(flagsJSON)) + "\n"},
-		OsFlags:      types.String{Value: string([]byte(osFlagsJSON)) + "\n"},
+		ID:           types.StringValue(flagProfileResp.ID),
+		Name:         types.StringValue(flagProfileResp.Name),
+		Description:  types.StringValue(flagProfileResp.Description),
+		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
+		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
 		Priority:     flagProfileResp.Priority,
-		ResourceType: types.String{Value: flagProfileResp.ResourceType},
+		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)

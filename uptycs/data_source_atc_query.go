@@ -3,16 +3,10 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &atcQueryDataSource{}
-	_ datasource.DataSourceWithConfigure = &atcQueryDataSource{}
 )
 
 func AtcQueryDataSource() datasource.DataSource {
@@ -35,27 +29,15 @@ func (d *atcQueryDataSource) Configure(_ context.Context, req datasource.Configu
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *atcQueryDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"query": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+func (d *atcQueryDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"query":       schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *atcQueryDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -89,10 +71,10 @@ func (d *atcQueryDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	var result = AtcQuery{
-		ID:          types.String{Value: atcQueryResp.ID},
-		Name:        types.String{Value: atcQueryResp.Name},
-		Description: types.String{Value: atcQueryResp.Description},
-		Query:       types.String{Value: atcQueryResp.Query},
+		ID:          types.StringValue(atcQueryResp.ID),
+		Name:        types.StringValue(atcQueryResp.Name),
+		Description: types.StringValue(atcQueryResp.Description),
+		Query:       types.StringValue(atcQueryResp.Query),
 	}
 
 	diags := resp.State.Set(ctx, result)
