@@ -2,10 +2,12 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -36,16 +38,22 @@ func (r *roleResource) Schema(_ context.Context, req resource.SchemaRequest, res
 			"id":   schema.StringAttribute{Computed: true},
 			"name": schema.StringAttribute{Required: true},
 			"description": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"permissions": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 			},
 			"hidden": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"no_minimal_permissions": schema.BoolAttribute{Required: true},
 			"role_object_groups": schema.ListAttribute{
@@ -56,7 +64,7 @@ func (r *roleResource) Schema(_ context.Context, req resource.SchemaRequest, res
 	}
 }
 
-func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var roleID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &roleID)...)
 	roleResp, err := r.client.GetRole(uptycs.Role{
@@ -71,27 +79,13 @@ func (r roleResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	var result = Role{
-		ID:          types.StringValue(roleResp.ID),
-		Name:        types.StringValue(roleResp.Name),
-		Description: types.StringValue(roleResp.Description),
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                   types.StringValue(roleResp.ID),
+		Name:                 types.StringValue(roleResp.Name),
+		Description:          types.StringValue(roleResp.Description),
+		Permissions:          makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 		Hidden:               types.BoolValue(roleResp.Hidden),
 		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
-	}
-
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
+		RoleObjectGroups:     makeListStringAttribute(roleResp.Permissions),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -124,11 +118,11 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	roleResp, err := r.client.CreateRole(uptycs.Role{
-		Name:                 plan.Name.Value,
-		Description:          plan.Description.Value,
+		Name:                 plan.Name.ValueString(),
+		Description:          plan.Description.ValueString(),
 		Permissions:          permissions,
-		Hidden:               plan.Hidden.Value,
-		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
+		Hidden:               plan.Hidden.ValueBool(),
+		NoMinimalPermissions: plan.NoMinimalPermissions.ValueBool(),
 		RoleObjectGroups:     roleObjectGroups,
 	})
 
@@ -141,27 +135,13 @@ func (r *roleResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = Role{
-		ID:          types.StringValue(roleResp.ID),
-		Name:        types.StringValue(roleResp.Name),
-		Description: types.StringValue(roleResp.Description),
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                   types.StringValue(roleResp.ID),
+		Name:                 types.StringValue(roleResp.Name),
+		Description:          types.StringValue(roleResp.Description),
+		Permissions:          makeListStringAttribute(roleResp.Permissions),
 		Hidden:               types.BoolValue(roleResp.Hidden),
 		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
-	}
-
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
+		RoleObjectGroups:     makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -179,7 +159,7 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	roleID := state.ID.Value
+	roleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan Role
@@ -203,11 +183,11 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	roleResp, err := r.client.UpdateRole(uptycs.Role{
 		ID:                   roleID,
-		Name:                 plan.Name.Value,
-		Description:          plan.Description.Value,
+		Name:                 plan.Name.ValueString(),
+		Description:          plan.Description.ValueString(),
 		Permissions:          permissions,
-		Hidden:               plan.Hidden.Value,
-		NoMinimalPermissions: plan.NoMinimalPermissions.Value,
+		Hidden:               plan.Hidden.ValueBool(),
+		NoMinimalPermissions: plan.NoMinimalPermissions.ValueBool(),
 		RoleObjectGroups:     roleObjectGroups,
 	})
 
@@ -222,24 +202,9 @@ func (r *roleResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		ID:          types.StringValue(roleResp.ID),
 		Name:        types.StringValue(roleResp.Name),
 		Description: types.StringValue(roleResp.Description),
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Hidden:               types.BoolValue(roleResp.Hidden),
+		Permissions: makeListStringAttribute(roleResp.Permissions), Hidden: types.BoolValue(roleResp.Hidden),
 		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
-	}
-
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
+		RoleObjectGroups:     makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -257,7 +222,7 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	roleID := state.ID.Value
+	roleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteRole(uptycs.Role{
 		ID: roleID,
@@ -274,6 +239,6 @@ func (r *roleResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	resp.State.RemoveResource(ctx)
 }
 
-func (r roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *roleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

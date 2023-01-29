@@ -84,7 +84,7 @@ func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource
 		ID:           types.StringValue(eventExcludeProfileResp.ID),
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
-		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),

@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -38,21 +41,33 @@ func (r *exceptionResource) Schema(_ context.Context, req resource.SchemaRequest
 			"name":        schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true},
 			"exception_type": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("sift")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault("sift"),
+				},
 			},
 			"table_name": schema.StringAttribute{Optional: true},
 			"is_global": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(true),
+				},
 			},
 			"disabled": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(true),
+				},
 			},
 			"close_open_alerts": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(true),
+				},
 			},
 			"rule": schema.StringAttribute{Optional: true},
 		},
@@ -87,7 +102,7 @@ func (r *exceptionResource) Read(ctx context.Context, req resource.ReadRequest, 
 		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
 		Disabled:        types.BoolValue(exceptionResp.Disabled),
 		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
-		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
+		Rule:            types.StringValue(string(ruleJSON) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -108,14 +123,14 @@ func (r *exceptionResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	exceptionResp, err := r.client.CreateException(uptycs.Exception{
-		Name:            plan.Name.Value,
-		Description:     plan.Description.Value,
-		ExceptionType:   plan.ExceptionType.Value,
-		TableName:       plan.TableName.Value,
-		IsGlobal:        plan.IsGlobal.Value,
-		Disabled:        plan.Disabled.Value,
-		CloseOpenAlerts: plan.CloseOpenAlerts.Value,
-		Rule:            uptycs.CustomJSONString(plan.Rule.Value),
+		Name:            plan.Name.ValueString(),
+		Description:     plan.Description.ValueString(),
+		ExceptionType:   plan.ExceptionType.ValueString(),
+		TableName:       plan.TableName.ValueString(),
+		IsGlobal:        plan.IsGlobal.ValueBool(),
+		Disabled:        plan.Disabled.ValueBool(),
+		CloseOpenAlerts: plan.CloseOpenAlerts.ValueBool(),
+		Rule:            uptycs.CustomJSONString(plan.Rule.ValueString()),
 	})
 
 	if err != nil {
@@ -140,7 +155,7 @@ func (r *exceptionResource) Create(ctx context.Context, req resource.CreateReque
 		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
 		Disabled:        types.BoolValue(exceptionResp.Disabled),
 		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
-		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
+		Rule:            types.StringValue(string(ruleJSON) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -158,7 +173,7 @@ func (r *exceptionResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	exceptionID := state.ID.Value
+	exceptionID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan Exception
@@ -170,14 +185,14 @@ func (r *exceptionResource) Update(ctx context.Context, req resource.UpdateReque
 
 	exceptionResp, err := r.client.UpdateException(uptycs.Exception{
 		ID:              exceptionID,
-		Name:            plan.Name.Value,
-		Description:     plan.Description.Value,
-		ExceptionType:   plan.ExceptionType.Value,
-		TableName:       plan.TableName.Value,
-		IsGlobal:        plan.IsGlobal.Value,
-		Disabled:        plan.Disabled.Value,
-		CloseOpenAlerts: plan.CloseOpenAlerts.Value,
-		Rule:            uptycs.CustomJSONString(plan.Rule.Value),
+		Name:            plan.Name.ValueString(),
+		Description:     plan.Description.ValueString(),
+		ExceptionType:   plan.ExceptionType.ValueString(),
+		TableName:       plan.TableName.ValueString(),
+		IsGlobal:        plan.IsGlobal.ValueBool(),
+		Disabled:        plan.Disabled.ValueBool(),
+		CloseOpenAlerts: plan.CloseOpenAlerts.ValueBool(),
+		Rule:            uptycs.CustomJSONString(plan.Rule.ValueString()),
 	})
 
 	if err != nil {
@@ -202,7 +217,7 @@ func (r *exceptionResource) Update(ctx context.Context, req resource.UpdateReque
 		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
 		Disabled:        types.BoolValue(exceptionResp.Disabled),
 		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
-		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
+		Rule:            types.StringValue(string(ruleJSON) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -220,7 +235,7 @@ func (r *exceptionResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	exceptionID := state.ID.Value
+	exceptionID := state.ID.ValueString()
 
 	_, err := r.client.DeleteException(uptycs.Exception{
 		ID: exceptionID,

@@ -91,7 +91,7 @@ func (d *exceptionDataSource) Read(ctx context.Context, req datasource.ReadReque
 		IsGlobal:        types.BoolValue(exceptionResp.IsGlobal),
 		Disabled:        types.BoolValue(exceptionResp.Disabled),
 		CloseOpenAlerts: types.BoolValue(exceptionResp.CloseOpenAlerts),
-		Rule:            types.StringValue(string([]byte(ruleJSON)) + "\n"),
+		Rule:            types.StringValue(string(ruleJSON) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)

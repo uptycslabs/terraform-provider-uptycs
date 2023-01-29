@@ -111,17 +111,17 @@ func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	tagRuleResp, err := r.client.CreateTagRule(uptycs.TagRule{
-		ID:             plan.ID.Value,
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		Query:          plan.Query.Value,
-		Source:         plan.Source.Value,
-		RunOnce:        plan.RunOnce.Value,
+		ID:             plan.ID.ValueString(),
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		Query:          plan.Query.ValueString(),
+		Source:         plan.Source.ValueString(),
+		RunOnce:        plan.RunOnce.ValueBool(),
 		Interval:       plan.Interval,
-		OSqueryVersion: plan.OSqueryVersion.Value,
-		Platform:       plan.Platform.Value,
-		Enabled:        plan.Enabled.Value,
-		ResourceType:   plan.ResourceType.Value,
+		OSqueryVersion: plan.OSqueryVersion.ValueString(),
+		Platform:       plan.Platform.ValueString(),
+		Enabled:        plan.Enabled.ValueBool(),
+		ResourceType:   plan.ResourceType.ValueString(),
 		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
@@ -163,7 +163,7 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	tagRuleID := state.ID.Value
+	tagRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan TagRule
@@ -175,16 +175,16 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tagRuleResp, err := r.client.UpdateTagRule(uptycs.TagRule{
 		ID:             tagRuleID,
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		Query:          plan.Query.Value,
-		Source:         plan.Source.Value,
-		RunOnce:        plan.RunOnce.Value,
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		Query:          plan.Query.ValueString(),
+		Source:         plan.Source.ValueString(),
+		RunOnce:        plan.RunOnce.ValueBool(),
 		Interval:       plan.Interval,
-		OSqueryVersion: plan.OSqueryVersion.Value,
-		Platform:       plan.Platform.Value,
-		Enabled:        plan.Enabled.Value,
-		ResourceType:   plan.ResourceType.Value,
+		OSqueryVersion: plan.OSqueryVersion.ValueString(),
+		Platform:       plan.Platform.ValueString(),
+		Enabled:        plan.Enabled.ValueBool(),
+		ResourceType:   plan.ResourceType.ValueString(),
 		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
@@ -226,7 +226,7 @@ func (r *tagRuleResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	tagRuleID := state.ID.Value
+	tagRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteTagRule(uptycs.TagRule{
 		ID: tagRuleID,

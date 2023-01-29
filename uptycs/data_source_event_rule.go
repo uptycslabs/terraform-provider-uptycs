@@ -136,7 +136,7 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		Score:       types.StringValue(eventRuleResp.Score),
 		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
 		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
+			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
 			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
@@ -146,7 +146,7 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 			AutoAlertConfig: AutoAlertConfig{
 				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
 				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
-				MetadataSources: types.StringValue(string([]byte(metadataJSON)) + "\n"),
+				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
 	}

@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -41,16 +44,25 @@ func (r *querypackResource) Schema(_ context.Context, req resource.SchemaRequest
 				Required: true,
 			},
 			"additional_logger": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"is_internal": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"resource_type": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("asset")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault("asset"),
+				},
 			},
 			"conf": schema.StringAttribute{Required: true},
 		},
@@ -84,7 +96,7 @@ func (r *querypackResource) Read(ctx context.Context, req resource.ReadRequest, 
 		AdditionalLogger: types.BoolValue(querypackResp.AdditionalLogger),
 		IsInternal:       types.BoolValue(querypackResp.IsInternal),
 		ResourceType:     types.StringValue(querypackResp.ResourceType),
-		Conf:             types.StringValue(string([]byte(queryPackConfJSON)) + "\n"),
+		Conf:             types.StringValue(string(queryPackConfJSON) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -105,14 +117,14 @@ func (r *querypackResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	querypackResp, err := r.client.CreateQuerypack(uptycs.Querypack{
-		Name:             plan.Name.Value,
-		Description:      plan.Description.Value,
-		Type:             plan.Type.Value,
-		AdditionalLogger: plan.AdditionalLogger.Value,
-		IsInternal:       plan.IsInternal.Value,
-		ResourceType:     plan.ResourceType.Value,
+		Name:             plan.Name.ValueString(),
+		Description:      plan.Description.ValueString(),
+		Type:             plan.Type.ValueString(),
+		AdditionalLogger: plan.AdditionalLogger.ValueBool(),
+		IsInternal:       plan.IsInternal.ValueBool(),
+		ResourceType:     plan.ResourceType.ValueString(),
 		Queries:          []uptycs.Query{},
-		Conf:             uptycs.CustomJSONString(plan.Conf.Value),
+		Conf:             uptycs.CustomJSONString(plan.Conf.ValueString()),
 	})
 
 	if err != nil {
@@ -136,7 +148,7 @@ func (r *querypackResource) Create(ctx context.Context, req resource.CreateReque
 		AdditionalLogger: types.BoolValue(querypackResp.AdditionalLogger),
 		IsInternal:       types.BoolValue(querypackResp.IsInternal),
 		ResourceType:     types.StringValue(querypackResp.ResourceType),
-		Conf:             types.StringValue(string([]byte(queryPackConfJSON)) + "\n"),
+		Conf:             types.StringValue(string(queryPackConfJSON) + "\n"),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -154,7 +166,7 @@ func (r *querypackResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	queryPackID := state.ID.Value
+	queryPackID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan Querypack
@@ -195,7 +207,7 @@ func (r *querypackResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	queryPackID := state.ID.Value
+	queryPackID := state.ID.ValueString()
 
 	_, err := r.client.DeleteQuerypack(uptycs.Querypack{
 		ID: queryPackID,

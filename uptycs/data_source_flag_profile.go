@@ -89,8 +89,8 @@ func (d *flagProfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
 		Priority:     flagProfileResp.Priority,
-		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
-		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		Flags:        types.StringValue(string(flagsJSON) + "\n"),
+		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 

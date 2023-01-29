@@ -5,6 +5,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -36,8 +38,11 @@ func (r *yaraGroupRuleResource) Schema(_ context.Context, req resource.SchemaReq
 			"name":        schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true},
 			"rules": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 		},
 	}
@@ -81,9 +86,9 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	yaraGroupRuleResp, err := r.client.CreateYaraGroupRule(uptycs.YaraGroupRule{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
-		Rules:       plan.Rules.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rules:       plan.Rules.ValueString(),
 	})
 
 	if err != nil {
@@ -116,7 +121,7 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	yaraGroupRuleID := state.ID.Value
+	yaraGroupRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan YaraGroupRule
@@ -128,9 +133,9 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 
 	yaraGroupRuleResp, err := r.client.UpdateYaraGroupRule(uptycs.YaraGroupRule{
 		ID:          yaraGroupRuleID,
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
-		Rules:       plan.Rules.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rules:       plan.Rules.ValueString(),
 	})
 
 	if err != nil {
@@ -163,7 +168,7 @@ func (r *yaraGroupRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	yaraGroupRuleID := state.ID.Value
+	yaraGroupRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteYaraGroupRule(uptycs.YaraGroupRule{
 		ID: yaraGroupRuleID,

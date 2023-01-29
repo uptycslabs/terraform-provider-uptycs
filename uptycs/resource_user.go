@@ -172,15 +172,15 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	userResp, err := r.client.CreateUser(uptycs.User{
-		Name:               plan.Name.Value,
-		Email:              plan.Email.Value,
-		Phone:              plan.Phone.Value,
-		ImageURL:           plan.ImageURL.Value,
+		Name:               plan.Name.ValueString(),
+		Email:              plan.Email.ValueString(),
+		Phone:              plan.Phone.ValueString(),
+		ImageURL:           plan.ImageURL.ValueString(),
 		MaxIdleTimeMins:    plan.MaxIdleTimeMins,
-		Active:             plan.Active.Value,
-		SuperAdmin:         plan.SuperAdmin.Value,
-		Bot:                plan.Bot.Value,
-		Support:            plan.Support.Value,
+		Active:             plan.Active.ValueBool(),
+		SuperAdmin:         plan.SuperAdmin.ValueBool(),
+		Bot:                plan.Bot.ValueBool(),
+		Support:            plan.Support.ValueBool(),
 		AlertHiddenColumns: alertHiddenColumns,
 		Roles:              roles,
 		UserObjectGroups:   userObjectGroups,
@@ -246,7 +246,7 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	userID := state.ID.Value
+	userID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan User
@@ -279,18 +279,18 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	userResp, err := r.client.UpdateUser(uptycs.User{
 		ID:                 userID,
-		Name:               plan.Name.Value,
-		Email:              plan.Email.Value,
-		Phone:              plan.Phone.Value,
-		ImageURL:           plan.ImageURL.Value,
+		Name:               plan.Name.ValueString(),
+		Email:              plan.Email.ValueString(),
+		Phone:              plan.Phone.ValueString(),
+		ImageURL:           plan.ImageURL.ValueString(),
 		MaxIdleTimeMins:    plan.MaxIdleTimeMins,
 		AlertHiddenColumns: alertHiddenColumns,
 		UserObjectGroups:   userObjectGroups,
 		Roles:              roles,
-		Active:             plan.Active.Value,
-		SuperAdmin:         plan.SuperAdmin.Value,
-		Bot:                plan.Bot.Value,
-		Support:            plan.Support.Value,
+		Active:             plan.Active.ValueBool(),
+		SuperAdmin:         plan.SuperAdmin.ValueBool(),
+		Bot:                plan.Bot.ValueBool(),
+		Support:            plan.Support.ValueBool(),
 	})
 
 	if err != nil {
@@ -352,7 +352,7 @@ func (r *userResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	userID := state.ID.Value
+	userID := state.ID.ValueString()
 
 	_, err := r.client.DeleteUser(uptycs.User{
 		ID: userID,

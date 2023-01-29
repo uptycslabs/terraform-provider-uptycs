@@ -73,8 +73,8 @@ func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
 		Priority:     flagProfileResp.Priority,
-		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
-		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		Flags:        types.StringValue(string(flagsJSON) + "\n"),
+		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
@@ -96,12 +96,12 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	flagProfileResp, err := r.client.CreateFlagProfile(uptycs.FlagProfile{
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		Flags:        uptycs.CustomJSONString(plan.Flags.Value),
-		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.Value),
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		Flags:        uptycs.CustomJSONString(plan.Flags.ValueString()),
+		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.ValueString()),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
+		ResourceType: plan.ResourceType.ValueString(),
 	})
 
 	if err != nil {
@@ -126,8 +126,8 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 		ID:           types.StringValue(flagProfileResp.ID),
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
-		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
-		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		Flags:        types.StringValue(string(flagsJSON) + "\n"),
+		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		Priority:     flagProfileResp.Priority,
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
@@ -147,7 +147,7 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	flagProfileID := state.ID.Value
+	flagProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan FlagProfile
@@ -159,12 +159,12 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 
 	flagProfileResp, err := r.client.UpdateFlagProfile(uptycs.FlagProfile{
 		ID:           flagProfileID,
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		Flags:        uptycs.CustomJSONString(plan.Flags.Value),
-		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.Value),
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		Flags:        uptycs.CustomJSONString(plan.Flags.ValueString()),
+		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.ValueString()),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
+		ResourceType: plan.ResourceType.ValueString(),
 	})
 
 	if err != nil {
@@ -189,8 +189,8 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		ID:           types.StringValue(flagProfileResp.ID),
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
-		Flags:        types.StringValue(string([]byte(flagsJSON)) + "\n"),
-		OsFlags:      types.StringValue(string([]byte(osFlagsJSON)) + "\n"),
+		Flags:        types.StringValue(string(flagsJSON) + "\n"),
+		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		Priority:     flagProfileResp.Priority,
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
@@ -210,7 +210,7 @@ func (r *flagProfileResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	flagProfileID := state.ID.Value
+	flagProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteFlagProfile(uptycs.FlagProfile{
 		ID: flagProfileID,

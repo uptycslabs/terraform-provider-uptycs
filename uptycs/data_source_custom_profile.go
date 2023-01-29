@@ -84,7 +84,7 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 		ID:             types.StringValue(customProfileResp.ID),
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
-		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
+		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
 		Priority:       customProfileResp.Priority,
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}

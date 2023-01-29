@@ -67,7 +67,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		ID:             types.StringValue(customProfileResp.ID),
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
-		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
+		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
 		Priority:       customProfileResp.Priority,
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}

@@ -88,7 +88,7 @@ func (d *querypackDataSource) Read(ctx context.Context, req datasource.ReadReque
 		AdditionalLogger: types.BoolValue(querypackResp.AdditionalLogger),
 		IsInternal:       types.BoolValue(querypackResp.IsInternal),
 		ResourceType:     types.StringValue(querypackResp.ResourceType),
-		Conf:             types.StringValue(string([]byte(queryPackConfJSON)) + "\n"),
+		Conf:             types.StringValue(string(queryPackConfJSON) + "\n"),
 	}
 
 	diags := resp.State.Set(ctx, result)

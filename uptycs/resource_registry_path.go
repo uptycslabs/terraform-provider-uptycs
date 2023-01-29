@@ -2,10 +2,12 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -36,20 +38,29 @@ func (r *registryPathResource) Schema(_ context.Context, req resource.SchemaRequ
 			"id":   schema.StringAttribute{Computed: true},
 			"name": schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"grouping": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"include_registry_paths": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 			},
 			"reg_accesses": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"exclude_registry_paths": schema.ListAttribute{
 				ElementType: types.StringType,
@@ -74,27 +85,13 @@ func (r *registryPathResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	var result = RegistryPath{
-		ID:          types.StringValue(registryPathResp.ID),
-		Name:        types.StringValue(registryPathResp.Name),
-		Description: types.StringValue(registryPathResp.Description),
-		Grouping:    types.StringValue(registryPathResp.Grouping),
-		IncludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
-		ExcludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _irp := range registryPathResp.IncludeRegistryPaths {
-		result.IncludeRegistryPaths.Elems = append(result.IncludeRegistryPaths.Elems, types.String{Value: _irp})
-	}
-
-	for _, _erp := range registryPathResp.ExcludeRegistryPaths {
-		result.ExcludeRegistryPaths.Elems = append(result.ExcludeRegistryPaths.Elems, types.String{Value: _erp})
+		ID:                   types.StringValue(registryPathResp.ID),
+		Name:                 types.StringValue(registryPathResp.Name),
+		Description:          types.StringValue(registryPathResp.Description),
+		Grouping:             types.StringValue(registryPathResp.Grouping),
+		IncludeRegistryPaths: makeListStringAttribute(registryPathResp.IncludeRegistryPaths),
+		RegAccesses:          types.BoolValue(registryPathResp.RegAccesses),
+		ExcludeRegistryPaths: makeListStringAttribute(registryPathResp.ExcludeRegistryPaths),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -121,11 +118,11 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 	plan.ExcludeRegistryPaths.ElementsAs(ctx, &excludeRegistryPaths, false)
 
 	registryPathResp, err := r.client.CreateRegistryPath(uptycs.RegistryPath{
-		Name:                 plan.Name.Value,
-		Description:          plan.Description.Value,
-		Grouping:             plan.Grouping.Value,
+		Name:                 plan.Name.ValueString(),
+		Description:          plan.Description.ValueString(),
+		Grouping:             plan.Grouping.ValueString(),
 		IncludeRegistryPaths: includeRegistryPaths,
-		RegAccesses:          plan.RegAccesses.Value,
+		RegAccesses:          plan.RegAccesses.ValueBool(),
 		ExcludeRegistryPaths: excludeRegistryPaths,
 	})
 
@@ -138,27 +135,13 @@ func (r *registryPathResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.StringValue(registryPathResp.ID),
-		Name:        types.StringValue(registryPathResp.Name),
-		Description: types.StringValue(registryPathResp.Description),
-		Grouping:    types.StringValue(registryPathResp.Grouping),
-		IncludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
-		ExcludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _irp := range registryPathResp.IncludeRegistryPaths {
-		result.IncludeRegistryPaths.Elems = append(result.IncludeRegistryPaths.Elems, types.String{Value: _irp})
-	}
-
-	for _, _erp := range registryPathResp.ExcludeRegistryPaths {
-		result.ExcludeRegistryPaths.Elems = append(result.ExcludeRegistryPaths.Elems, types.String{Value: _erp})
+		ID:                   types.StringValue(registryPathResp.ID),
+		Name:                 types.StringValue(registryPathResp.Name),
+		Description:          types.StringValue(registryPathResp.Description),
+		Grouping:             types.StringValue(registryPathResp.Grouping),
+		IncludeRegistryPaths: makeListStringAttribute(registryPathResp.IncludeRegistryPaths),
+		RegAccesses:          types.BoolValue(registryPathResp.RegAccesses),
+		ExcludeRegistryPaths: makeListStringAttribute(registryPathResp.ExcludeRegistryPaths),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -176,7 +159,7 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	registryPathID := state.ID.Value
+	registryPathID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan RegistryPath
@@ -194,11 +177,11 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 
 	registryPathResp, err := r.client.UpdateRegistryPath(uptycs.RegistryPath{
 		ID:                   registryPathID,
-		Name:                 plan.Name.Value,
-		Description:          plan.Description.Value,
-		Grouping:             plan.Grouping.Value,
+		Name:                 plan.Name.ValueString(),
+		Description:          plan.Description.ValueString(),
+		Grouping:             plan.Grouping.ValueString(),
 		IncludeRegistryPaths: includeRegistryPaths,
-		RegAccesses:          plan.RegAccesses.Value,
+		RegAccesses:          plan.RegAccesses.ValueBool(),
 		ExcludeRegistryPaths: excludeRegistryPaths,
 	})
 
@@ -211,27 +194,13 @@ func (r *registryPathResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.StringValue(registryPathResp.ID),
-		Name:        types.StringValue(registryPathResp.Name),
-		Description: types.StringValue(registryPathResp.Description),
-		Grouping:    types.StringValue(registryPathResp.Grouping),
-		IncludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
-		ExcludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _irp := range registryPathResp.IncludeRegistryPaths {
-		result.IncludeRegistryPaths.Elems = append(result.IncludeRegistryPaths.Elems, types.String{Value: _irp})
-	}
-
-	for _, _erp := range registryPathResp.ExcludeRegistryPaths {
-		result.ExcludeRegistryPaths.Elems = append(result.ExcludeRegistryPaths.Elems, types.String{Value: _erp})
+		ID:                   types.StringValue(registryPathResp.ID),
+		Name:                 types.StringValue(registryPathResp.Name),
+		Description:          types.StringValue(registryPathResp.Description),
+		Grouping:             types.StringValue(registryPathResp.Grouping),
+		IncludeRegistryPaths: makeListStringAttribute(registryPathResp.IncludeRegistryPaths),
+		RegAccesses:          types.BoolValue(registryPathResp.RegAccesses),
+		ExcludeRegistryPaths: makeListStringAttribute(registryPathResp.ExcludeRegistryPaths),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -249,7 +218,7 @@ func (r *registryPathResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	registryPathID := state.ID.Value
+	registryPathID := state.ID.ValueString()
 
 	_, err := r.client.DeleteRegistryPath(uptycs.RegistryPath{
 		ID: registryPathID,
