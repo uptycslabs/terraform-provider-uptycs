@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -39,8 +41,11 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 			"name":        schema.StringAttribute{Required: true},
 			"description": schema.StringAttribute{Required: true},
 			"score": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"code": schema.StringAttribute{Required: true,
 				Computed: false,
@@ -53,35 +58,35 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 			"grouping_l2": schema.StringAttribute{Optional: true},
 			"grouping_l3": schema.StringAttribute{Optional: true},
 			"enabled": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"event_tags": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			"builder_config": {
+			"builder_config": schema.SingleNestedAttribute{
 				Required: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+				Attributes: map[string]schema.Attribute{
 					"table_name":     schema.StringAttribute{Optional: true},
 					"added":          schema.BoolAttribute{Optional: true},
 					"matches_filter": schema.BoolAttribute{Optional: true},
 					"severity":       schema.StringAttribute{Optional: true},
 					"key":            schema.StringAttribute{Optional: true},
 					"value_field":    schema.StringAttribute{Optional: true},
-					"filters": {
+					"filters":        schema.StringAttribute{Required: true},
+					"auto_alert_config": schema.SingleNestedAttribute{
 						Required: true,
-						Type:     types.StringType,
-					},
-					"auto_alert_config": {
-						Required: true,
-						Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+						Attributes: map[string]schema.Attribute{
 							"raise_alert":      schema.BoolAttribute{Required: true},
 							"disable_alert":    schema.BoolAttribute{Required: true},
 							"metadata_sources": schema.StringAttribute{Optional: true},
-						}),
+						},
 					},
-				}),
+				},
 			},
 		},
 	}
@@ -123,12 +128,9 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
 		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
+			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
 			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
@@ -138,17 +140,13 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 			AutoAlertConfig: AutoAlertConfig{
 				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
 				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
-				MetadataSources: types.StringValue(string([]byte(metadataJSON)) + "\n"),
+				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
 	}
 
-	if result.Type.Value == "sql" {
-		result.Rule.Value += "\n"
-	}
-
-	for _, _et := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: _et})
+	if result.Type.ValueString() == "sql" {
+		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -171,29 +169,29 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
 	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
-		Name:        plan.Name.Value,
-		Code:        plan.Code.Value,
-		Description: plan.Description.Value,
-		Rule:        plan.Rule.Value,
-		Type:        plan.Type.Value,
-		Enabled:     plan.Enabled.Value,
-		Grouping:    plan.Grouping.Value,
-		GroupingL2:  plan.GroupingL2.Value,
-		GroupingL3:  plan.GroupingL3.Value,
+		Name:        plan.Name.ValueString(),
+		Code:        plan.Code.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rule:        plan.Rule.ValueString(),
+		Type:        plan.Type.ValueString(),
+		Enabled:     plan.Enabled.ValueBool(),
+		Grouping:    plan.Grouping.ValueString(),
+		GroupingL2:  plan.GroupingL2.ValueString(),
+		GroupingL3:  plan.GroupingL3.ValueString(),
 		EventTags:   tags,
-		Score:       plan.Score.Value,
+		Score:       plan.Score.ValueString(),
 		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
-			TableName:     plan.BuilderConfig.TableName.Value,
-			Added:         plan.BuilderConfig.Added.Value,
-			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
-			Severity:      plan.BuilderConfig.Severity.Value,
-			Key:           plan.BuilderConfig.Key.Value,
-			ValueField:    plan.BuilderConfig.ValueField.Value,
+			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
+			TableName:     plan.BuilderConfig.TableName.ValueString(),
+			Added:         plan.BuilderConfig.Added.ValueBool(),
+			MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
+			Severity:      plan.BuilderConfig.Severity.ValueString(),
+			Key:           plan.BuilderConfig.Key.ValueString(),
+			ValueField:    plan.BuilderConfig.ValueField.ValueString(),
 			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
-				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
-				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.Value),
+				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
+				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
+				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
 			},
 		},
 	})
@@ -228,12 +226,9 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
 		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
+			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
 			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
@@ -243,16 +238,12 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 			AutoAlertConfig: AutoAlertConfig{
 				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
 				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
-				MetadataSources: types.StringValue(string([]byte(metadataJSON)) + "\n"),
+				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
 	}
-	if result.Type.Value == "sql" {
-		result.Rule.Value += "\n"
-	}
-
-	for _, t := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	if result.Type.ValueString() == "sql" {
+		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -270,7 +261,7 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	eventRuleID := state.ID.Value
+	eventRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan EventRule
@@ -285,29 +276,29 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
 		ID:          eventRuleID,
-		Name:        plan.Name.Value,
-		Code:        plan.Code.Value,
-		Description: plan.Description.Value,
-		Rule:        plan.Rule.Value,
-		Type:        plan.Type.Value,
-		Enabled:     plan.Enabled.Value,
-		Grouping:    plan.Grouping.Value,
-		GroupingL2:  plan.GroupingL2.Value,
-		GroupingL3:  plan.GroupingL3.Value,
+		Name:        plan.Name.ValueString(),
+		Code:        plan.Code.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rule:        plan.Rule.ValueString(),
+		Type:        plan.Type.ValueString(),
+		Enabled:     plan.Enabled.ValueBool(),
+		Grouping:    plan.Grouping.ValueString(),
+		GroupingL2:  plan.GroupingL2.ValueString(),
+		GroupingL3:  plan.GroupingL3.ValueString(),
 		EventTags:   tags,
-		Score:       plan.Score.Value,
+		Score:       plan.Score.ValueString(),
 		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.Value),
-			TableName:     plan.BuilderConfig.TableName.Value,
-			Added:         plan.BuilderConfig.Added.Value,
-			MatchesFilter: plan.BuilderConfig.MatchesFilter.Value,
-			Severity:      plan.BuilderConfig.Severity.Value,
-			Key:           plan.BuilderConfig.Key.Value,
-			ValueField:    plan.BuilderConfig.ValueField.Value,
+			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
+			TableName:     plan.BuilderConfig.TableName.ValueString(),
+			Added:         plan.BuilderConfig.Added.ValueBool(),
+			MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
+			Severity:      plan.BuilderConfig.Severity.ValueString(),
+			Key:           plan.BuilderConfig.Key.ValueString(),
+			ValueField:    plan.BuilderConfig.ValueField.ValueString(),
 			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.Value,
-				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.Value,
-				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.Value),
+				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
+				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
+				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
 			},
 		},
 	})
@@ -342,12 +333,9 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
 		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
+			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
 			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
@@ -357,13 +345,9 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			AutoAlertConfig: AutoAlertConfig{
 				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
 				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
-				MetadataSources: types.StringValue(string([]byte(metadataJSON)) + "\n"),
+				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
-	}
-
-	for _, t := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -381,7 +365,7 @@ func (r *eventRuleResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	eventRuleID := state.ID.Value
+	eventRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteEventRule(uptycs.EventRule{
 		ID: eventRuleID,

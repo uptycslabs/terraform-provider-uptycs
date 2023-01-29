@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -81,27 +80,13 @@ func (d *roleDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	var result = Role{
-		ID:          types.StringValue(roleResp.ID),
-		Name:        types.StringValue(roleResp.Name),
-		Description: types.StringValue(roleResp.Description),
-		Permissions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                   types.StringValue(roleResp.ID),
+		Name:                 types.StringValue(roleResp.Name),
+		Description:          types.StringValue(roleResp.Description),
+		Permissions:          makeListStringAttribute(roleResp.Permissions),
 		Hidden:               types.BoolValue(roleResp.Hidden),
 		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
-		RoleObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, t := range roleResp.Permissions {
-		result.Permissions.Elems = append(result.Permissions.Elems, types.String{Value: t})
-	}
-
-	for _, _rogid := range roleResp.RoleObjectGroups {
-		result.RoleObjectGroups.Elems = append(result.RoleObjectGroups.Elems, types.String{Value: _rogid.ObjectGroupID})
+		RoleObjectGroups:     makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)

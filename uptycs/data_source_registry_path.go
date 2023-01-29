@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -66,27 +65,13 @@ func (d *registryPathDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.StringValue(registryPathResp.ID),
-		Name:        types.StringValue(registryPathResp.Name),
-		Description: types.StringValue(registryPathResp.Description),
-		Grouping:    types.StringValue(registryPathResp.Grouping),
-		IncludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegAccesses: types.BoolValue(registryPathResp.RegAccesses),
-		ExcludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _irp := range registryPathResp.IncludeRegistryPaths {
-		result.IncludeRegistryPaths.Elems = append(result.IncludeRegistryPaths.Elems, types.String{Value: _irp})
-	}
-
-	for _, _erp := range registryPathResp.ExcludeRegistryPaths {
-		result.ExcludeRegistryPaths.Elems = append(result.ExcludeRegistryPaths.Elems, types.String{Value: _erp})
+		ID:                   types.StringValue(registryPathResp.ID),
+		Name:                 types.StringValue(registryPathResp.Name),
+		Description:          types.StringValue(registryPathResp.Description),
+		Grouping:             types.StringValue(registryPathResp.Grouping),
+		IncludeRegistryPaths: makeListStringAttribute(registryPathResp.IncludeRegistryPaths),
+		RegAccesses:          types.BoolValue(registryPathResp.RegAccesses),
+		ExcludeRegistryPaths: makeListStringAttribute(registryPathResp.ExcludeRegistryPaths),
 	}
 
 	diags := resp.State.Set(ctx, result)

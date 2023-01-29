@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -96,14 +95,7 @@ func (d *objectGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Secret:           types.StringValue(objectGroupResp.Secret),
 		ObjectType:       types.StringValue(objectGroupResp.ObjectType),
 		RetentionDays:    0,
-		Destinations: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _dest := range objectGroupResp.Destinations {
-		result.Destinations.Elems = append(result.Destinations.Elems, types.String{Value: _dest.ID})
+		Destinations:     makeListStringAttributeFn(objectGroupResp.Destinations, func(d uptycs.Destination) (string, bool) { return d.ID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)

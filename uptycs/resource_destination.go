@@ -3,6 +3,7 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -38,8 +39,10 @@ func (r *destinationResource) Schema(_ context.Context, req resource.SchemaReque
 			"type":    schema.StringAttribute{Optional: true},
 			"address": schema.StringAttribute{Optional: true},
 			"enabled": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(true),
+				},
 			},
 		},
 	}
@@ -84,10 +87,10 @@ func (r *destinationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	destinationResp, err := r.client.CreateDestination(uptycs.Destination{
-		Name:    plan.Name.Value,
-		Type:    plan.Type.Value,
-		Address: plan.Address.Value,
-		Enabled: plan.Enabled.Value,
+		Name:    plan.Name.ValueString(),
+		Type:    plan.Type.ValueString(),
+		Address: plan.Address.ValueString(),
+		Enabled: plan.Enabled.ValueBool(),
 	})
 
 	if err != nil {
@@ -121,7 +124,7 @@ func (r *destinationResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	destinationID := state.ID.Value
+	destinationID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan Destination
@@ -133,10 +136,10 @@ func (r *destinationResource) Update(ctx context.Context, req resource.UpdateReq
 
 	destinationResp, err := r.client.UpdateDestination(uptycs.Destination{
 		ID:      destinationID,
-		Name:    plan.Name.Value,
-		Type:    plan.Type.Value,
-		Address: plan.Address.Value,
-		Enabled: plan.Enabled.Value,
+		Name:    plan.Name.ValueString(),
+		Type:    plan.Type.ValueString(),
+		Address: plan.Address.ValueString(),
+		Enabled: plan.Enabled.ValueBool(),
 	})
 
 	if err != nil {
@@ -170,7 +173,7 @@ func (r *destinationResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	destinationID := state.ID.Value
+	destinationID := state.ID.ValueString()
 
 	_, err := r.client.DeleteDestination(uptycs.Destination{
 		ID: destinationID,

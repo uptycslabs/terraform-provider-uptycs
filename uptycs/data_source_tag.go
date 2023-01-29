@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -126,54 +125,12 @@ func (d *tagDataSource) Read(ctx context.Context, req datasource.ReadRequest, re
 		Status:                    types.StringValue(tagResp.Status),
 		Source:                    types.StringValue(tagResp.Source),
 		ResourceType:              types.StringValue(tagResp.ResourceType),
-		FilePathGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		EventExcludeProfiles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Querypacks: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		YaraGroupRules: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AuditConfigurations: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
-	}
-
-	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
-	}
-
-	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
-	}
-
-	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
-	}
-
-	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
-	}
-
-	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
+		FilePathGroups:            makeListStringAttributeFn(tagResp.FilePathGroups, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
+		EventExcludeProfiles:      makeListStringAttributeFn(tagResp.EventExcludeProfiles, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
+		Querypacks:                makeListStringAttributeFn(tagResp.Querypacks, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
+		RegistryPaths:             makeListStringAttributeFn(tagResp.RegistryPaths, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
+		YaraGroupRules:            makeListStringAttributeFn(tagResp.YaraGroupRules, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
+		AuditConfigurations:       makeListStringAttributeFn(tagResp.AuditConfigurations, func(o uptycs.TagConfigurationObject) (string, bool) { return o.ID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)

@@ -79,8 +79,8 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	complianceProfileResp, err := r.client.CreateComplianceProfile(uptycs.ComplianceProfile{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		Priority:    plan.Priority,
 	})
 
@@ -114,7 +114,7 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	complianceProfileID := state.ID.Value
+	complianceProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan ComplianceProfile
@@ -126,8 +126,8 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 
 	complianceProfileResp, err := r.client.UpdateComplianceProfile(uptycs.ComplianceProfile{
 		ID:          complianceProfileID,
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		Priority:    plan.Priority,
 	})
 
@@ -161,7 +161,7 @@ func (r *complianceProfileResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	complianceProfileID := state.ID.Value
+	complianceProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteComplianceProfile(uptycs.ComplianceProfile{
 		ID: complianceProfileID,

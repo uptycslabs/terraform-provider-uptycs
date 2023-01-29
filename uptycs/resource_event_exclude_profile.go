@@ -40,10 +40,7 @@ func (r *eventExcludeProfileResource) Schema(_ context.Context, req resource.Sch
 			"priority":      schema.NumberAttribute{Optional: true},
 			"resource_type": schema.StringAttribute{Computed: true},
 			"platform":      schema.StringAttribute{Optional: true},
-			"metadata": {
-				Optional: true,
-				Type:     types.StringType,
-			},
+			"metadata":      schema.StringAttribute{Optional: true},
 		},
 	}
 }
@@ -58,12 +55,12 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 	}
 
 	eventExcludeProfileResp, err := r.client.CreateEventExcludeProfile(uptycs.EventExcludeProfile{
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		MetadataJSON: plan.Metadata.Value,
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		MetadataJSON: plan.Metadata.ValueString(),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
-		Platform:     plan.Platform.Value,
+		ResourceType: plan.ResourceType.ValueString(),
+		Platform:     plan.Platform.ValueString(),
 	})
 
 	if err != nil {
@@ -83,7 +80,7 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 		ID:           types.StringValue(eventExcludeProfileResp.ID),
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
-		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
@@ -119,7 +116,7 @@ func (r *eventExcludeProfileResource) Read(ctx context.Context, req resource.Rea
 		ID:           types.StringValue(eventExcludeProfileResp.ID),
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
-		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
@@ -141,7 +138,7 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	eventExcludeProfileID := state.ID.Value
+	eventExcludeProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan EventExcludeProfile
@@ -153,12 +150,12 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 
 	eventExcludeProfileResp, err := r.client.UpdateEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID:           eventExcludeProfileID,
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		MetadataJSON: plan.Metadata.Value,
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		MetadataJSON: plan.Metadata.ValueString(),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
-		Platform:     plan.Platform.Value,
+		ResourceType: plan.ResourceType.ValueString(),
+		Platform:     plan.Platform.ValueString(),
 	})
 
 	if err != nil {
@@ -178,7 +175,7 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 		ID:           types.StringValue(eventExcludeProfileResp.ID),
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
-		Metadata:     types.StringValue(string([]byte(metadataJSON)) + "\n"),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
@@ -199,7 +196,7 @@ func (r *eventExcludeProfileResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	eventExcludeProfileID := state.ID.Value
+	eventExcludeProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID: eventExcludeProfileID,

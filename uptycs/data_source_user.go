@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -90,40 +89,19 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	var result = User{
-		ID:              types.StringValue(userResp.ID),
-		Name:            types.StringValue(userResp.Name),
-		Email:           types.StringValue(userResp.Email),
-		Phone:           types.StringValue(userResp.Phone),
-		Active:          types.BoolValue(userResp.Active),
-		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
-		Bot:             types.BoolValue(userResp.Bot),
-		Support:         types.BoolValue(userResp.Support),
-		ImageURL:        types.StringValue(userResp.ImageURL),
-		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
-		AlertHiddenColumns: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Roles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		UserObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
-	}
-
-	for _, _ahc := range userResp.AlertHiddenColumns {
-		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
-	}
-
-	for _, _uogid := range userResp.UserObjectGroups {
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
+		ID:                 types.StringValue(userResp.ID),
+		Name:               types.StringValue(userResp.Name),
+		Email:              types.StringValue(userResp.Email),
+		Phone:              types.StringValue(userResp.Phone),
+		Active:             types.BoolValue(userResp.Active),
+		SuperAdmin:         types.BoolValue(userResp.SuperAdmin),
+		Bot:                types.BoolValue(userResp.Bot),
+		Support:            types.BoolValue(userResp.Support),
+		ImageURL:           types.StringValue(userResp.ImageURL),
+		MaxIdleTimeMins:    userResp.MaxIdleTimeMins,
+		AlertHiddenColumns: makeListStringAttributeFn(userResp.Roles, func(r uptycs.Role) (string, bool) { return r.ID, true }),
+		Roles:              makeListStringAttribute(userResp.AlertHiddenColumns),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)

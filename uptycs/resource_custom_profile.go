@@ -90,11 +90,11 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	customProfileResp, err := r.client.CreateCustomProfile(uptycs.CustomProfile{
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.Value),
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.ValueString()),
 		Priority:       plan.Priority,
-		ResourceType:   plan.ResourceType.Value,
+		ResourceType:   plan.ResourceType.ValueString(),
 	})
 
 	if err != nil {
@@ -114,7 +114,7 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 		ID:             types.StringValue(customProfileResp.ID),
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
-		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
+		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
 		Priority:       customProfileResp.Priority,
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
@@ -134,7 +134,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	customProfileID := state.ID.Value
+	customProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan CustomProfile
@@ -146,11 +146,11 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 
 	customProfileResp, err := r.client.UpdateCustomProfile(uptycs.CustomProfile{
 		ID:             customProfileID,
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.Value),
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.ValueString()),
 		Priority:       plan.Priority,
-		ResourceType:   plan.ResourceType.Value,
+		ResourceType:   plan.ResourceType.ValueString(),
 	})
 
 	if err != nil {
@@ -170,7 +170,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		ID:             types.StringValue(customProfileResp.ID),
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
-		QuerySchedules: types.StringValue(string([]byte(queryScheduleJSON)) + "\n"),
+		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
 		Priority:       customProfileResp.Priority,
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
@@ -190,7 +190,7 @@ func (r *customProfileResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	customProfileID := state.ID.Value
+	customProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteCustomProfile(uptycs.CustomProfile{
 		ID: customProfileID,
