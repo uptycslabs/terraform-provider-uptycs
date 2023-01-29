@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -59,14 +58,11 @@ func (d *filePathGroupDataSource) Schema(_ context.Context, req datasource.Schem
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"signatures": {
+			"signatures": schema.ListNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"id": {
-							Computed: true,
-							Type:     types.StringType,
-						},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id":          schema.StringAttribute{Computed: true},
 						"name":        schema.StringAttribute{Optional: true},
 						"description": schema.StringAttribute{Optional: true},
 						"paths": schema.ListAttribute{
@@ -74,21 +70,18 @@ func (d *filePathGroupDataSource) Schema(_ context.Context, req datasource.Schem
 							Optional:    true,
 						},
 					},
-				),
+				},
 			},
-			"yara_group_rules": {
+			"yara_group_rules": schema.ListNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"id": {
-							Computed: true,
-							Type:     types.StringType,
-						},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id":          schema.StringAttribute{Computed: true},
 						"name":        schema.StringAttribute{Optional: true},
 						"description": schema.StringAttribute{Optional: true},
 						"rules":       schema.StringAttribute{Optional: true},
 					},
-				),
+				},
 			},
 		},
 	}
@@ -125,52 +118,17 @@ func (d *filePathGroupDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = FilePathGroup{
-		ID:          types.StringValue(filePathGroupResp.ID),
-		Name:        types.StringValue(filePathGroupResp.Name),
-		Description: types.StringValue(filePathGroupResp.Description),
-		Grouping:    types.StringValue(filePathGroupResp.Grouping),
-		IncludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		IncludePathExtensions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		ExcludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		CheckSignature: types.BoolValue(filePathGroupResp.CheckSignature),
-		FileAccesses:   types.BoolValue(filePathGroupResp.FileAccesses),
-		ExcludeProcessNames: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		PriorityPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, ip := range filePathGroupResp.IncludePaths {
-		result.IncludePaths.Elems = append(result.IncludePaths.Elems, types.String{Value: ip})
-	}
-
-	for _, ipe := range filePathGroupResp.IncludePathExtensions {
-		result.IncludePathExtensions.Elems = append(result.IncludePathExtensions.Elems, types.String{Value: ipe})
-	}
-
-	for _, ep := range filePathGroupResp.ExcludePaths {
-		result.ExcludePaths.Elems = append(result.ExcludePaths.Elems, types.String{Value: ep})
-	}
-
-	for _, epn := range filePathGroupResp.ExcludeProcessNames {
-		result.ExcludeProcessNames.Elems = append(result.ExcludeProcessNames.Elems, types.String{Value: epn})
-	}
-
-	for _, pp := range filePathGroupResp.PriorityPaths {
-		result.PriorityPaths.Elems = append(result.PriorityPaths.Elems, types.String{Value: pp})
+		ID:                    types.StringValue(filePathGroupResp.ID),
+		Name:                  types.StringValue(filePathGroupResp.Name),
+		Description:           types.StringValue(filePathGroupResp.Description),
+		Grouping:              types.StringValue(filePathGroupResp.Grouping),
+		IncludePaths:          makeListStringAttribute(filePathGroupResp.IncludePaths),
+		IncludePathExtensions: makeListStringAttribute(filePathGroupResp.IncludePathExtensions),
+		ExcludePaths:          makeListStringAttribute(filePathGroupResp.ExcludePaths),
+		CheckSignature:        types.BoolValue(filePathGroupResp.CheckSignature),
+		FileAccesses:          types.BoolValue(filePathGroupResp.FileAccesses),
+		ExcludeProcessNames:   makeListStringAttribute(filePathGroupResp.ExcludeProcessNames),
+		PriorityPaths:         makeListStringAttribute(filePathGroupResp.PriorityPaths),
 	}
 
 	var signatures []FilePathGroupSignature

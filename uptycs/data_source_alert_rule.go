@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -55,22 +54,22 @@ func (d *alertRuleDataSource) Schema(_ context.Context, req datasource.SchemaReq
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"destinations": {
+			"destinations": schema.ListNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
 						"severity":             schema.StringAttribute{Optional: true},
 						"destination_id":       schema.StringAttribute{Optional: true},
 						"notify_every_alert":   schema.BoolAttribute{Optional: true},
 						"close_after_delivery": schema.BoolAttribute{Optional: true},
 					},
-				),
+				},
 			},
-			"sql_config": {
+			"sql_config": schema.SingleNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+				Attributes: map[string]schema.Attribute{
 					"interval_seconds": schema.NumberAttribute{Optional: true},
-				}),
+				},
 			},
 		},
 	}
@@ -119,30 +118,17 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		IsInternal:          types.BoolValue(alertRuleResp.IsInternal),
 		AlertNotifyCount:    types.Int64Value(int64(alertRuleResp.AlertNotifyCount)),
 		AlertNotifyInterval: types.Int64Value(int64(alertRuleResp.AlertNotifyInterval)),
-		AlertTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		GroupingL2: types.StringValue(alertRuleResp.GroupingL2),
-		GroupingL3: types.StringValue(alertRuleResp.GroupingL3),
-		AlertRuleExceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
+
+		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
+		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
+		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
 			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
 		}
-	}
-
-	for _, at := range alertRuleResp.AlertTags {
-		result.AlertTags.Elems = append(result.AlertTags.Elems, types.String{Value: at})
-	}
-
-	for _, are := range alertRuleResp.AlertRuleExceptions {
-		result.AlertRuleExceptions.Elems = append(result.AlertRuleExceptions.Elems, types.String{Value: are.ExceptionID})
 	}
 
 	destinations := make([]AlertRuleDestination, 0)

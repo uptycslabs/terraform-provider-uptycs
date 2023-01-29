@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -52,36 +50,33 @@ func (d *eventRuleDataSource) Schema(_ context.Context, req datasource.SchemaReq
 			"grouping":    schema.StringAttribute{Optional: true},
 			"grouping_l2": schema.StringAttribute{Optional: true},
 			"grouping_l3": schema.StringAttribute{Optional: true},
-			"enabled": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+			"enabled": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
 			},
 			"event_tags": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 			},
-			"builder_config": {
+			"builder_config": schema.SingleNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+				Attributes: map[string]schema.Attribute{
 					"table_name":     schema.StringAttribute{Optional: true},
 					"added":          schema.BoolAttribute{Optional: true},
 					"matches_filter": schema.BoolAttribute{Optional: true},
 					"severity":       schema.StringAttribute{Optional: true},
 					"key":            schema.StringAttribute{Optional: true},
 					"value_field":    schema.StringAttribute{Optional: true},
-					"filters": {
+					"filters":        schema.StringAttribute{Optional: true},
+					"auto_alert_config": schema.SingleNestedAttribute{
 						Optional: true,
-						Type:     types.StringType,
-					},
-					"auto_alert_config": {
-						Optional: true,
-						Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
+						Attributes: map[string]schema.Attribute{
 							"raise_alert":      schema.BoolAttribute{Optional: true},
 							"disable_alert":    schema.BoolAttribute{Optional: true},
 							"metadata_sources": schema.StringAttribute{Optional: true},
-						}),
+						},
 					},
-				}),
+				},
 			},
 		},
 	}
@@ -139,10 +134,7 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
 		BuilderConfig: BuilderConfig{
 			Filters:       types.StringValue(string([]byte(filtersJSON)) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
@@ -159,12 +151,8 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		},
 	}
 
-	if result.Type.Value == "sql" {
-		result.Rule.Value += "\n"
-	}
-
-	for _, t := range eventRuleResp.EventTags {
-		result.EventTags.Elems = append(result.EventTags.Elems, types.String{Value: t})
+	if result.Type.ValueString() == "sql" {
+		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
 	}
 
 	diags := resp.State.Set(ctx, result)
