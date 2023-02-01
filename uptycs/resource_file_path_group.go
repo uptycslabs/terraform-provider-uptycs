@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -43,7 +44,7 @@ func (r *filePathGroupResource) Schema(_ context.Context, req resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"include_paths": schema.ListAttribute{

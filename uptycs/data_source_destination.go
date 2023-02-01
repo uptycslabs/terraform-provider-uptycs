@@ -36,7 +36,7 @@ func (d *destinationDataSource) Schema(_ context.Context, req datasource.SchemaR
 			"name":    schema.StringAttribute{Optional: true},
 			"type":    schema.StringAttribute{Optional: true},
 			"address": schema.StringAttribute{Optional: true},
-			"enabled": schema.BoolAttribute{Optional: true}, //PlanModifiers: tfsdk.AttributePlanModifiers{boolDefault(true)},
+			"enabled": schema.BoolAttribute{Optional: true}, //PlanModifiers: tfsdk.AttributePlanModifiers{modifiers.DefaultBool(true)},
 
 		},
 	}

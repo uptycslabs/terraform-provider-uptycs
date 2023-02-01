@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -42,7 +43,7 @@ func (r *tagResource) Schema(_ context.Context, req resource.SchemaRequest, resp
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"key": schema.StringAttribute{Optional: true},
@@ -50,37 +51,37 @@ func (r *tagResource) Schema(_ context.Context, req resource.SchemaRequest, resp
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"custom_profile": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"compliance_profile": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"process_block_rule": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"dns_block_rule": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"windows_defender_preference": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				}},
 			"tag": schema.StringAttribute{Optional: true,
 				Computed: true,
@@ -89,7 +90,7 @@ func (r *tagResource) Schema(_ context.Context, req resource.SchemaRequest, resp
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"tag_rule": schema.StringAttribute{Optional: true,
@@ -99,21 +100,21 @@ func (r *tagResource) Schema(_ context.Context, req resource.SchemaRequest, resp
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault("active"),
+					modifiers.DefaultString("active"),
 				},
 			},
 			"source": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault("direct"),
+					modifiers.DefaultString("direct"),
 				},
 			},
 			"resource_type": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault("asset"),
+					modifiers.DefaultString("asset"),
 				},
 			},
 			"file_path_groups": schema.ListAttribute{

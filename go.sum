@@ -200,6 +200,12 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201183808-144f6fbb8937 h1:sl6yMlqCO4m+lBbkoWkLjgg2zWI3PsmEYXRAbjjIbkM=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201183808-144f6fbb8937/go.mod h1:3Clx6Vx3+M+vDvD8KrgPAfit1iHePqWMs3+0P1rumcw=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184628-d6be729c2b67 h1:NDCAmvOOxIImdRSxtnufk+8Ej5ysJcakjpehhi0p1kU=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184628-d6be729c2b67/go.mod h1:3Clx6Vx3+M+vDvD8KrgPAfit1iHePqWMs3+0P1rumcw=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184903-6cd82880569f h1:HhiEQhhr1W4qpRXt9YD2/bXVddc8KTsHBFEoMRnlN4c=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184903-6cd82880569f/go.mod h1:3Clx6Vx3+M+vDvD8KrgPAfit1iHePqWMs3+0P1rumcw=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=

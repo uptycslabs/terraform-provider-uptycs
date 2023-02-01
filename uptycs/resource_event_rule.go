@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -44,7 +45,7 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"code": schema.StringAttribute{Required: true,
@@ -61,7 +62,7 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"event_tags": schema.ListAttribute{
