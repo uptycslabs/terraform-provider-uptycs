@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -41,7 +42,7 @@ func (r *destinationResource) Schema(_ context.Context, req resource.SchemaReque
 			"enabled": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolDefault(true),
+					modifiers.DefaultBool(true),
 				},
 			},
 		},

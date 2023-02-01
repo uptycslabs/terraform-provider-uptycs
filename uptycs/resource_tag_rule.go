@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -40,36 +41,41 @@ func (r *tagRuleResource) Schema(_ context.Context, req resource.SchemaRequest, 
 			"description": schema.StringAttribute{Required: true},
 			"query":       schema.StringAttribute{Required: true},
 			"source":      schema.StringAttribute{Required: true},
-			"run_once":    schema.BoolAttribute{Optional: true},
-			"interval":    schema.Int64Attribute{Optional: true},
+			"run_once": schema.BoolAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					modifiers.DefaultBool(false),
+				},
+			},
+			"interval": schema.Int64Attribute{Optional: true},
 			"osquery_version": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"platform": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"resource_type": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringDefault("asset"),
+					modifiers.DefaultString("asset"),
 				},
 			},
 			"enabled": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolDefault(true),
+					modifiers.DefaultBool(true),
 				},
 			},
 			"system": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolDefault(true),
+					modifiers.DefaultBool(true),
 				},
 			},
 		},

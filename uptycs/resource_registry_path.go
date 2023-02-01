@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -41,14 +42,14 @@ func (r *registryPathResource) Schema(_ context.Context, req resource.SchemaRequ
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"grouping": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"include_registry_paths": schema.ListAttribute{
@@ -59,7 +60,7 @@ func (r *registryPathResource) Schema(_ context.Context, req resource.SchemaRequ
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"exclude_registry_paths": schema.ListAttribute{

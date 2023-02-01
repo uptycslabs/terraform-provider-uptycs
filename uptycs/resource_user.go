@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -43,48 +44,48 @@ func (r *userResource) Schema(_ context.Context, req resource.SchemaRequest, res
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"phone": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 			},
 			"active": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(true),
+					modifiers.DefaultBool(true),
 				},
 			},
 			"super_admin": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"bot": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"support": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"image_url": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault(""),
+					modifiers.DefaultString(""),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 512),

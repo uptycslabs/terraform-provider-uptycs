@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
 
@@ -47,21 +48,21 @@ func (r *querypackResource) Schema(_ context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"is_internal": schema.BoolAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
-					boolDefault(false),
+					modifiers.DefaultBool(false),
 				},
 			},
 			"resource_type": schema.StringAttribute{Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-					stringDefault("asset"),
+					modifiers.DefaultString("asset"),
 				},
 			},
 			"conf": schema.StringAttribute{Required: true},
