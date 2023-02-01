@@ -2,18 +2,13 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &yaraGroupRuleResource{}
-	_ resource.ResourceWithConfigure   = &yaraGroupRuleResource{}
-	_ resource.ResourceWithImportState = &yaraGroupRuleResource{}
 )
 
 func YaraGroupRuleResource() resource.Resource {
@@ -36,29 +31,21 @@ func (r *yaraGroupRuleResource) Configure(_ context.Context, req resource.Config
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *yaraGroupRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
+func (r *yaraGroupRuleResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Computed: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"rules": schema.StringAttribute{Optional: true,
 				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"rules": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *yaraGroupRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -75,10 +62,10 @@ func (r *yaraGroupRuleResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -99,9 +86,9 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	yaraGroupRuleResp, err := r.client.CreateYaraGroupRule(uptycs.YaraGroupRule{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
-		Rules:       plan.Rules.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rules:       plan.Rules.ValueString(),
 	})
 
 	if err != nil {
@@ -113,10 +100,10 @@ func (r *yaraGroupRuleResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -134,7 +121,7 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	yaraGroupRuleID := state.ID.Value
+	yaraGroupRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan YaraGroupRule
@@ -146,9 +133,9 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 
 	yaraGroupRuleResp, err := r.client.UpdateYaraGroupRule(uptycs.YaraGroupRule{
 		ID:          yaraGroupRuleID,
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
-		Rules:       plan.Rules.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
+		Rules:       plan.Rules.ValueString(),
 	})
 
 	if err != nil {
@@ -160,10 +147,10 @@ func (r *yaraGroupRuleResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	var result = YaraGroupRule{
-		ID:          types.String{Value: yaraGroupRuleResp.ID},
-		Name:        types.String{Value: yaraGroupRuleResp.Name},
-		Description: types.String{Value: yaraGroupRuleResp.Description},
-		Rules:       types.String{Value: yaraGroupRuleResp.Rules},
+		ID:          types.StringValue(yaraGroupRuleResp.ID),
+		Name:        types.StringValue(yaraGroupRuleResp.Name),
+		Description: types.StringValue(yaraGroupRuleResp.Description),
+		Rules:       types.StringValue(yaraGroupRuleResp.Rules),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -181,7 +168,7 @@ func (r *yaraGroupRuleResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	yaraGroupRuleID := state.ID.Value
+	yaraGroupRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteYaraGroupRule(uptycs.YaraGroupRule{
 		ID: yaraGroupRuleID,

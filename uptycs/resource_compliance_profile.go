@@ -2,18 +2,11 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &complianceProfileResource{}
-	_ resource.ResourceWithConfigure   = &complianceProfileResource{}
-	_ resource.ResourceWithImportState = &complianceProfileResource{}
 )
 
 func ComplianceProfileResource() resource.Resource {
@@ -36,27 +29,15 @@ func (r *complianceProfileResource) Configure(_ context.Context, req resource.Co
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *complianceProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
+func (r *complianceProfileResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Computed: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"priority":    schema.NumberAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (r *complianceProfileResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -74,9 +55,9 @@ func (r *complianceProfileResource) Read(ctx context.Context, req resource.ReadR
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 
@@ -98,8 +79,8 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	complianceProfileResp, err := r.client.CreateComplianceProfile(uptycs.ComplianceProfile{
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		Priority:    plan.Priority,
 	})
 
@@ -112,9 +93,9 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 
@@ -133,7 +114,7 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	complianceProfileID := state.ID.Value
+	complianceProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan ComplianceProfile
@@ -145,8 +126,8 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 
 	complianceProfileResp, err := r.client.UpdateComplianceProfile(uptycs.ComplianceProfile{
 		ID:          complianceProfileID,
-		Name:        plan.Name.Value,
-		Description: plan.Description.Value,
+		Name:        plan.Name.ValueString(),
+		Description: plan.Description.ValueString(),
 		Priority:    plan.Priority,
 	})
 
@@ -159,9 +140,9 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 
@@ -180,7 +161,7 @@ func (r *complianceProfileResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	complianceProfileID := state.ID.Value
+	complianceProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteComplianceProfile(uptycs.ComplianceProfile{
 		ID: complianceProfileID,

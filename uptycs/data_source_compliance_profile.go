@@ -3,16 +3,11 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &complianceProfileDataSource{}
-	_ datasource.DataSourceWithConfigure = &complianceProfileDataSource{}
 )
 
 func ComplianceProfileDataSource() datasource.DataSource {
@@ -35,27 +30,15 @@ func (d *complianceProfileDataSource) Configure(_ context.Context, req datasourc
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *complianceProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
+func (d *complianceProfileDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"priority":    schema.NumberAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *complianceProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -89,9 +72,9 @@ func (d *complianceProfileDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	var result = ComplianceProfile{
-		ID:          types.String{Value: complianceProfileResp.ID},
-		Name:        types.String{Value: complianceProfileResp.Name},
-		Description: types.String{Value: complianceProfileResp.Description},
+		ID:          types.StringValue(complianceProfileResp.ID),
+		Name:        types.StringValue(complianceProfileResp.Name),
+		Description: types.StringValue(complianceProfileResp.Description),
 		Priority:    complianceProfileResp.Priority,
 	}
 

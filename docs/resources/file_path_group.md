@@ -40,7 +40,7 @@ description: |-
 <a id="nestedatt--signatures"></a>
 ### Nested Schema for `signatures`
 
-Required:
+Optional:
 
 - `description` (String)
 - `id` (String)
@@ -51,7 +51,7 @@ Required:
 <a id="nestedatt--yara_group_rules"></a>
 ### Nested Schema for `yara_group_rules`
 
-Required:
+Optional:
 
 - `description` (String)
 - `id` (String)

@@ -2,18 +2,12 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &tagRuleResource{}
-	_ resource.ResourceWithConfigure   = &tagRuleResource{}
-	_ resource.ResourceWithImportState = &tagRuleResource{}
 )
 
 func TagRuleResource() resource.Resource {
@@ -36,70 +30,50 @@ func (r *tagRuleResource) Configure(_ context.Context, req resource.ConfigureReq
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *tagRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
+func (r *tagRuleResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{Optional: true,
 				Computed: true,
 			},
-			"name": {
-				Type:     types.StringType,
-				Required: true,
+			"name":        schema.StringAttribute{Required: true},
+			"description": schema.StringAttribute{Required: true},
+			"query":       schema.StringAttribute{Required: true},
+			"source":      schema.StringAttribute{Required: true},
+			"run_once":    schema.BoolAttribute{Required: true},
+			"interval":    schema.NumberAttribute{Optional: true},
+			"osquery_version": schema.StringAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault(""),
+				},
 			},
-			"description": {
-				Type:     types.StringType,
-				Required: true,
+			"platform": schema.StringAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault(""),
+				},
 			},
-			"query": {
-				Type:     types.StringType,
-				Required: true,
+			"resource_type": schema.StringAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault("asset"),
+				},
 			},
-			"source": {
-				Type:     types.StringType,
-				Required: true,
+			"enabled": schema.BoolAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(true),
+				},
 			},
-			"run_once": {
-				Type:     types.BoolType,
-				Required: true,
-			},
-			"interval": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"osquery_version": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
-			},
-			"platform": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
-			},
-			"resource_type": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("asset")},
-			},
-			"enabled": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
-			},
-			"system": {
-				Type:          types.BoolType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+			"system": schema.BoolAttribute{Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(true),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *tagRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -117,18 +91,18 @@ func (r *tagRuleResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -148,17 +122,17 @@ func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 	tagRuleResp, err := r.client.CreateTagRule(uptycs.TagRule{
-		ID:             plan.ID.Value,
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		Query:          plan.Query.Value,
-		Source:         plan.Source.Value,
-		RunOnce:        plan.RunOnce.Value,
+		ID:             plan.ID.ValueString(),
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		Query:          plan.Query.ValueString(),
+		Source:         plan.Source.ValueString(),
+		RunOnce:        plan.RunOnce.ValueBool(),
 		Interval:       plan.Interval,
-		OSqueryVersion: plan.OSqueryVersion.Value,
-		Platform:       plan.Platform.Value,
-		Enabled:        plan.Enabled.Value,
-		ResourceType:   plan.ResourceType.Value,
+		OSqueryVersion: plan.OSqueryVersion.ValueString(),
+		Platform:       plan.Platform.ValueString(),
+		Enabled:        plan.Enabled.ValueBool(),
+		ResourceType:   plan.ResourceType.ValueString(),
 		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
@@ -171,18 +145,18 @@ func (r *tagRuleResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -200,7 +174,7 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	tagRuleID := state.ID.Value
+	tagRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan TagRule
@@ -212,16 +186,16 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	tagRuleResp, err := r.client.UpdateTagRule(uptycs.TagRule{
 		ID:             tagRuleID,
-		Name:           plan.Name.Value,
-		Description:    plan.Description.Value,
-		Query:          plan.Query.Value,
-		Source:         plan.Source.Value,
-		RunOnce:        plan.RunOnce.Value,
+		Name:           plan.Name.ValueString(),
+		Description:    plan.Description.ValueString(),
+		Query:          plan.Query.ValueString(),
+		Source:         plan.Source.ValueString(),
+		RunOnce:        plan.RunOnce.ValueBool(),
 		Interval:       plan.Interval,
-		OSqueryVersion: plan.OSqueryVersion.Value,
-		Platform:       plan.Platform.Value,
-		Enabled:        plan.Enabled.Value,
-		ResourceType:   plan.ResourceType.Value,
+		OSqueryVersion: plan.OSqueryVersion.ValueString(),
+		Platform:       plan.Platform.ValueString(),
+		Enabled:        plan.Enabled.ValueBool(),
+		ResourceType:   plan.ResourceType.ValueString(),
 		// System:         plan.System.Value, //"error":{"status":400,"code":"INVALID_OR_REQUIRED_FIELD","message":{"brief":"","detail":"\"system\"│ is not allowed","developer":""}}}
 	})
 
@@ -234,18 +208,18 @@ func (r *tagRuleResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	var result = TagRule{
-		ID:             types.String{Value: tagRuleResp.ID},
-		Name:           types.String{Value: tagRuleResp.Name},
-		Description:    types.String{Value: tagRuleResp.Description},
-		Query:          types.String{Value: tagRuleResp.Query},
-		Source:         types.String{Value: tagRuleResp.Source},
-		RunOnce:        types.Bool{Value: tagRuleResp.RunOnce},
+		ID:             types.StringValue(tagRuleResp.ID),
+		Name:           types.StringValue(tagRuleResp.Name),
+		Description:    types.StringValue(tagRuleResp.Description),
+		Query:          types.StringValue(tagRuleResp.Query),
+		Source:         types.StringValue(tagRuleResp.Source),
+		RunOnce:        types.BoolValue(tagRuleResp.RunOnce),
 		Interval:       tagRuleResp.Interval,
-		OSqueryVersion: types.String{Value: tagRuleResp.OSqueryVersion},
-		Platform:       types.String{Value: tagRuleResp.Platform},
-		Enabled:        types.Bool{Value: tagRuleResp.Enabled},
-		System:         types.Bool{Value: tagRuleResp.System},
-		ResourceType:   types.String{Value: tagRuleResp.ResourceType},
+		OSqueryVersion: types.StringValue(tagRuleResp.OSqueryVersion),
+		Platform:       types.StringValue(tagRuleResp.Platform),
+		Enabled:        types.BoolValue(tagRuleResp.Enabled),
+		System:         types.BoolValue(tagRuleResp.System),
+		ResourceType:   types.StringValue(tagRuleResp.ResourceType),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -263,7 +237,7 @@ func (r *tagRuleResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	tagRuleID := state.ID.Value
+	tagRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteTagRule(uptycs.TagRule{
 		ID: tagRuleID,

@@ -2,19 +2,13 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &filePathGroupResource{}
-	_ resource.ResourceWithConfigure   = &filePathGroupResource{}
-	_ resource.ResourceWithImportState = &filePathGroupResource{}
 )
 
 func FilePathGroupResource() resource.Resource {
@@ -37,109 +31,83 @@ func (r *filePathGroupResource) Configure(_ context.Context, req resource.Config
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *filePathGroupResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
+func (r *filePathGroupResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{Computed: true,
+				Optional: true,
+			},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"grouping": schema.StringAttribute{Optional: true,
 				Computed: true,
-				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
+			"include_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
+			"include_path_extensions": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"grouping": {
-				Type:          types.StringType,
-				Optional:      true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+			"exclude_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"include_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"check_signature": schema.BoolAttribute{Optional: true},
+			"file_accesses":   schema.BoolAttribute{Optional: true},
+			"exclude_process_names": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"include_path_extensions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"priority_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"exclude_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"check_signature": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"file_accesses": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"exclude_process_names": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"priority_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"signatures": {
+			"signatures": schema.ListNestedAttribute{
 				Required: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"id": {
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
 							Computed: true,
 							Optional: true,
-							Type:     types.StringType,
 						},
-						"name": {
-							Type:     types.StringType,
+						"name":        schema.StringAttribute{Optional: true},
+						"description": schema.StringAttribute{Optional: true},
+						"paths": schema.ListAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
+						},
+					},
+				},
+			},
+			"yara_group_rules": schema.ListNestedAttribute{
+				Required: true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							Computed: true,
 							Optional: true,
 						},
-						"description": {
-							Type:     types.StringType,
+						"name": schema.StringAttribute{Computed: true,
 							Optional: true,
 						},
-						"paths": {
-							Type:     types.ListType{ElemType: types.StringType},
+						"description": schema.StringAttribute{Computed: true,
+							Optional: true,
+						},
+						"rules": schema.StringAttribute{
+							Computed: true,
 							Optional: true,
 						},
 					},
-				),
-			},
-			"yara_group_rules": {
-				Required: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"id": {
-							Computed: true,
-							Optional: true,
-							Type:     types.StringType,
-						},
-						"name": {
-							Type:     types.StringType,
-							Computed: true,
-							Optional: true,
-						},
-						"description": {
-							Type:     types.StringType,
-							Computed: true,
-							Optional: true,
-						},
-						"rules": {
-							Computed: true,
-							Type:     types.StringType,
-							Optional: true,
-						},
-					},
-				),
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -157,60 +125,25 @@ func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadReque
 	}
 
 	var result = FilePathGroup{
-		ID:          types.String{Value: filePathGroupResp.ID},
-		Name:        types.String{Value: filePathGroupResp.Name},
-		Description: types.String{Value: filePathGroupResp.Description},
-		Grouping:    types.String{Value: filePathGroupResp.Grouping},
-		IncludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		IncludePathExtensions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		ExcludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
-		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
-		ExcludeProcessNames: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		PriorityPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, ip := range filePathGroupResp.IncludePaths {
-		result.IncludePaths.Elems = append(result.IncludePaths.Elems, types.String{Value: ip})
-	}
-
-	for _, ipe := range filePathGroupResp.IncludePathExtensions {
-		result.IncludePathExtensions.Elems = append(result.IncludePathExtensions.Elems, types.String{Value: ipe})
-	}
-
-	for _, ep := range filePathGroupResp.ExcludePaths {
-		result.ExcludePaths.Elems = append(result.ExcludePaths.Elems, types.String{Value: ep})
-	}
-
-	for _, epn := range filePathGroupResp.ExcludeProcessNames {
-		result.ExcludeProcessNames.Elems = append(result.ExcludeProcessNames.Elems, types.String{Value: epn})
-	}
-
-	for _, pp := range filePathGroupResp.PriorityPaths {
-		result.PriorityPaths.Elems = append(result.PriorityPaths.Elems, types.String{Value: pp})
+		ID:                    types.StringValue(filePathGroupResp.ID),
+		Name:                  types.StringValue(filePathGroupResp.Name),
+		Description:           types.StringValue(filePathGroupResp.Description),
+		Grouping:              types.StringValue(filePathGroupResp.Grouping),
+		IncludePaths:          makeListStringAttribute(filePathGroupResp.IncludePaths),
+		IncludePathExtensions: makeListStringAttribute(filePathGroupResp.IncludePathExtensions),
+		ExcludePaths:          makeListStringAttribute(filePathGroupResp.ExcludePaths),
+		CheckSignature:        types.BoolValue(filePathGroupResp.CheckSignature),
+		FileAccesses:          types.BoolValue(filePathGroupResp.FileAccesses),
+		ExcludeProcessNames:   makeListStringAttribute(filePathGroupResp.ExcludeProcessNames),
+		PriorityPaths:         makeListStringAttribute(filePathGroupResp.PriorityPaths),
 	}
 
 	signatures := make([]FilePathGroupSignature, 0)
 	for _, s := range filePathGroupResp.Signatures {
 		signatures = append(signatures, FilePathGroupSignature{
-			ID:          types.String{Value: s.ID},
-			Name:        types.String{Value: s.Name},
-			Description: types.String{Value: s.Description},
+			ID:          types.StringValue(s.ID),
+			Name:        types.StringValue(s.Name),
+			Description: types.StringValue(s.Description),
 			//Paths:       types.List{}, //TODO we dont have any signatures
 		})
 	}
@@ -219,10 +152,10 @@ func (r *filePathGroupResource) Read(ctx context.Context, req resource.ReadReque
 	yaraGroupRules := make([]YaraGroupRule, 0)
 	for _, ygr := range filePathGroupResp.YaraGroupRules {
 		yaraGroupRules = append(yaraGroupRules, YaraGroupRule{
-			ID:          types.String{Value: ygr.ID},
-			Name:        types.String{Value: ygr.Name},
-			Description: types.String{Value: ygr.Description},
-			Rules:       types.String{Value: ygr.Rules},
+			ID:          types.StringValue(ygr.ID),
+			Name:        types.StringValue(ygr.Name),
+			Description: types.StringValue(ygr.Description),
+			Rules:       types.StringValue(ygr.Rules),
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
@@ -262,28 +195,28 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 	_signatures := make([]uptycs.FilePathGroupSignature, 0)
 	for _, s := range plan.Signatures {
 		_signatures = append(_signatures, uptycs.FilePathGroupSignature{
-			ID:   s.ID.Value,
-			Name: s.Name.Value,
+			ID:   s.ID.ValueString(),
+			Name: s.Name.ValueString(),
 		})
 	}
 
 	_yaraGroupRules := make([]uptycs.YaraGroupRule, 0)
 	for _, yg := range plan.YaraGroupRules {
 		_yaraGroupRules = append(_yaraGroupRules, uptycs.YaraGroupRule{
-			ID:   yg.ID.Value,
-			Name: yg.Name.Value,
+			ID:   yg.ID.ValueString(),
+			Name: yg.Name.ValueString(),
 		})
 	}
 
 	filePathGroupResp, err := r.client.CreateFilePathGroup(uptycs.FilePathGroup{
-		Name:                  plan.Name.Value,
-		Description:           plan.Description.Value,
-		Grouping:              plan.Grouping.Value,
+		Name:                  plan.Name.ValueString(),
+		Description:           plan.Description.ValueString(),
+		Grouping:              plan.Grouping.ValueString(),
 		IncludePaths:          includePaths,
 		IncludePathExtensions: includePathExtensions,
 		ExcludePaths:          excludePaths,
-		CheckSignature:        plan.CheckSignature.Value,
-		FileAccesses:          plan.FileAccesses.Value,
+		CheckSignature:        plan.CheckSignature.ValueBool(),
+		FileAccesses:          plan.FileAccesses.ValueBool(),
 		ExcludeProcessNames:   excludeProcessNames,
 		PriorityPaths:         priorityPaths,
 		Signatures:            _signatures,
@@ -299,60 +232,25 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	var result = FilePathGroup{
-		ID:          types.String{Value: filePathGroupResp.ID},
-		Name:        types.String{Value: filePathGroupResp.Name},
-		Description: types.String{Value: filePathGroupResp.Description},
-		Grouping:    types.String{Value: filePathGroupResp.Grouping},
-		IncludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		IncludePathExtensions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		ExcludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
-		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
-		ExcludeProcessNames: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		PriorityPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, ip := range filePathGroupResp.IncludePaths {
-		result.IncludePaths.Elems = append(result.IncludePaths.Elems, types.String{Value: ip})
-	}
-
-	for _, ipe := range filePathGroupResp.IncludePathExtensions {
-		result.IncludePathExtensions.Elems = append(result.IncludePathExtensions.Elems, types.String{Value: ipe})
-	}
-
-	for _, ep := range filePathGroupResp.ExcludePaths {
-		result.ExcludePaths.Elems = append(result.ExcludePaths.Elems, types.String{Value: ep})
-	}
-
-	for _, epn := range filePathGroupResp.ExcludeProcessNames {
-		result.ExcludeProcessNames.Elems = append(result.ExcludeProcessNames.Elems, types.String{Value: epn})
-	}
-
-	for _, pp := range filePathGroupResp.PriorityPaths {
-		result.PriorityPaths.Elems = append(result.PriorityPaths.Elems, types.String{Value: pp})
+		ID:                    types.StringValue(filePathGroupResp.ID),
+		Name:                  types.StringValue(filePathGroupResp.Name),
+		Description:           types.StringValue(filePathGroupResp.Description),
+		Grouping:              types.StringValue(filePathGroupResp.Grouping),
+		IncludePaths:          makeListStringAttribute(filePathGroupResp.IncludePaths),
+		IncludePathExtensions: makeListStringAttribute(filePathGroupResp.IncludePathExtensions),
+		ExcludePaths:          makeListStringAttribute(filePathGroupResp.ExcludePaths),
+		CheckSignature:        types.BoolValue(filePathGroupResp.CheckSignature),
+		FileAccesses:          types.BoolValue(filePathGroupResp.FileAccesses),
+		ExcludeProcessNames:   makeListStringAttribute(filePathGroupResp.ExcludeProcessNames),
+		PriorityPaths:         makeListStringAttribute(filePathGroupResp.PriorityPaths),
 	}
 
 	signatures := make([]FilePathGroupSignature, 0)
 	for _, s := range filePathGroupResp.Signatures {
 		signatures = append(signatures, FilePathGroupSignature{
-			ID:          types.String{Value: s.ID},
-			Name:        types.String{Value: s.Name},
-			Description: types.String{Value: s.Description},
+			ID:          types.StringValue(s.ID),
+			Name:        types.StringValue(s.Name),
+			Description: types.StringValue(s.Description),
 			//Paths:       types.List{}, //TODO we dont have any signatures
 		})
 	}
@@ -361,10 +259,10 @@ func (r *filePathGroupResource) Create(ctx context.Context, req resource.CreateR
 	yaraGroupRules := make([]YaraGroupRule, 0)
 	for _, ygr := range filePathGroupResp.YaraGroupRules {
 		yaraGroupRules = append(yaraGroupRules, YaraGroupRule{
-			ID:          types.String{Value: ygr.ID},
-			Name:        types.String{Value: ygr.Name},
-			Description: types.String{Value: ygr.Description},
-			Rules:       types.String{Value: ygr.Rules},
+			ID:          types.StringValue(ygr.ID),
+			Name:        types.StringValue(ygr.Name),
+			Description: types.StringValue(ygr.Description),
+			Rules:       types.StringValue(ygr.Rules),
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
@@ -384,7 +282,7 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	filePathGroupID := state.ID.Value
+	filePathGroupID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan FilePathGroup
@@ -412,29 +310,29 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 	_signatures := make([]uptycs.FilePathGroupSignature, 0)
 	for _, s := range plan.Signatures {
 		_signatures = append(_signatures, uptycs.FilePathGroupSignature{
-			ID:   s.ID.Value,
-			Name: s.Name.Value,
+			ID:   s.ID.ValueString(),
+			Name: s.Name.ValueString(),
 		})
 	}
 
 	_yaraGroupRules := make([]uptycs.YaraGroupRule, 0)
 	for _, yg := range plan.YaraGroupRules {
 		_yaraGroupRules = append(_yaraGroupRules, uptycs.YaraGroupRule{
-			ID:   yg.ID.Value,
-			Name: yg.Name.Value,
+			ID:   yg.ID.ValueString(),
+			Name: yg.Name.ValueString(),
 		})
 	}
 
 	filePathGroupResp, err := r.client.UpdateFilePathGroup(uptycs.FilePathGroup{
 		ID:                    filePathGroupID,
-		Name:                  plan.Name.Value,
-		Description:           plan.Description.Value,
-		Grouping:              plan.Grouping.Value,
+		Name:                  plan.Name.ValueString(),
+		Description:           plan.Description.ValueString(),
+		Grouping:              plan.Grouping.ValueString(),
 		IncludePaths:          includePaths,
 		IncludePathExtensions: includePathExtensions,
 		ExcludePaths:          excludePaths,
-		CheckSignature:        plan.CheckSignature.Value,
-		FileAccesses:          plan.FileAccesses.Value,
+		CheckSignature:        plan.CheckSignature.ValueBool(),
+		FileAccesses:          plan.FileAccesses.ValueBool(),
 		ExcludeProcessNames:   excludeProcessNames,
 		PriorityPaths:         priorityPaths,
 		Signatures:            _signatures,
@@ -450,60 +348,25 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	var result = FilePathGroup{
-		ID:          types.String{Value: filePathGroupResp.ID},
-		Name:        types.String{Value: filePathGroupResp.Name},
-		Description: types.String{Value: filePathGroupResp.Description},
-		Grouping:    types.String{Value: filePathGroupResp.Grouping},
-		IncludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		IncludePathExtensions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		ExcludePaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		CheckSignature: types.Bool{Value: filePathGroupResp.CheckSignature},
-		FileAccesses:   types.Bool{Value: filePathGroupResp.FileAccesses},
-		ExcludeProcessNames: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		PriorityPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, ip := range filePathGroupResp.IncludePaths {
-		result.IncludePaths.Elems = append(result.IncludePaths.Elems, types.String{Value: ip})
-	}
-
-	for _, ipe := range filePathGroupResp.IncludePathExtensions {
-		result.IncludePathExtensions.Elems = append(result.IncludePathExtensions.Elems, types.String{Value: ipe})
-	}
-
-	for _, ep := range filePathGroupResp.ExcludePaths {
-		result.ExcludePaths.Elems = append(result.ExcludePaths.Elems, types.String{Value: ep})
-	}
-
-	for _, epn := range filePathGroupResp.ExcludeProcessNames {
-		result.ExcludeProcessNames.Elems = append(result.ExcludeProcessNames.Elems, types.String{Value: epn})
-	}
-
-	for _, pp := range filePathGroupResp.PriorityPaths {
-		result.PriorityPaths.Elems = append(result.PriorityPaths.Elems, types.String{Value: pp})
+		ID:                    types.StringValue(filePathGroupResp.ID),
+		Name:                  types.StringValue(filePathGroupResp.Name),
+		Description:           types.StringValue(filePathGroupResp.Description),
+		Grouping:              types.StringValue(filePathGroupResp.Grouping),
+		IncludePaths:          makeListStringAttribute(filePathGroupResp.IncludePaths),
+		IncludePathExtensions: makeListStringAttribute(filePathGroupResp.IncludePathExtensions),
+		ExcludePaths:          makeListStringAttribute(filePathGroupResp.ExcludePaths),
+		CheckSignature:        types.BoolValue(filePathGroupResp.CheckSignature),
+		FileAccesses:          types.BoolValue(filePathGroupResp.FileAccesses),
+		ExcludeProcessNames:   makeListStringAttribute(filePathGroupResp.ExcludeProcessNames),
+		PriorityPaths:         makeListStringAttribute(filePathGroupResp.PriorityPaths),
 	}
 
 	signatures := make([]FilePathGroupSignature, 0)
 	for _, s := range filePathGroupResp.Signatures {
 		signatures = append(signatures, FilePathGroupSignature{
-			ID:          types.String{Value: s.ID},
-			Name:        types.String{Value: s.Name},
-			Description: types.String{Value: s.Description},
+			ID:          types.StringValue(s.ID),
+			Name:        types.StringValue(s.Name),
+			Description: types.StringValue(s.Description),
 			//Paths:       types.List{}, //TODO we dont have any signatures
 		})
 	}
@@ -512,10 +375,10 @@ func (r *filePathGroupResource) Update(ctx context.Context, req resource.UpdateR
 	yaraGroupRules := make([]YaraGroupRule, 0)
 	for _, ygr := range filePathGroupResp.YaraGroupRules {
 		yaraGroupRules = append(yaraGroupRules, YaraGroupRule{
-			ID:          types.String{Value: ygr.ID},
-			Name:        types.String{Value: ygr.Name},
-			Description: types.String{Value: ygr.Description},
-			Rules:       types.String{Value: ygr.Rules},
+			ID:          types.StringValue(ygr.ID),
+			Name:        types.StringValue(ygr.Name),
+			Description: types.StringValue(ygr.Description),
+			Rules:       types.StringValue(ygr.Rules),
 		})
 	}
 	result.YaraGroupRules = yaraGroupRules
@@ -535,7 +398,7 @@ func (r *filePathGroupResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	filePathGroupID := state.ID.Value
+	filePathGroupID := state.ID.ValueString()
 
 	_, err := r.client.DeleteFilePathGroup(uptycs.FilePathGroup{
 		ID: filePathGroupID,

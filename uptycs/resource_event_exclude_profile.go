@@ -4,18 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &eventExcludeProfileResource{}
-	_ resource.ResourceWithConfigure   = &eventExcludeProfileResource{}
-	_ resource.ResourceWithImportState = &eventExcludeProfileResource{}
 )
 
 func EventExcludeProfileResource() resource.Resource {
@@ -38,39 +31,18 @@ func (r *eventExcludeProfileResource) Configure(_ context.Context, req resource.
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *eventExcludeProfileResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Computed: true,
-			},
-			"platform": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"metadata": {
-				Optional: true,
-				Type:     types.StringType,
-			},
+func (r *eventExcludeProfileResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":            schema.StringAttribute{Computed: true},
+			"name":          schema.StringAttribute{Optional: true},
+			"description":   schema.StringAttribute{Optional: true},
+			"priority":      schema.NumberAttribute{Optional: true},
+			"resource_type": schema.StringAttribute{Computed: true},
+			"platform":      schema.StringAttribute{Optional: true},
+			"metadata":      schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -83,12 +55,12 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 	}
 
 	eventExcludeProfileResp, err := r.client.CreateEventExcludeProfile(uptycs.EventExcludeProfile{
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		MetadataJSON: plan.Metadata.Value,
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		MetadataJSON: plan.Metadata.ValueString(),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
-		Platform:     plan.Platform.Value,
+		ResourceType: plan.ResourceType.ValueString(),
+		Platform:     plan.Platform.ValueString(),
 	})
 
 	if err != nil {
@@ -105,13 +77,13 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 	}
 
 	var result = EventExcludeProfile{
-		ID:           types.String{Value: eventExcludeProfileResp.ID},
-		Name:         types.String{Value: eventExcludeProfileResp.Name},
-		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
+		ID:           types.StringValue(eventExcludeProfileResp.ID),
+		Name:         types.StringValue(eventExcludeProfileResp.Name),
+		Description:  types.StringValue(eventExcludeProfileResp.Description),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
-		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
-		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
+		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
+		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -141,13 +113,13 @@ func (r *eventExcludeProfileResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	var result = EventExcludeProfile{
-		ID:           types.String{Value: eventExcludeProfileResp.ID},
-		Name:         types.String{Value: eventExcludeProfileResp.Name},
-		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
+		ID:           types.StringValue(eventExcludeProfileResp.ID),
+		Name:         types.StringValue(eventExcludeProfileResp.Name),
+		Description:  types.StringValue(eventExcludeProfileResp.Description),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
-		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
-		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
+		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
+		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -166,7 +138,7 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	eventExcludeProfileID := state.ID.Value
+	eventExcludeProfileID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan EventExcludeProfile
@@ -178,12 +150,12 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 
 	eventExcludeProfileResp, err := r.client.UpdateEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID:           eventExcludeProfileID,
-		Name:         plan.Name.Value,
-		Description:  plan.Description.Value,
-		MetadataJSON: plan.Metadata.Value,
+		Name:         plan.Name.ValueString(),
+		Description:  plan.Description.ValueString(),
+		MetadataJSON: plan.Metadata.ValueString(),
 		Priority:     plan.Priority,
-		ResourceType: plan.ResourceType.Value,
-		Platform:     plan.Platform.Value,
+		ResourceType: plan.ResourceType.ValueString(),
+		Platform:     plan.Platform.ValueString(),
 	})
 
 	if err != nil {
@@ -200,13 +172,13 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 	}
 
 	var result = EventExcludeProfile{
-		ID:           types.String{Value: eventExcludeProfileResp.ID},
-		Name:         types.String{Value: eventExcludeProfileResp.Name},
-		Description:  types.String{Value: eventExcludeProfileResp.Description},
-		Metadata:     types.String{Value: string([]byte(metadataJSON)) + "\n"},
+		ID:           types.StringValue(eventExcludeProfileResp.ID),
+		Name:         types.StringValue(eventExcludeProfileResp.Name),
+		Description:  types.StringValue(eventExcludeProfileResp.Description),
+		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
 		Priority:     eventExcludeProfileResp.Priority,
-		ResourceType: types.String{Value: eventExcludeProfileResp.ResourceType},
-		Platform:     types.String{Value: eventExcludeProfileResp.Platform},
+		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
+		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -224,7 +196,7 @@ func (r *eventExcludeProfileResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	eventExcludeProfileID := state.ID.Value
+	eventExcludeProfileID := state.ID.ValueString()
 
 	_, err := r.client.DeleteEventExcludeProfile(uptycs.EventExcludeProfile{
 		ID: eventExcludeProfileID,

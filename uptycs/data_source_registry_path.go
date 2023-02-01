@@ -2,18 +2,11 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &registryPathDataSource{}
-	_ datasource.DataSourceWithConfigure = &registryPathDataSource{}
 )
 
 func RegistryPathDataSource() datasource.DataSource {
@@ -36,39 +29,24 @@ func (d *registryPathDataSource) Configure(_ context.Context, req datasource.Con
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *registryPathDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
+func (d *registryPathDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":          schema.StringAttribute{Optional: true},
+			"name":        schema.StringAttribute{Optional: true},
+			"description": schema.StringAttribute{Optional: true},
+			"grouping":    schema.StringAttribute{Optional: true},
+			"include_registry_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"grouping": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"include_registry_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"reg_accesses": {
-				Type:     types.BoolType,
-				Optional: true,
-			},
-			"exclude_registry_paths": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
+			"reg_accesses": schema.BoolAttribute{Optional: true},
+			"exclude_registry_paths": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
-	}, nil
+	}
 }
 
 func (d *registryPathDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -87,27 +65,13 @@ func (d *registryPathDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	var result = RegistryPath{
-		ID:          types.String{Value: registryPathResp.ID},
-		Name:        types.String{Value: registryPathResp.Name},
-		Description: types.String{Value: registryPathResp.Description},
-		Grouping:    types.String{Value: registryPathResp.Grouping},
-		IncludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegAccesses: types.Bool{Value: registryPathResp.RegAccesses},
-		ExcludeRegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _irp := range registryPathResp.IncludeRegistryPaths {
-		result.IncludeRegistryPaths.Elems = append(result.IncludeRegistryPaths.Elems, types.String{Value: _irp})
-	}
-
-	for _, _erp := range registryPathResp.ExcludeRegistryPaths {
-		result.ExcludeRegistryPaths.Elems = append(result.ExcludeRegistryPaths.Elems, types.String{Value: _erp})
+		ID:                   types.StringValue(registryPathResp.ID),
+		Name:                 types.StringValue(registryPathResp.Name),
+		Description:          types.StringValue(registryPathResp.Description),
+		Grouping:             types.StringValue(registryPathResp.Grouping),
+		IncludeRegistryPaths: makeListStringAttribute(registryPathResp.IncludeRegistryPaths),
+		RegAccesses:          types.BoolValue(registryPathResp.RegAccesses),
+		ExcludeRegistryPaths: makeListStringAttribute(registryPathResp.ExcludeRegistryPaths),
 	}
 
 	diags := resp.State.Set(ctx, result)

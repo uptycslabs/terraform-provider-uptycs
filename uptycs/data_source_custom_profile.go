@@ -5,16 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ datasource.DataSource              = &customProfileDataSource{}
-	_ datasource.DataSourceWithConfigure = &customProfileDataSource{}
 )
 
 func CustomProfileDataSource() datasource.DataSource {
@@ -37,35 +32,17 @@ func (d *customProfileDataSource) Configure(_ context.Context, req datasource.Co
 	d.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (d *customProfileDataSource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"name": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"description": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"query_schedules": {
-				Type:     types.StringType,
-				Optional: true,
-			},
-			"priority": {
-				Type:     types.NumberType,
-				Optional: true,
-			},
-			"resource_type": {
-				Type:     types.StringType,
-				Optional: true,
-			},
+func (d *customProfileDataSource) Schema(_ context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":              schema.StringAttribute{Optional: true},
+			"name":            schema.StringAttribute{Optional: true},
+			"description":     schema.StringAttribute{Optional: true},
+			"query_schedules": schema.StringAttribute{Optional: true},
+			"priority":        schema.NumberAttribute{Optional: true},
+			"resource_type":   schema.StringAttribute{Optional: true},
 		},
-	}, nil
+	}
 }
 
 func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -104,12 +81,12 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	var result = CustomProfile{
-		ID:             types.String{Value: customProfileResp.ID},
-		Name:           types.String{Value: customProfileResp.Name},
-		Description:    types.String{Value: customProfileResp.Description},
-		QuerySchedules: types.String{Value: string([]byte(queryScheduleJSON)) + "\n"},
+		ID:             types.StringValue(customProfileResp.ID),
+		Name:           types.StringValue(customProfileResp.Name),
+		Description:    types.StringValue(customProfileResp.Description),
+		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
 		Priority:       customProfileResp.Priority,
-		ResourceType:   types.String{Value: customProfileResp.ResourceType},
+		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
 	diags := resp.State.Set(ctx, result)

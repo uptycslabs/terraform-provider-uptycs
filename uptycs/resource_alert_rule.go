@@ -3,19 +3,12 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
-)
-
-var (
-	_ resource.Resource                = &alertRuleResource{}
-	_ resource.ResourceWithConfigure   = &alertRuleResource{}
-	_ resource.ResourceWithImportState = &alertRuleResource{}
 )
 
 func AlertRuleResource() resource.Resource {
@@ -39,113 +32,67 @@ func (r *alertRuleResource) Configure(_ context.Context, req resource.ConfigureR
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *alertRuleResource) GetSchema(_ context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	return tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"id": {
-				Type:     types.StringType,
+func (r *alertRuleResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"name": {
-				Type:     types.StringType,
+			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"description": {
-				Type:     types.StringType,
+			"description": schema.StringAttribute{
 				Required: true,
 			},
-			"code": {
-				Type:     types.StringType,
+			"code": schema.StringAttribute{
 				Required: true,
 				Computed: false,
 			},
-			"type": {
-				Type:     types.StringType,
+			"type": schema.StringAttribute{
 				Required: true,
 				Computed: false,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					stringvalidator.OneOfCaseInsensitive([]string{"sql"}...),
 				},
 			},
-			"rule": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"grouping": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"enabled": {
-				Type:     types.BoolType,
-				Required: false,
+			"rule":     schema.StringAttribute{Required: true},
+			"grouping": schema.StringAttribute{Required: true},
+			"enabled": schema.BoolAttribute{Required: false,
 				Computed: true,
 			},
-			"throttled": {
-				Type:     types.BoolType,
-				Required: true,
+			"throttled":   schema.BoolAttribute{Required: true},
+			"is_internal": schema.BoolAttribute{Required: true},
+			"alert_tags": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"is_internal": {
-				Type:     types.BoolType,
-				Required: true,
+			"grouping_l2":     schema.StringAttribute{Required: true},
+			"grouping_l3":     schema.StringAttribute{Required: true},
+			"notify_interval": schema.Int64Attribute{Required: true},
+			"notify_count":    schema.Int64Attribute{Required: true},
+			"rule_exceptions": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
-			"alert_tags": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Optional: true,
-			},
-			"grouping_l2": {
-				Type:     types.StringType,
+			"destinations": schema.ListNestedAttribute{
 				Required: true,
-			},
-			"grouping_l3": {
-				Type:     types.StringType,
-				Required: true,
-			},
-			"notify_interval": {
-				Type:     types.Int64Type,
-				Required: true,
-			},
-			"notify_count": {
-				Type:     types.Int64Type,
-				Required: true,
-			},
-			"rule_exceptions": {
-				Type:     types.ListType{ElemType: types.StringType},
-				Required: true,
-			},
-			"destinations": {
-				Required: true,
-				Attributes: tfsdk.ListNestedAttributes(
-					map[string]tfsdk.Attribute{
-						"severity": {
-							Type:     types.StringType,
-							Optional: true,
-						},
-						"destination_id": {
-							Type:     types.StringType,
-							Optional: true,
-						},
-						"notify_every_alert": {
-							Type:     types.BoolType,
-							Optional: true,
-						},
-						"close_after_delivery": {
-							Type:     types.BoolType,
-							Optional: true,
-						},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"severity":             schema.StringAttribute{Optional: true},
+						"destination_id":       schema.StringAttribute{Optional: true},
+						"notify_every_alert":   schema.BoolAttribute{Optional: true},
+						"close_after_delivery": schema.BoolAttribute{Optional: true},
 					},
-				),
+				},
 			},
-			"sql_config": {
+			"sql_config": schema.SingleNestedAttribute{
 				Optional: true,
-				Attributes: tfsdk.SingleNestedAttributes(map[string]tfsdk.Attribute{
-					"interval_seconds": {
-						Type:     types.NumberType,
-						Optional: true,
-					},
-				}),
+				Attributes: map[string]schema.Attribute{
+					"interval_seconds": schema.NumberAttribute{Optional: true},
+				},
 			},
 		},
-	}, nil
+	}
 }
 
 func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -163,28 +110,22 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	var result = AlertRule{
-		ID:                  types.String{Value: alertRuleResp.ID},
-		Name:                types.String{Value: alertRuleResp.Name},
-		Description:         types.String{Value: alertRuleResp.Description},
-		Code:                types.String{Value: alertRuleResp.Code},
-		Type:                types.String{Value: alertRuleResp.Type},
-		Rule:                types.String{Value: alertRuleResp.Rule},
-		Grouping:            types.String{Value: alertRuleResp.Grouping},
-		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
-		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
-		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
-		AlertTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
-		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		AlertRuleExceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                  types.StringValue(alertRuleResp.ID),
+		Name:                types.StringValue(alertRuleResp.Name),
+		Description:         types.StringValue(alertRuleResp.Description),
+		Code:                types.StringValue(alertRuleResp.Code),
+		Type:                types.StringValue(alertRuleResp.Type),
+		Rule:                types.StringValue(alertRuleResp.Rule),
+		Grouping:            types.StringValue(alertRuleResp.Grouping),
+		Enabled:             types.BoolValue(alertRuleResp.Enabled),
+		Throttled:           types.BoolValue(alertRuleResp.Throttled),
+		IsInternal:          types.BoolValue(alertRuleResp.IsInternal),
+		AlertNotifyCount:    types.Int64Value(int64(alertRuleResp.AlertNotifyCount)),
+		AlertNotifyInterval: types.Int64Value(int64(alertRuleResp.AlertNotifyInterval)),
+		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
+		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
+		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
+		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
 
 	if alertRuleResp.SQLConfig != nil {
@@ -193,21 +134,13 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		}
 	}
 
-	for _, at := range alertRuleResp.AlertTags {
-		result.AlertTags.Elems = append(result.AlertTags.Elems, types.String{Value: at})
-	}
-
-	for _, are := range alertRuleResp.AlertRuleExceptions {
-		result.AlertRuleExceptions.Elems = append(result.AlertRuleExceptions.Elems, types.String{Value: are.ExceptionID})
-	}
-
 	destinations := make([]AlertRuleDestination, 0)
 	for _, d := range alertRuleResp.Destinations {
 		destinations = append(destinations, AlertRuleDestination{
-			Severity:           types.String{Value: d.Severity},
-			DestinationID:      types.String{Value: d.DestinationID},
-			NotifyEveryAlert:   types.Bool{Value: d.NotifyEveryAlert},
-			CloseAfterDelivery: types.Bool{Value: d.CloseAfterDelivery},
+			Severity:           types.StringValue(d.Severity),
+			DestinationID:      types.StringValue(d.DestinationID),
+			NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+			CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
 		})
 	}
 	result.Destinations = destinations
@@ -244,30 +177,30 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 	_destinations := make([]uptycs.AlertRuleDestination, 0)
 	for _, d := range plan.Destinations {
 		_destinations = append(_destinations, uptycs.AlertRuleDestination{
-			Severity:           d.Severity.Value,
-			DestinationID:      d.DestinationID.Value,
-			NotifyEveryAlert:   d.NotifyEveryAlert.Value,
-			CloseAfterDelivery: d.CloseAfterDelivery.Value,
+			Severity:           d.Severity.ValueString(),
+			DestinationID:      d.DestinationID.ValueString(),
+			NotifyEveryAlert:   d.NotifyEveryAlert.ValueBool(),
+			CloseAfterDelivery: d.CloseAfterDelivery.ValueBool(),
 		})
 	}
 
 	alertRule := uptycs.AlertRule{
-		Name:                plan.Name.Value,
-		Description:         plan.Description.Value,
-		Code:                plan.Code.Value,
-		Type:                plan.Type.Value,
-		Rule:                plan.Rule.Value,
-		Grouping:            plan.Grouping.Value,
-		Enabled:             plan.Enabled.Value,
-		Throttled:           plan.Throttled.Value,
-		IsInternal:          plan.IsInternal.Value,
+		Name:                plan.Name.ValueString(),
+		Description:         plan.Description.ValueString(),
+		Code:                plan.Code.ValueString(),
+		Type:                plan.Type.ValueString(),
+		Rule:                plan.Rule.ValueString(),
+		Grouping:            plan.Grouping.ValueString(),
+		Enabled:             plan.Enabled.ValueBool(),
+		Throttled:           plan.Throttled.ValueBool(),
+		IsInternal:          plan.IsInternal.ValueBool(),
 		AlertTags:           tags,
-		GroupingL2:          plan.GroupingL2.Value,
-		GroupingL3:          plan.GroupingL3.Value,
+		GroupingL2:          plan.GroupingL2.ValueString(),
+		GroupingL3:          plan.GroupingL3.ValueString(),
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
-		AlertNotifyInterval: int(plan.AlertNotifyInterval.Value),
-		AlertNotifyCount:    int(plan.AlertNotifyCount.Value),
+		AlertNotifyInterval: int(plan.AlertNotifyInterval.ValueInt64()),
+		AlertNotifyCount:    int(plan.AlertNotifyCount.ValueInt64()),
 	}
 
 	if plan.SQLConfig != nil {
@@ -286,28 +219,22 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	var result = AlertRule{
-		ID:                  types.String{Value: alertRuleResp.ID},
-		Name:                types.String{Value: alertRuleResp.Name},
-		Description:         types.String{Value: alertRuleResp.Description},
-		Code:                types.String{Value: alertRuleResp.Code},
-		Type:                types.String{Value: alertRuleResp.Type},
-		Rule:                types.String{Value: alertRuleResp.Rule},
-		Grouping:            types.String{Value: alertRuleResp.Grouping},
-		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
-		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
-		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
-		AlertTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
-		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		AlertRuleExceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                  types.StringValue(alertRuleResp.ID),
+		Name:                types.StringValue(alertRuleResp.Name),
+		Description:         types.StringValue(alertRuleResp.Description),
+		Code:                types.StringValue(alertRuleResp.Code),
+		Type:                types.StringValue(alertRuleResp.Type),
+		Rule:                types.StringValue(alertRuleResp.Rule),
+		Grouping:            types.StringValue(alertRuleResp.Grouping),
+		Enabled:             types.BoolValue(alertRuleResp.Enabled),
+		Throttled:           types.BoolValue(alertRuleResp.Throttled),
+		IsInternal:          types.BoolValue(alertRuleResp.IsInternal),
+		AlertNotifyCount:    types.Int64Value(int64(alertRuleResp.AlertNotifyCount)),
+		AlertNotifyInterval: types.Int64Value(int64(alertRuleResp.AlertNotifyInterval)),
+		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
+		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
+		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
+		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
 
 	if alertRuleResp.SQLConfig != nil {
@@ -316,21 +243,13 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 		}
 	}
 
-	for _, at := range alertRuleResp.AlertTags {
-		result.AlertTags.Elems = append(result.AlertTags.Elems, types.String{Value: at})
-	}
-
-	for _, are := range alertRuleResp.AlertRuleExceptions {
-		result.AlertRuleExceptions.Elems = append(result.AlertRuleExceptions.Elems, types.String{Value: are.ExceptionID})
-	}
-
 	destinations := make([]AlertRuleDestination, 0)
 	for _, d := range alertRuleResp.Destinations {
 		destinations = append(destinations, AlertRuleDestination{
-			Severity:           types.String{Value: d.Severity},
-			DestinationID:      types.String{Value: d.DestinationID},
-			NotifyEveryAlert:   types.Bool{Value: d.NotifyEveryAlert},
-			CloseAfterDelivery: types.Bool{Value: d.CloseAfterDelivery},
+			Severity:           types.StringValue(d.Severity),
+			DestinationID:      types.StringValue(d.DestinationID),
+			NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+			CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
 		})
 	}
 	result.Destinations = destinations
@@ -350,7 +269,7 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	alertRuleID := state.ID.Value
+	alertRuleID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan AlertRule
@@ -375,29 +294,29 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	_destinations := make([]uptycs.AlertRuleDestination, 0)
 	for _, d := range plan.Destinations {
 		_destinations = append(_destinations, uptycs.AlertRuleDestination{
-			Severity:           d.Severity.Value,
-			DestinationID:      d.DestinationID.Value,
-			NotifyEveryAlert:   d.NotifyEveryAlert.Value,
-			CloseAfterDelivery: d.CloseAfterDelivery.Value,
+			Severity:           d.Severity.ValueString(),
+			DestinationID:      d.DestinationID.ValueString(),
+			NotifyEveryAlert:   d.NotifyEveryAlert.ValueBool(),
+			CloseAfterDelivery: d.CloseAfterDelivery.ValueBool(),
 		})
 	}
 
 	alertRule := uptycs.AlertRule{
 		ID:                  alertRuleID,
-		Name:                plan.Name.Value,
-		Description:         plan.Description.Value,
-		Code:                plan.Code.Value,
-		Type:                plan.Type.Value,
-		Rule:                plan.Rule.Value,
-		Grouping:            plan.Grouping.Value,
-		Enabled:             plan.Enabled.Value,
-		Throttled:           plan.Throttled.Value,
-		IsInternal:          plan.IsInternal.Value,
-		AlertNotifyInterval: int(plan.AlertNotifyInterval.Value),
-		AlertNotifyCount:    int(plan.AlertNotifyCount.Value),
+		Name:                plan.Name.ValueString(),
+		Description:         plan.Description.ValueString(),
+		Code:                plan.Code.ValueString(),
+		Type:                plan.Type.ValueString(),
+		Rule:                plan.Rule.ValueString(),
+		Grouping:            plan.Grouping.ValueString(),
+		Enabled:             plan.Enabled.ValueBool(),
+		Throttled:           plan.Throttled.ValueBool(),
+		IsInternal:          plan.IsInternal.ValueBool(),
+		AlertNotifyInterval: int(plan.AlertNotifyInterval.ValueInt64()),
+		AlertNotifyCount:    int(plan.AlertNotifyCount.ValueInt64()),
 		AlertTags:           tags,
-		GroupingL2:          plan.GroupingL2.Value,
-		GroupingL3:          plan.GroupingL3.Value,
+		GroupingL2:          plan.GroupingL2.ValueString(),
+		GroupingL3:          plan.GroupingL3.ValueString(),
 		AlertRuleExceptions: _ruleExceptions,
 		Destinations:        _destinations,
 	}
@@ -419,28 +338,22 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	var result = AlertRule{
-		ID:                  types.String{Value: alertRuleResp.ID},
-		Name:                types.String{Value: alertRuleResp.Name},
-		Description:         types.String{Value: alertRuleResp.Description},
-		Code:                types.String{Value: alertRuleResp.Code},
-		Type:                types.String{Value: alertRuleResp.Type},
-		Rule:                types.String{Value: alertRuleResp.Rule},
-		Grouping:            types.String{Value: alertRuleResp.Grouping},
-		Enabled:             types.Bool{Value: alertRuleResp.Enabled},
-		Throttled:           types.Bool{Value: alertRuleResp.Throttled},
-		IsInternal:          types.Bool{Value: alertRuleResp.IsInternal},
-		AlertNotifyCount:    types.Int64{Value: int64(alertRuleResp.AlertNotifyCount)},
-		AlertNotifyInterval: types.Int64{Value: int64(alertRuleResp.AlertNotifyInterval)},
-		AlertTags: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		GroupingL2: types.String{Value: alertRuleResp.GroupingL2},
-		GroupingL3: types.String{Value: alertRuleResp.GroupingL3},
-		AlertRuleExceptions: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
+		ID:                  types.StringValue(alertRuleResp.ID),
+		Name:                types.StringValue(alertRuleResp.Name),
+		Description:         types.StringValue(alertRuleResp.Description),
+		Code:                types.StringValue(alertRuleResp.Code),
+		Type:                types.StringValue(alertRuleResp.Type),
+		Rule:                types.StringValue(alertRuleResp.Rule),
+		Grouping:            types.StringValue(alertRuleResp.Grouping),
+		Enabled:             types.BoolValue(alertRuleResp.Enabled),
+		Throttled:           types.BoolValue(alertRuleResp.Throttled),
+		IsInternal:          types.BoolValue(alertRuleResp.IsInternal),
+		AlertNotifyCount:    types.Int64Value(int64(alertRuleResp.AlertNotifyCount)),
+		AlertNotifyInterval: types.Int64Value(int64(alertRuleResp.AlertNotifyInterval)),
+		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
+		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
+		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
+		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
 
 	if alertRuleResp.SQLConfig != nil {
@@ -449,21 +362,13 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		}
 	}
 
-	for _, at := range alertRuleResp.AlertTags {
-		result.AlertTags.Elems = append(result.AlertTags.Elems, types.String{Value: at})
-	}
-
-	for _, are := range alertRuleResp.AlertRuleExceptions {
-		result.AlertRuleExceptions.Elems = append(result.AlertRuleExceptions.Elems, types.String{Value: are.ExceptionID})
-	}
-
 	destinations := make([]AlertRuleDestination, 0)
 	for _, d := range alertRuleResp.Destinations {
 		destinations = append(destinations, AlertRuleDestination{
-			Severity:           types.String{Value: d.Severity},
-			DestinationID:      types.String{Value: d.DestinationID},
-			NotifyEveryAlert:   types.Bool{Value: d.NotifyEveryAlert},
-			CloseAfterDelivery: types.Bool{Value: d.CloseAfterDelivery},
+			Severity:           types.StringValue(d.Severity),
+			DestinationID:      types.StringValue(d.DestinationID),
+			NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+			CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
 		})
 	}
 	result.Destinations = destinations
@@ -483,7 +388,7 @@ func (r *alertRuleResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	alertRuleID := state.ID.Value
+	alertRuleID := state.ID.ValueString()
 
 	_, err := r.client.DeleteAlertRule(uptycs.AlertRule{
 		ID: alertRuleID,

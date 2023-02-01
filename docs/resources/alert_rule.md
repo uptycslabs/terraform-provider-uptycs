@@ -45,7 +45,7 @@ description: |-
 <a id="nestedatt--destinations"></a>
 ### Nested Schema for `destinations`
 
-Required:
+Optional:
 
 - `close_after_delivery` (Boolean)
 - `destination_id` (String)
