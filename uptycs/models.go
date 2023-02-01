@@ -33,7 +33,7 @@ type AlertRuleDestination struct {
 }
 
 type SQLConfig struct {
-	IntervalSeconds int `tfsdk:"interval_seconds"`
+	IntervalSeconds types.Int64 `tfsdk:"interval_seconds"`
 }
 
 type Exception struct {
@@ -98,7 +98,7 @@ type EventExcludeProfile struct {
 	ID           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
 	Description  types.String `tfsdk:"description"`
-	Priority     int          `tfsdk:"priority"`
+	Priority     types.Int64  `tfsdk:"priority"`
 	Metadata     types.String `tfsdk:"metadata"`
 	ResourceType types.String `tfsdk:"resource_type"`
 	Platform     types.String `tfsdk:"platform"`
@@ -114,7 +114,7 @@ type User struct {
 	Bot                types.Bool   `tfsdk:"bot"`
 	Support            types.Bool   `tfsdk:"support"`
 	ImageURL           types.String `tfsdk:"image_url"`
-	MaxIdleTimeMins    int          `tfsdk:"max_idle_time_mins"`
+	MaxIdleTimeMins    types.Int64  `tfsdk:"max_idle_time_mins"`
 	AlertHiddenColumns types.List   `tfsdk:"alert_hidden_columns"`
 	Roles              types.List   `tfsdk:"roles"`
 	UserObjectGroups   types.List   `tfsdk:"user_object_groups"`
@@ -142,7 +142,7 @@ type ObjectGroup struct {
 	Description      types.String `tfsdk:"description"`
 	Secret           types.String `tfsdk:"secret"`
 	ObjectType       types.String `tfsdk:"object_type"`
-	RetentionDays    int          `tfsdk:"retention_days"`
+	RetentionDays    types.Int64  `tfsdk:"retention_days"`
 	Destinations     types.List   `tfsdk:"destinations"`
 }
 
@@ -153,7 +153,7 @@ type TagRule struct {
 	Query          types.String `tfsdk:"query"`
 	Source         types.String `tfsdk:"source"`
 	RunOnce        types.Bool   `tfsdk:"run_once"`
-	Interval       int          `tfsdk:"interval"`
+	Interval       types.Int64  `tfsdk:"interval"`
 	OSqueryVersion types.String `tfsdk:"osquery_version"`
 	Platform       types.String `tfsdk:"platform"`
 	Enabled        types.Bool   `tfsdk:"enabled"`
@@ -251,7 +251,7 @@ type Query struct {
 	Query       types.String `tfsdk:"query"`
 	Removed     types.Bool   `tfsdk:"removed"`
 	Version     types.String `tfsdk:"version"`
-	Interval    int          `tfsdk:"interval"`
+	Interval    types.Int64  `tfsdk:"interval"`
 	Platform    types.String `tfsdk:"platform"`
 	Snapshot    types.Bool   `tfsdk:"snapshot"`
 	RunNow      types.Bool   `tfsdk:"run_now"`
@@ -273,7 +273,7 @@ type AuditConfiguration struct {
 	TableName   types.String `tfsdk:"table_name"`
 	Sha256      types.String `tfsdk:"sha256"`
 	Type        types.String `tfsdk:"type"`
-	Checks      int          `tfsdk:"checks"`
+	Checks      types.Int64  `tfsdk:"checks"`
 }
 
 type AssetGroupRule struct {
@@ -281,7 +281,7 @@ type AssetGroupRule struct {
 	Name           types.String `tfsdk:"name"`
 	Description    types.String `tfsdk:"description"`
 	Query          types.String `tfsdk:"query"`
-	Interval       int          `tfsdk:"interval"`
+	Interval       types.Int64  `tfsdk:"interval"`
 	OsqueryVersion types.String `tfsdk:"osquery_version"`
 	Platform       types.String `tfsdk:"platform"`
 	Enabled        types.Bool   `tfsdk:"enabled"`
@@ -309,7 +309,7 @@ type CustomProfile struct {
 	Name           types.String `tfsdk:"name"`
 	Description    types.String `tfsdk:"description"`
 	QuerySchedules types.String `tfsdk:"query_schedules"`
-	Priority       int          `tfsdk:"priority"`
+	Priority       types.Int64  `tfsdk:"priority"`
 	ResourceType   types.String `tfsdk:"resource_type"`
 }
 
@@ -317,7 +317,7 @@ type FlagProfile struct {
 	ID           types.String `tfsdk:"id"`
 	Name         types.String `tfsdk:"name"`
 	Description  types.String `tfsdk:"description"`
-	Priority     int          `tfsdk:"priority"`
+	Priority     types.Int64  `tfsdk:"priority"`
 	Flags        types.String `tfsdk:"flags"`
 	OsFlags      types.String `tfsdk:"os_flags"`
 	ResourceType types.String `tfsdk:"resource_type"`
@@ -327,5 +327,5 @@ type ComplianceProfile struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	Priority    int          `tfsdk:"priority"`
+	Priority    types.Int64  `tfsdk:"priority"`
 }

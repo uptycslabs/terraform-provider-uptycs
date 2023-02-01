@@ -68,7 +68,7 @@ func (d *alertRuleDataSource) Schema(_ context.Context, req datasource.SchemaReq
 			"sql_config": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"interval_seconds": schema.NumberAttribute{Optional: true},
+					"interval_seconds": schema.Int64Attribute{Optional: true},
 				},
 			},
 		},
@@ -127,7 +127,7 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
-			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
+			IntervalSeconds: types.Int64Value(int64(alertRuleResp.SQLConfig.IntervalSeconds)),
 		}
 	}
 

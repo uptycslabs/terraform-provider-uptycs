@@ -40,7 +40,7 @@ func (d *flagProfileDataSource) Schema(_ context.Context, req datasource.SchemaR
 			"flags":         schema.StringAttribute{Optional: true},
 			"os_flags":      schema.StringAttribute{Optional: true},
 			"resource_type": schema.StringAttribute{Optional: true},
-			"priority":      schema.NumberAttribute{Optional: true},
+			"priority":      schema.Int64Attribute{Optional: true},
 		},
 	}
 }
@@ -88,7 +88,7 @@ func (d *flagProfileDataSource) Read(ctx context.Context, req datasource.ReadReq
 		ID:           types.StringValue(flagProfileResp.ID),
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
-		Priority:     flagProfileResp.Priority,
+		Priority:     types.Int64Value(int64(flagProfileResp.Priority)),
 		Flags:        types.StringValue(string(flagsJSON) + "\n"),
 		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),

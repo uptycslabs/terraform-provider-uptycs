@@ -43,7 +43,7 @@ func (d *objectGroupDataSource) Schema(_ context.Context, req datasource.SchemaR
 			"description":         schema.StringAttribute{Optional: true},
 			"secret":              schema.StringAttribute{Optional: true},
 			"object_type":         schema.StringAttribute{Optional: true},
-			"retention_days":      schema.NumberAttribute{Optional: true},
+			"retention_days":      schema.Int64Attribute{Optional: true},
 			"destinations": schema.ListAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -94,7 +94,7 @@ func (d *objectGroupDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Description:      types.StringValue(objectGroupResp.Description),
 		Secret:           types.StringValue(objectGroupResp.Secret),
 		ObjectType:       types.StringValue(objectGroupResp.ObjectType),
-		RetentionDays:    0,
+		RetentionDays:    types.Int64Value(int64(0)),
 		Destinations:     makeListStringAttributeFn(objectGroupResp.Destinations, func(d uptycs.Destination) (string, bool) { return d.ID, true }),
 	}
 

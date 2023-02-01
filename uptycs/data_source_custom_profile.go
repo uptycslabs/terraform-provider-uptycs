@@ -39,7 +39,7 @@ func (d *customProfileDataSource) Schema(_ context.Context, req datasource.Schem
 			"name":            schema.StringAttribute{Optional: true},
 			"description":     schema.StringAttribute{Optional: true},
 			"query_schedules": schema.StringAttribute{Optional: true},
-			"priority":        schema.NumberAttribute{Optional: true},
+			"priority":        schema.Int64Attribute{Optional: true},
 			"resource_type":   schema.StringAttribute{Optional: true},
 		},
 	}
@@ -85,7 +85,7 @@ func (d *customProfileDataSource) Read(ctx context.Context, req datasource.ReadR
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
 		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
-		Priority:       customProfileResp.Priority,
+		Priority:       types.Int64Value(int64(customProfileResp.Priority)),
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 

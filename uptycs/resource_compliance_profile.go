@@ -35,7 +35,7 @@ func (r *complianceProfileResource) Schema(_ context.Context, req resource.Schem
 			"id":          schema.StringAttribute{Computed: true},
 			"name":        schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true},
-			"priority":    schema.NumberAttribute{Optional: true},
+			"priority":    schema.Int64Attribute{Optional: true},
 		},
 	}
 }
@@ -58,7 +58,7 @@ func (r *complianceProfileResource) Read(ctx context.Context, req resource.ReadR
 		ID:          types.StringValue(complianceProfileResp.ID),
 		Name:        types.StringValue(complianceProfileResp.Name),
 		Description: types.StringValue(complianceProfileResp.Description),
-		Priority:    complianceProfileResp.Priority,
+		Priority:    types.Int64Value(int64(complianceProfileResp.Priority)),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -81,7 +81,7 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 	complianceProfileResp, err := r.client.CreateComplianceProfile(uptycs.ComplianceProfile{
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
-		Priority:    plan.Priority,
+		Priority:    int(plan.Priority.ValueInt64()),
 	})
 
 	if err != nil {
@@ -96,7 +96,7 @@ func (r *complianceProfileResource) Create(ctx context.Context, req resource.Cre
 		ID:          types.StringValue(complianceProfileResp.ID),
 		Name:        types.StringValue(complianceProfileResp.Name),
 		Description: types.StringValue(complianceProfileResp.Description),
-		Priority:    complianceProfileResp.Priority,
+		Priority:    types.Int64Value(int64(complianceProfileResp.Priority)),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -128,7 +128,7 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		ID:          complianceProfileID,
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
-		Priority:    plan.Priority,
+		Priority:    int(plan.Priority.ValueInt64()),
 	})
 
 	if err != nil {
@@ -143,7 +143,7 @@ func (r *complianceProfileResource) Update(ctx context.Context, req resource.Upd
 		ID:          types.StringValue(complianceProfileResp.ID),
 		Name:        types.StringValue(complianceProfileResp.Name),
 		Description: types.StringValue(complianceProfileResp.Description),
-		Priority:    complianceProfileResp.Priority,
+		Priority:    types.Int64Value(int64(complianceProfileResp.Priority)),
 	}
 
 	diags = resp.State.Set(ctx, result)

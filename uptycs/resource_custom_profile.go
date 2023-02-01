@@ -38,7 +38,7 @@ func (r *customProfileResource) Schema(_ context.Context, req resource.SchemaReq
 			"name":            schema.StringAttribute{Optional: true},
 			"description":     schema.StringAttribute{Optional: true},
 			"query_schedules": schema.StringAttribute{Optional: true},
-			"priority":        schema.NumberAttribute{Optional: true},
+			"priority":        schema.Int64Attribute{Optional: true},
 			"resource_type":   schema.StringAttribute{Optional: true},
 		},
 	}
@@ -68,7 +68,7 @@ func (r *customProfileResource) Read(ctx context.Context, req resource.ReadReque
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
 		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
-		Priority:       customProfileResp.Priority,
+		Priority:       types.Int64Value(int64(customProfileResp.Priority)),
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
@@ -93,7 +93,7 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 		Name:           plan.Name.ValueString(),
 		Description:    plan.Description.ValueString(),
 		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.ValueString()),
-		Priority:       plan.Priority,
+		Priority:       int(plan.Priority.ValueInt64()),
 		ResourceType:   plan.ResourceType.ValueString(),
 	})
 
@@ -115,7 +115,7 @@ func (r *customProfileResource) Create(ctx context.Context, req resource.CreateR
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
 		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
-		Priority:       customProfileResp.Priority,
+		Priority:       types.Int64Value(int64(customProfileResp.Priority)),
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 
@@ -149,7 +149,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		Name:           plan.Name.ValueString(),
 		Description:    plan.Description.ValueString(),
 		QuerySchedules: uptycs.CustomJSONString(plan.QuerySchedules.ValueString()),
-		Priority:       plan.Priority,
+		Priority:       int(plan.Priority.ValueInt64()),
 		ResourceType:   plan.ResourceType.ValueString(),
 	})
 
@@ -171,7 +171,7 @@ func (r *customProfileResource) Update(ctx context.Context, req resource.UpdateR
 		Name:           types.StringValue(customProfileResp.Name),
 		Description:    types.StringValue(customProfileResp.Description),
 		QuerySchedules: types.StringValue(string(queryScheduleJSON) + "\n"),
-		Priority:       customProfileResp.Priority,
+		Priority:       types.Int64Value(int64(customProfileResp.Priority)),
 		ResourceType:   types.StringValue(customProfileResp.ResourceType),
 	}
 

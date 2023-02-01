@@ -37,7 +37,7 @@ func (r *eventExcludeProfileResource) Schema(_ context.Context, req resource.Sch
 			"id":            schema.StringAttribute{Computed: true},
 			"name":          schema.StringAttribute{Optional: true},
 			"description":   schema.StringAttribute{Optional: true},
-			"priority":      schema.NumberAttribute{Optional: true},
+			"priority":      schema.Int64Attribute{Optional: true},
 			"resource_type": schema.StringAttribute{Computed: true},
 			"platform":      schema.StringAttribute{Optional: true},
 			"metadata":      schema.StringAttribute{Optional: true},
@@ -58,7 +58,7 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 		Name:         plan.Name.ValueString(),
 		Description:  plan.Description.ValueString(),
 		MetadataJSON: plan.Metadata.ValueString(),
-		Priority:     plan.Priority,
+		Priority:     int(plan.Priority.ValueInt64()),
 		ResourceType: plan.ResourceType.ValueString(),
 		Platform:     plan.Platform.ValueString(),
 	})
@@ -81,7 +81,7 @@ func (r *eventExcludeProfileResource) Create(ctx context.Context, req resource.C
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
 		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
-		Priority:     eventExcludeProfileResp.Priority,
+		Priority:     types.Int64Value(int64(eventExcludeProfileResp.Priority)),
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
@@ -117,7 +117,7 @@ func (r *eventExcludeProfileResource) Read(ctx context.Context, req resource.Rea
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
 		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
-		Priority:     eventExcludeProfileResp.Priority,
+		Priority:     types.Int64Value(int64(eventExcludeProfileResp.Priority)),
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
@@ -153,7 +153,7 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 		Name:         plan.Name.ValueString(),
 		Description:  plan.Description.ValueString(),
 		MetadataJSON: plan.Metadata.ValueString(),
-		Priority:     plan.Priority,
+		Priority:     int(plan.Priority.ValueInt64()),
 		ResourceType: plan.ResourceType.ValueString(),
 		Platform:     plan.Platform.ValueString(),
 	})
@@ -176,7 +176,7 @@ func (r *eventExcludeProfileResource) Update(ctx context.Context, req resource.U
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
 		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
-		Priority:     eventExcludeProfileResp.Priority,
+		Priority:     types.Int64Value(int64(eventExcludeProfileResp.Priority)),
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}

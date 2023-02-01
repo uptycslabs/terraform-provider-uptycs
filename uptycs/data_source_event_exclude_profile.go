@@ -37,7 +37,7 @@ func (d *eventExcludeProfileDataSource) Schema(_ context.Context, req datasource
 			"id":            schema.StringAttribute{Optional: true},
 			"name":          schema.StringAttribute{Optional: true},
 			"description":   schema.StringAttribute{Optional: true},
-			"priority":      schema.NumberAttribute{Optional: true},
+			"priority":      schema.Int64Attribute{Optional: true},
 			"resource_type": schema.StringAttribute{Optional: true},
 			"platform":      schema.StringAttribute{Optional: true},
 			"metadata":      schema.StringAttribute{Optional: true},
@@ -85,7 +85,7 @@ func (d *eventExcludeProfileDataSource) Read(ctx context.Context, req datasource
 		Name:         types.StringValue(eventExcludeProfileResp.Name),
 		Description:  types.StringValue(eventExcludeProfileResp.Description),
 		Metadata:     types.StringValue(string(metadataJSON) + "\n"),
-		Priority:     eventExcludeProfileResp.Priority,
+		Priority:     types.Int64Value(int64(eventExcludeProfileResp.Priority)),
 		ResourceType: types.StringValue(eventExcludeProfileResp.ResourceType),
 		Platform:     types.StringValue(eventExcludeProfileResp.Platform),
 	}
