@@ -72,9 +72,9 @@ resource "uptycs_tag" "new_tag" {
   file_path_groups = [
     "FIM - Canary Baseline",
   ]
-  custom_profile         = uptycs_custom_profile.test.name
-  flag_profile           = uptycs_flag_profile.test.name
-  compliance_profile     = uptycs_compliance_profile.test.name
+  custom_profile_id      = uptycs_custom_profile.test.name
+  flag_profile_id        = uptycs_flag_profile.test.name
+  compliance_profile_id  = uptycs_compliance_profile.test.name
   audit_configurations   = []
   event_exclude_profiles = []
   querypacks             = []
