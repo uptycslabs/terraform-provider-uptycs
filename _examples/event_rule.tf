@@ -23,7 +23,20 @@ resource "uptycs_event_rule" "Access_Key_Created" {
   grouping_l3 = "T1078"
   code        = "AWS_THREAT_PRIV_ESC_1"
   type        = "builder"
-  rule        = "builder"
+  alert_rule = {
+    destinations = [
+      {
+        severity             = "medium"
+        destination_id       = data.uptycs_destination.foo.id
+        notify_every_alert   = true
+        close_after_delivery = true
+      },
+    ]
+    rule_exceptions = [
+      "ce67f12a-91d1-4a79-b0ee-a60501c5990b",
+    ]
+  }
+  rule = "builder"
   event_tags = [
     "ATTACK",
     "AWS",

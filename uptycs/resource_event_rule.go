@@ -8,11 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
+	"time"
 )
 
 func EventRuleResource() resource.Resource {
@@ -58,8 +60,8 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 			"grouping":    schema.StringAttribute{Required: true},
 			"grouping_l2": schema.StringAttribute{Optional: true},
 			"grouping_l3": schema.StringAttribute{Optional: true},
-			"enabled": schema.BoolAttribute{Optional: true,
-				Computed: true,
+			"enabled": schema.BoolAttribute{
+				Optional: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 					modifiers.DefaultBool(false),
@@ -82,9 +84,53 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 					"auto_alert_config": schema.SingleNestedAttribute{
 						Required: true,
 						Attributes: map[string]schema.Attribute{
-							"raise_alert":      schema.BoolAttribute{Required: true},
-							"disable_alert":    schema.BoolAttribute{Required: true},
+							"raise_alert": schema.BoolAttribute{
+								Required: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+									modifiers.DefaultBool(false),
+								},
+							},
+							"disable_alert": schema.BoolAttribute{
+								Required: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+									modifiers.DefaultBool(false),
+								},
+							},
 							"metadata_sources": schema.StringAttribute{Optional: true},
+						},
+					},
+				},
+			},
+			"alert_rule": schema.SingleNestedAttribute{
+				Required: true,
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						Computed: true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"rule_exceptions": schema.ListAttribute{
+						ElementType: types.StringType,
+						Required:    true,
+						PlanModifiers: []planmodifier.List{
+							listplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"destinations": schema.ListNestedAttribute{
+						Required: true,
+						PlanModifiers: []planmodifier.List{
+							listplanmodifier.UseStateForUnknown(),
+						},
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"severity":             schema.StringAttribute{Optional: true},
+								"destination_id":       schema.StringAttribute{Optional: true},
+								"notify_every_alert":   schema.BoolAttribute{Optional: true},
+								"close_after_delivery": schema.BoolAttribute{Optional: true},
+							},
 						},
 					},
 				},
@@ -144,10 +190,37 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
+		AlertRule: &AlertRuleLite{
+			Enabled:             types.BoolValue(false),
+			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
+			Destinations:        []AlertRuleDestination{},
+		},
 	}
 
 	if result.Type.ValueString() == "sql" {
 		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
+	}
+
+	if eventRuleResp.Type == "builder" {
+		if eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert {
+			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
+			if err == nil {
+
+				result.AlertRule.AlertRuleExceptions = makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true })
+
+				_destinations := make([]AlertRuleDestination, 0)
+				for _, d := range alertRuleResp.Destinations {
+					_destinations = append(_destinations, AlertRuleDestination{
+						Severity:           types.StringValue(d.Severity),
+						DestinationID:      types.StringValue(d.DestinationID),
+						NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+						CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
+					})
+				}
+
+				result.AlertRule.Destinations = _destinations
+			}
+		}
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -242,9 +315,76 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
+		AlertRule: &AlertRuleLite{
+			Enabled:             types.BoolValue(false),
+			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
+			Destinations:        []AlertRuleDestination{},
+		},
 	}
 	if result.Type.ValueString() == "sql" {
 		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
+	}
+
+	time.Sleep(1 * time.Second)
+
+	if eventRuleResp.Type == "builder" {
+		//if plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool() {
+		if !plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool() {
+			if len(plan.AlertRule.Destinations) > 0 || len(plan.AlertRule.AlertRuleExceptions.Elements()) > 0 {
+				_, _ = r.client.DeleteEventRule(uptycs.EventRule{ID: eventRuleResp.ID})
+				resp.Diagnostics.AddError(
+					"Error creating",
+					"alert_rule.destinations and alert_rule.rule_exceptions must be empty when builder_config.auto_alert_config.raise_alert is false",
+				)
+				return
+			}
+
+		} else {
+
+			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
+			if err == nil {
+				result.AlertRule = &AlertRuleLite{
+					Enabled: types.BoolValue(alertRuleResp.Enabled),
+				}
+
+				var ruleExceptions []string
+				plan.AlertRule.AlertRuleExceptions.ElementsAs(ctx, &ruleExceptions, false)
+				_ruleExceptions := make([]uptycs.RuleException, 0)
+				for _, _re := range ruleExceptions {
+					_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
+						ExceptionID: _re,
+					})
+				}
+
+				_destinations := make([]uptycs.AlertRuleDestination, 0)
+				for _, d := range plan.AlertRule.Destinations {
+					_destinations = append(_destinations, uptycs.AlertRuleDestination{
+						Severity:           d.Severity.ValueString(),
+						DestinationID:      d.DestinationID.ValueString(),
+						NotifyEveryAlert:   d.NotifyEveryAlert.ValueBool(),
+						CloseAfterDelivery: d.CloseAfterDelivery.ValueBool(),
+					})
+				}
+
+				alertRule := uptycs.AlertRule{
+					ID:                  alertRuleResp.ID,
+					AlertRuleExceptions: _ruleExceptions,
+					Destinations:        _destinations,
+					Type:                eventRuleResp.Type,
+				}
+
+				_, err := r.client.UpdateAlertRule(alertRule)
+				if err != nil {
+					resp.Diagnostics.AddError(
+						"Error creating",
+						"Could not update attached alertRule, unexpected error: "+err.Error(),
+					)
+					return
+				}
+				result.AlertRule.AlertRuleExceptions = makeListStringAttributeFn(_ruleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true })
+				result.AlertRule.Destinations = plan.AlertRule.Destinations
+			}
+		}
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -349,6 +489,84 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
 		},
+		AlertRule: &AlertRuleLite{
+			Enabled:             types.BoolValue(false),
+			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
+			Destinations:        []AlertRuleDestination{},
+		},
+	}
+
+	// Do the attached alert rule
+	if eventRuleResp.Type == "builder" {
+		if !plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool() {
+			if len(plan.AlertRule.Destinations) > 0 || len(plan.AlertRule.AlertRuleExceptions.Elements()) > 0 {
+				resp.Diagnostics.AddError(
+					"Error creating",
+					"alert_rule.destinations and alert_rule.rule_exceptions must be empty when builder_config.auto_alert_config.raise_alert is false",
+				)
+				return
+			}
+		} else {
+			var ruleExceptions []string
+			if plan.AlertRule != nil && len(plan.AlertRule.AlertRuleExceptions.Elements()) > 0 {
+				plan.AlertRule.AlertRuleExceptions.ElementsAs(ctx, &ruleExceptions, true)
+			}
+			_ruleExceptions := make([]uptycs.RuleException, 0)
+			for _, _re := range ruleExceptions {
+				_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
+					ExceptionID: _re,
+				})
+			}
+			_destinations := make([]uptycs.AlertRuleDestination, 0)
+			if plan.AlertRule != nil {
+				for _, d := range plan.AlertRule.Destinations {
+					_destinations = append(_destinations, uptycs.AlertRuleDestination{
+						Severity:           d.Severity.ValueString(),
+						DestinationID:      d.DestinationID.ValueString(),
+						NotifyEveryAlert:   d.NotifyEveryAlert.ValueBool(),
+						CloseAfterDelivery: d.CloseAfterDelivery.ValueBool(),
+					})
+				}
+			}
+
+			alertRule := uptycs.AlertRule{
+				ID:                  state.ID.ValueString(),
+				AlertRuleExceptions: _ruleExceptions,
+				Destinations:        _destinations,
+				Type:                eventRuleResp.Type,
+			}
+
+			alertRuleResp, err := r.client.UpdateAlertRule(alertRule)
+
+			if err != nil {
+				resp.Diagnostics.AddError(
+					"Error creating",
+					"Could not update attached alertRule, unexpected error: "+err.Error(),
+				)
+				return
+			}
+
+			var arResult = AlertRuleLite{
+				Enabled:             types.BoolValue(alertRuleResp.Enabled),
+				AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
+			}
+
+			destinations := make([]AlertRuleDestination, 0)
+			for _, d := range alertRuleResp.Destinations {
+				destinations = append(destinations, AlertRuleDestination{
+					Severity:           types.StringValue(d.Severity),
+					DestinationID:      types.StringValue(d.DestinationID),
+					NotifyEveryAlert:   types.BoolValue(d.NotifyEveryAlert),
+					CloseAfterDelivery: types.BoolValue(d.CloseAfterDelivery),
+				})
+			}
+
+			arResult.Destinations = destinations
+			if plan.AlertRule != nil {
+				result.AlertRule = &arResult
+			}
+		}
+
 	}
 
 	diags = resp.State.Set(ctx, result)

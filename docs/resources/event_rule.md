@@ -17,6 +17,7 @@ description: |-
 
 ### Required
 
+- `alert_rule` (Attributes) (see [below for nested schema](#nestedatt--alert_rule))
 - `builder_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config))
 - `code` (String)
 - `description` (String)
@@ -36,6 +37,30 @@ description: |-
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--alert_rule"></a>
+### Nested Schema for `alert_rule`
+
+Required:
+
+- `destinations` (Attributes List) (see [below for nested schema](#nestedatt--alert_rule--destinations))
+- `rule_exceptions` (List of String)
+
+Read-Only:
+
+- `enabled` (Boolean)
+
+<a id="nestedatt--alert_rule--destinations"></a>
+### Nested Schema for `alert_rule.destinations`
+
+Optional:
+
+- `close_after_delivery` (Boolean)
+- `destination_id` (String)
+- `notify_every_alert` (Boolean)
+- `severity` (String)
+
+
 
 <a id="nestedatt--builder_config"></a>
 ### Nested Schema for `builder_config`
