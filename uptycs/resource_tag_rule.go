@@ -5,6 +5,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -42,24 +43,34 @@ func (r *tagRuleResource) Schema(_ context.Context, req resource.SchemaRequest, 
 			"run_once":    schema.BoolAttribute{Required: true},
 			"interval":    schema.NumberAttribute{Optional: true},
 			"osquery_version": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault(""),
+				},
 			},
 			"platform": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault(""),
+				},
 			},
 			"resource_type": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("asset")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringDefault("asset"),
+				},
 			},
 			"enabled": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(true),
+				},
 			},
 			"system": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(true),
+				},
 			},
 		},
 	}

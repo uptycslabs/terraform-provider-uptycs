@@ -42,9 +42,12 @@ description: |-
 
 Required:
 
-- `added` (Boolean)
 - `auto_alert_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config--auto_alert_config))
 - `filters` (String)
+
+Optional:
+
+- `added` (Boolean)
 - `key` (String)
 - `matches_filter` (Boolean)
 - `severity` (String)
@@ -57,7 +60,10 @@ Required:
 Required:
 
 - `disable_alert` (Boolean)
-- `metadata_sources` (String)
 - `raise_alert` (Boolean)
+
+Optional:
+
+- `metadata_sources` (String)
 
 

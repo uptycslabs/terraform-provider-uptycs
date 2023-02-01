@@ -40,9 +40,12 @@ description: |-
 Optional:
 
 - `description` (String)
-- `id` (String)
 - `name` (String)
 - `paths` (List of String)
+
+Read-Only:
+
+- `id` (String)
 
 
 <a id="nestedatt--yara_group_rules"></a>
@@ -51,8 +54,11 @@ Optional:
 Optional:
 
 - `description` (String)
-- `id` (String)
 - `name` (String)
 - `rules` (String)
+
+Read-Only:
+
+- `id` (String)
 
 

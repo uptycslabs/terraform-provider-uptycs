@@ -3,10 +3,13 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
 )
@@ -37,33 +40,53 @@ func (r *userResource) Schema(_ context.Context, req resource.SchemaRequest, res
 			"id":   schema.StringAttribute{Computed: true},
 			"name": schema.StringAttribute{Required: true},
 			"email": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"phone": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
 			},
 			"active": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(true)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(true),
+				},
 			},
 			"super_admin": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolDefault(false),
+				},
 			},
 			"bot": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"support": schema.BoolAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), boolDefault(false)},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+					boolDefault(false),
+				},
 			},
 			"image_url": schema.StringAttribute{Optional: true,
-				Computed:      true,
-				PlanModifiers: tfsdk.AttributePlanModifiers{resource.UseStateForUnknown(), stringDefault("")},
-				Validators: []tfsdk.AttributeValidator{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringDefault(""),
+				},
+				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 512),
 				},
 			},
@@ -97,40 +120,19 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 	var result = User{
-		ID:              types.StringValue(userResp.ID),
-		Name:            types.StringValue(userResp.Name),
-		Email:           types.StringValue(userResp.Email),
-		Phone:           types.StringValue(userResp.Phone),
-		Active:          types.BoolValue(userResp.Active),
-		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
-		ImageURL:        types.StringValue(userResp.ImageURL),
-		Bot:             types.BoolValue(userResp.Bot),
-		Support:         types.BoolValue(userResp.Support),
-		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
-		Roles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AlertHiddenColumns: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		UserObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
-	}
-
-	for _, _ahc := range userResp.AlertHiddenColumns {
-		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
-	}
-
-	for _, _uogid := range userResp.UserObjectGroups {
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
+		ID:                 types.StringValue(userResp.ID),
+		Name:               types.StringValue(userResp.Name),
+		Email:              types.StringValue(userResp.Email),
+		Phone:              types.StringValue(userResp.Phone),
+		Active:             types.BoolValue(userResp.Active),
+		SuperAdmin:         types.BoolValue(userResp.SuperAdmin),
+		ImageURL:           types.StringValue(userResp.ImageURL),
+		Bot:                types.BoolValue(userResp.Bot),
+		Support:            types.BoolValue(userResp.Support),
+		MaxIdleTimeMins:    userResp.MaxIdleTimeMins,
+		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -195,40 +197,19 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	var result = User{
-		ID:              types.StringValue(userResp.ID),
-		Name:            types.StringValue(userResp.Name),
-		Email:           types.StringValue(userResp.Email),
-		Phone:           types.StringValue(userResp.Phone),
-		Active:          types.BoolValue(userResp.Active),
-		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
-		Bot:             types.BoolValue(userResp.Bot),
-		Support:         types.BoolValue(userResp.Support),
-		ImageURL:        types.StringValue(userResp.ImageURL),
-		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
-		Roles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AlertHiddenColumns: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		UserObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
-	}
-
-	for _, _ahc := range userResp.AlertHiddenColumns {
-		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
-	}
-
-	for _, _uogid := range userResp.UserObjectGroups {
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
+		ID:                 types.StringValue(userResp.ID),
+		Name:               types.StringValue(userResp.Name),
+		Email:              types.StringValue(userResp.Email),
+		Phone:              types.StringValue(userResp.Phone),
+		Active:             types.BoolValue(userResp.Active),
+		SuperAdmin:         types.BoolValue(userResp.SuperAdmin),
+		Bot:                types.BoolValue(userResp.Bot),
+		Support:            types.BoolValue(userResp.Support),
+		ImageURL:           types.StringValue(userResp.ImageURL),
+		MaxIdleTimeMins:    userResp.MaxIdleTimeMins,
+		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -302,39 +283,19 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 
 	var result = User{
-		ID:              types.StringValue(userResp.ID),
-		Name:            types.StringValue(userResp.Name),
-		Email:           types.StringValue(userResp.Email),
-		Phone:           types.StringValue(userResp.Phone),
-		Active:          types.BoolValue(userResp.Active),
-		SuperAdmin:      types.BoolValue(userResp.SuperAdmin),
-		Bot:             types.BoolValue(userResp.Bot),
-		ImageURL:        types.StringValue(userResp.ImageURL),
-		Support:         types.BoolValue(userResp.Support),
-		MaxIdleTimeMins: userResp.MaxIdleTimeMins,
-		Roles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AlertHiddenColumns: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		UserObjectGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-	for _, _uogid := range userResp.UserObjectGroups {
-		result.UserObjectGroups.Elems = append(result.UserObjectGroups.Elems, types.String{Value: _uogid.ObjectGroupID})
-	}
-
-	for _, _r := range userResp.Roles {
-		result.Roles.Elems = append(result.Roles.Elems, types.String{Value: _r.ID})
-	}
-
-	for _, _ahc := range userResp.AlertHiddenColumns {
-		result.AlertHiddenColumns.Elems = append(result.AlertHiddenColumns.Elems, types.String{Value: _ahc})
+		ID:                 types.StringValue(userResp.ID),
+		Name:               types.StringValue(userResp.Name),
+		Email:              types.StringValue(userResp.Email),
+		Phone:              types.StringValue(userResp.Phone),
+		Active:             types.BoolValue(userResp.Active),
+		SuperAdmin:         types.BoolValue(userResp.SuperAdmin),
+		Bot:                types.BoolValue(userResp.Bot),
+		ImageURL:           types.StringValue(userResp.ImageURL),
+		Support:            types.BoolValue(userResp.Support),
+		MaxIdleTimeMins:    userResp.MaxIdleTimeMins,
+		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)

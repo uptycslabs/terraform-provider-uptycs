@@ -2,7 +2,6 @@ package uptycs
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -121,6 +120,7 @@ func (r *tagResource) Schema(_ context.Context, req resource.SchemaRequest, resp
 				ElementType: types.StringType,
 				Required:    true,
 			},
+
 			"event_exclude_profiles": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
@@ -175,54 +175,12 @@ func (r *tagResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		Status:                    types.StringValue(tagResp.Status),
 		Source:                    types.StringValue(tagResp.Source),
 		ResourceType:              types.StringValue(tagResp.ResourceType),
-		FilePathGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		EventExcludeProfiles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Querypacks: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		YaraGroupRules: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AuditConfigurations: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
-	}
-
-	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
-	}
-
-	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
-	}
-
-	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
-	}
-
-	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
-	}
-
-	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
+		FilePathGroups:            makeListStringAttributeFn(tagResp.FilePathGroups, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		EventExcludeProfiles:      makeListStringAttributeFn(tagResp.EventExcludeProfiles, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		Querypacks:                makeListStringAttributeFn(tagResp.Querypacks, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		RegistryPaths:             makeListStringAttributeFn(tagResp.RegistryPaths, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		YaraGroupRules:            makeListStringAttributeFn(tagResp.YaraGroupRules, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		AuditConfigurations:       makeListStringAttributeFn(tagResp.AuditConfigurations, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -297,20 +255,20 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	tagResp, err := r.client.CreateTag(uptycs.Tag{
-		Value:                     plan.Value.Value,
-		Key:                       plan.Key.Value,
-		FlagProfile:               plan.FlagProfile.Value,
-		CustomProfile:             plan.CustomProfile.Value,
-		ComplianceProfile:         plan.ComplianceProfile.Value,
-		ProcessBlockRule:          plan.ProcessBlockRule.Value,
-		DNSBlockRule:              plan.DNSBlockRule.Value,
-		WindowsDefenderPreference: plan.WindowsDefenderPreference.Value,
-		TagRule:                   plan.TagRule.Value,
-		Tag:                       plan.Tag.Value,
-		System:                    plan.System.Value,
-		Status:                    plan.Status.Value,
-		Source:                    plan.Source.Value,
-		ResourceType:              plan.ResourceType.Value,
+		Value:                     plan.Value.ValueString(),
+		Key:                       plan.Key.ValueString(),
+		FlagProfile:               plan.FlagProfile.ValueString(),
+		CustomProfile:             plan.CustomProfile.ValueString(),
+		ComplianceProfile:         plan.ComplianceProfile.ValueString(),
+		ProcessBlockRule:          plan.ProcessBlockRule.ValueString(),
+		DNSBlockRule:              plan.DNSBlockRule.ValueString(),
+		WindowsDefenderPreference: plan.WindowsDefenderPreference.ValueString(),
+		TagRule:                   plan.TagRule.ValueString(),
+		Tag:                       plan.Tag.ValueString(),
+		System:                    plan.System.ValueBool(),
+		Status:                    plan.Status.ValueString(),
+		Source:                    plan.Source.ValueString(),
+		ResourceType:              plan.ResourceType.ValueString(),
 		FilePathGroups:            filePathGroups,
 		EventExcludeProfiles:      eventExcludeProfiles,
 		RegistryPaths:             registryPaths,
@@ -343,54 +301,12 @@ func (r *tagResource) Create(ctx context.Context, req resource.CreateRequest, re
 		Status:                    types.StringValue(tagResp.Status),
 		Source:                    types.StringValue(tagResp.Source),
 		ResourceType:              types.StringValue(tagResp.ResourceType),
-		FilePathGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		EventExcludeProfiles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Querypacks: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		YaraGroupRules: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AuditConfigurations: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
-	}
-
-	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
-	}
-
-	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
-	}
-
-	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
-	}
-
-	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
-	}
-
-	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
+		FilePathGroups:            makeListStringAttributeFn(tagResp.FilePathGroups, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		EventExcludeProfiles:      makeListStringAttributeFn(tagResp.EventExcludeProfiles, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		Querypacks:                makeListStringAttributeFn(tagResp.Querypacks, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		RegistryPaths:             makeListStringAttributeFn(tagResp.RegistryPaths, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		YaraGroupRules:            makeListStringAttributeFn(tagResp.YaraGroupRules, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		AuditConfigurations:       makeListStringAttributeFn(tagResp.AuditConfigurations, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -408,7 +324,7 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	tagID := state.ID.Value
+	tagID := state.ID.ValueString()
 
 	// Retrieve values from plan
 	var plan Tag
@@ -474,17 +390,17 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	tagResp, err := r.client.UpdateTag(uptycs.Tag{
 		ID:                        tagID,
-		Value:                     plan.Value.Value,
-		Key:                       plan.Key.Value,
-		FlagProfile:               plan.FlagProfile.Value,
-		CustomProfile:             plan.CustomProfile.Value,
-		ComplianceProfile:         plan.ComplianceProfile.Value,
-		ProcessBlockRule:          plan.ProcessBlockRule.Value,
-		DNSBlockRule:              plan.DNSBlockRule.Value,
-		WindowsDefenderPreference: plan.WindowsDefenderPreference.Value,
-		TagRule:                   plan.TagRule.Value,
-		Tag:                       plan.Tag.Value,
-		System:                    plan.System.Value,
+		Value:                     plan.Value.ValueString(),
+		Key:                       plan.Key.ValueString(),
+		FlagProfile:               plan.FlagProfile.ValueString(),
+		CustomProfile:             plan.CustomProfile.ValueString(),
+		ComplianceProfile:         plan.ComplianceProfile.ValueString(),
+		ProcessBlockRule:          plan.ProcessBlockRule.ValueString(),
+		DNSBlockRule:              plan.DNSBlockRule.ValueString(),
+		WindowsDefenderPreference: plan.WindowsDefenderPreference.ValueString(),
+		TagRule:                   plan.TagRule.ValueString(),
+		Tag:                       plan.Tag.ValueString(),
+		System:                    plan.System.ValueBool(),
 		FilePathGroups:            filePathGroups,
 		EventExcludeProfiles:      eventExcludeProfiles,
 		RegistryPaths:             registryPaths,
@@ -520,54 +436,12 @@ func (r *tagResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		Status:                    types.StringValue(tagResp.Status),
 		Source:                    types.StringValue(tagResp.Source),
 		ResourceType:              types.StringValue(tagResp.ResourceType),
-		FilePathGroups: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		EventExcludeProfiles: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		Querypacks: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		RegistryPaths: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		YaraGroupRules: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-		AuditConfigurations: types.List{
-			ElemType: types.StringType,
-			Elems:    make([]attr.Value, 0),
-		},
-	}
-
-	for _, fpg := range tagResp.FilePathGroups {
-		result.FilePathGroups.Elems = append(result.FilePathGroups.Elems, types.String{Value: fpg.ID})
-	}
-
-	for _, eep := range tagResp.EventExcludeProfiles {
-		result.EventExcludeProfiles.Elems = append(result.EventExcludeProfiles.Elems, types.String{Value: eep.ID})
-	}
-
-	for _, qp := range tagResp.Querypacks {
-		result.Querypacks.Elems = append(result.Querypacks.Elems, types.String{Value: qp.ID})
-	}
-
-	for _, rp := range tagResp.RegistryPaths {
-		result.RegistryPaths.Elems = append(result.RegistryPaths.Elems, types.String{Value: rp.ID})
-	}
-
-	for _, yg := range tagResp.YaraGroupRules {
-		result.YaraGroupRules.Elems = append(result.YaraGroupRules.Elems, types.String{Value: yg.ID})
-	}
-
-	for _, ac := range tagResp.AuditConfigurations {
-		result.AuditConfigurations.Elems = append(result.AuditConfigurations.Elems, types.String{Value: ac.ID})
+		FilePathGroups:            makeListStringAttributeFn(tagResp.FilePathGroups, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		EventExcludeProfiles:      makeListStringAttributeFn(tagResp.EventExcludeProfiles, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		Querypacks:                makeListStringAttributeFn(tagResp.Querypacks, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		RegistryPaths:             makeListStringAttributeFn(tagResp.RegistryPaths, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		YaraGroupRules:            makeListStringAttributeFn(tagResp.YaraGroupRules, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
+		AuditConfigurations:       makeListStringAttributeFn(tagResp.AuditConfigurations, func(f uptycs.TagConfigurationObject) (string, bool) { return f.ID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -585,7 +459,7 @@ func (r *tagResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 		return
 	}
 
-	tagID := state.ID.Value
+	tagID := state.ID.ValueString()
 
 	_, err := r.client.DeleteTag(uptycs.Tag{
 		ID: tagID,
