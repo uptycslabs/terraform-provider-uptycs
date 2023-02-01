@@ -88,7 +88,7 @@ func (r *alertRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 			"sql_config": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"interval_seconds": schema.NumberAttribute{Optional: true},
+					"interval_seconds": schema.Int64Attribute{Optional: true},
 				},
 			},
 		},
@@ -130,7 +130,7 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
-			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
+			IntervalSeconds: types.Int64Value(int64(alertRuleResp.SQLConfig.IntervalSeconds)),
 		}
 	}
 
@@ -205,7 +205,7 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 
 	if plan.SQLConfig != nil {
 		alertRule.SQLConfig = &uptycs.SQLConfig{
-			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
+			IntervalSeconds: int(plan.SQLConfig.IntervalSeconds.ValueInt64()),
 		}
 	}
 	alertRuleResp, err := r.client.CreateAlertRule(alertRule)
@@ -239,7 +239,7 @@ func (r *alertRuleResource) Create(ctx context.Context, req resource.CreateReque
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
-			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
+			IntervalSeconds: types.Int64Value(int64(alertRuleResp.SQLConfig.IntervalSeconds)),
 		}
 	}
 
@@ -323,7 +323,7 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	if plan.SQLConfig != nil {
 		alertRule.SQLConfig = &uptycs.SQLConfig{
-			IntervalSeconds: plan.SQLConfig.IntervalSeconds,
+			IntervalSeconds: int(plan.SQLConfig.IntervalSeconds.ValueInt64()),
 		}
 	}
 
@@ -358,7 +358,7 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
-			IntervalSeconds: alertRuleResp.SQLConfig.IntervalSeconds,
+			IntervalSeconds: types.Int64Value(int64(alertRuleResp.SQLConfig.IntervalSeconds)),
 		}
 	}
 

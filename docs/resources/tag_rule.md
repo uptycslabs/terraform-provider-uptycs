@@ -20,7 +20,6 @@ description: |-
 - `description` (String)
 - `name` (String)
 - `query` (String)
-- `run_once` (Boolean)
 - `source` (String)
 
 ### Optional
@@ -30,6 +29,7 @@ description: |-
 - `osquery_version` (String)
 - `platform` (String)
 - `resource_type` (String)
+- `run_once` (Boolean)
 - `system` (Boolean)
 
 ### Read-Only

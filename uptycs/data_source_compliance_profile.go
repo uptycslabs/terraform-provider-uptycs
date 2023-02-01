@@ -36,7 +36,7 @@ func (d *complianceProfileDataSource) Schema(_ context.Context, req datasource.S
 			"id":          schema.StringAttribute{Optional: true},
 			"name":        schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true},
-			"priority":    schema.NumberAttribute{Optional: true},
+			"priority":    schema.Int64Attribute{Optional: true},
 		},
 	}
 }
@@ -75,7 +75,7 @@ func (d *complianceProfileDataSource) Read(ctx context.Context, req datasource.R
 		ID:          types.StringValue(complianceProfileResp.ID),
 		Name:        types.StringValue(complianceProfileResp.Name),
 		Description: types.StringValue(complianceProfileResp.Description),
-		Priority:    complianceProfileResp.Priority,
+		Priority:    types.Int64Value(int64(complianceProfileResp.Priority)),
 	}
 
 	diags := resp.State.Set(ctx, result)

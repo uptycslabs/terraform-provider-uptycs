@@ -42,7 +42,7 @@ func (d *auditConfigurationDataSource) Schema(_ context.Context, req datasource.
 			"table_name":  schema.StringAttribute{Optional: true},
 			"sha256":      schema.StringAttribute{Optional: true},
 			"type":        schema.StringAttribute{Optional: true},
-			"checks":      schema.NumberAttribute{Optional: true},
+			"checks":      schema.Int64Attribute{Optional: true},
 		},
 	}
 }
@@ -88,7 +88,7 @@ func (d *auditConfigurationDataSource) Read(ctx context.Context, req datasource.
 		TableName:   types.StringValue(auditConfigurationResp.TableName),
 		Sha256:      types.StringValue(auditConfigurationResp.Sha256),
 		Type:        types.StringValue(auditConfigurationResp.Type),
-		Checks:      auditConfigurationResp.Checks,
+		Checks:      types.Int64Value(int64(auditConfigurationResp.Checks)),
 	}
 
 	diags := resp.State.Set(ctx, result)

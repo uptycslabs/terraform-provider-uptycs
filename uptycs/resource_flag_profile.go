@@ -40,7 +40,7 @@ func (r *flagProfileResource) Schema(_ context.Context, req resource.SchemaReque
 			"flags":         schema.StringAttribute{Required: true},
 			"os_flags":      schema.StringAttribute{Required: true},
 			"resource_type": schema.StringAttribute{Optional: true},
-			"priority":      schema.NumberAttribute{Optional: true},
+			"priority":      schema.Int64Attribute{Optional: true},
 		},
 	}
 }
@@ -72,7 +72,7 @@ func (r *flagProfileResource) Read(ctx context.Context, req resource.ReadRequest
 		ID:           types.StringValue(flagProfileResp.ID),
 		Name:         types.StringValue(flagProfileResp.Name),
 		Description:  types.StringValue(flagProfileResp.Description),
-		Priority:     flagProfileResp.Priority,
+		Priority:     types.Int64Value(int64(flagProfileResp.Priority)),
 		Flags:        types.StringValue(string(flagsJSON) + "\n"),
 		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
@@ -100,7 +100,7 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 		Description:  plan.Description.ValueString(),
 		Flags:        uptycs.CustomJSONString(plan.Flags.ValueString()),
 		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.ValueString()),
-		Priority:     plan.Priority,
+		Priority:     int(plan.Priority.ValueInt64()),
 		ResourceType: plan.ResourceType.ValueString(),
 	})
 
@@ -128,7 +128,7 @@ func (r *flagProfileResource) Create(ctx context.Context, req resource.CreateReq
 		Description:  types.StringValue(flagProfileResp.Description),
 		Flags:        types.StringValue(string(flagsJSON) + "\n"),
 		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
-		Priority:     flagProfileResp.Priority,
+		Priority:     types.Int64Value(int64(flagProfileResp.Priority)),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
@@ -163,7 +163,7 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		Description:  plan.Description.ValueString(),
 		Flags:        uptycs.CustomJSONString(plan.Flags.ValueString()),
 		OsFlags:      uptycs.CustomJSONString(plan.OsFlags.ValueString()),
-		Priority:     plan.Priority,
+		Priority:     int(plan.Priority.ValueInt64()),
 		ResourceType: plan.ResourceType.ValueString(),
 	})
 
@@ -191,7 +191,7 @@ func (r *flagProfileResource) Update(ctx context.Context, req resource.UpdateReq
 		Description:  types.StringValue(flagProfileResp.Description),
 		Flags:        types.StringValue(string(flagsJSON) + "\n"),
 		OsFlags:      types.StringValue(string(osFlagsJSON) + "\n"),
-		Priority:     flagProfileResp.Priority,
+		Priority:     types.Int64Value(int64(flagProfileResp.Priority)),
 		ResourceType: types.StringValue(flagProfileResp.ResourceType),
 	}
 
