@@ -445,6 +445,21 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				result.AlertRule.Destinations = plan.AlertRule.Destinations
 			}
 		}
+	} else {
+		if plan.BuilderConfig != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"builder_config should not be set for event_rules with type 'sql'",
+			)
+			return
+		}
+		if plan.AlertRule != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"alert_rule should not be set for event_rules with type 'sql'",
+			)
+			return
+		}
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -678,6 +693,21 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			}
 		}
 
+	} else {
+		if plan.BuilderConfig != nil {
+			resp.Diagnostics.AddError(
+				"Error updating",
+				"builder_config should not be set for event_rules with type 'sql'",
+			)
+			return
+		}
+		if plan.AlertRule != nil {
+			resp.Diagnostics.AddError(
+				"Error updating",
+				"alert_rule should not be set for event_rules with type 'sql'",
+			)
+			return
+		}
 	}
 
 	diags = resp.State.Set(ctx, result)
