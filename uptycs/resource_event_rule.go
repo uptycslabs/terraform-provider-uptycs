@@ -400,8 +400,13 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 
 			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
 			if err == nil {
-				result.AlertRule = &AlertRuleLite{
-					Enabled: types.BoolValue(alertRuleResp.Enabled),
+				if plan.AlertRule == nil {
+					resp.Diagnostics.AddError(
+						"Error creating",
+						"Could not manage attached alertRule. alert_rule = { destinations = [], rule_exceptions = [] } is required at a minimum for event rules with type 'builder'",
+					)
+					_, _ = r.client.DeleteEventRule(uptycs.EventRule{ID: eventRuleResp.ID})
+					return
 				}
 
 				var ruleExceptions []string
