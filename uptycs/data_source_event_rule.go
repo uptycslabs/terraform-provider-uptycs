@@ -135,7 +135,7 @@ func (d *eventRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
 		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
-		BuilderConfig: BuilderConfig{
+		BuilderConfig: &BuilderConfig{
 			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),

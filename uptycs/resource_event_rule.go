@@ -71,8 +71,19 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				ElementType: types.StringType,
 				Required:    true,
 			},
+			"sql_config": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"interval_seconds": schema.Int64Attribute{
+						Optional: true,
+						PlanModifiers: []planmodifier.Int64{
+							modifiers.DefaultInt(600),
+						},
+					},
+				},
+			},
 			"builder_config": schema.SingleNestedAttribute{
-				Required: true,
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"table_name":     schema.StringAttribute{Optional: true},
 					"added":          schema.BoolAttribute{Optional: true},
@@ -104,7 +115,7 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				},
 			},
 			"alert_rule": schema.SingleNestedAttribute{
-				Required: true,
+				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"enabled": schema.BoolAttribute{
 						Computed: true,
@@ -153,16 +164,6 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
 	var result = EventRule{
 		ID:          types.StringValue(eventRuleResp.ID),
 		Enabled:     types.BoolValue(eventRuleResp.Enabled),
@@ -176,7 +177,18 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
 		Score:       types.StringValue(eventRuleResp.Score),
 		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
-		BuilderConfig: BuilderConfig{
+	}
+	if eventRuleResp.Type == "builder" {
+		filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
+		result.BuilderConfig = &BuilderConfig{
 			Filters:       types.StringValue(string(filtersJSON) + "\n"),
 			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
 			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
@@ -189,19 +201,13 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
 				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
 			},
-		},
-		AlertRule: &AlertRuleLite{
+		}
+
+		result.AlertRule = &AlertRuleLite{
 			Enabled:             types.BoolValue(false),
 			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
 			Destinations:        []AlertRuleDestination{},
-		},
-	}
-
-	if result.Type.ValueString() == "sql" {
-		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
-	}
-
-	if eventRuleResp.Type == "builder" {
+		}
 		if eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert {
 			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
 			if err == nil {
@@ -220,6 +226,13 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 
 				result.AlertRule.Destinations = _destinations
 			}
+		}
+	}
+
+	if eventRuleResp.Type == "sql" {
+		result.Rule = types.StringValue(result.Rule.ValueString())
+		result.SQLConfig = &SQLConfig{
+			IntervalSeconds: types.Int64Value(int64(eventRuleResp.SQLConfig.IntervalSeconds)),
 		}
 	}
 
@@ -242,93 +255,137 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
-		Name:        plan.Name.ValueString(),
-		Code:        plan.Code.ValueString(),
-		Description: plan.Description.ValueString(),
-		Rule:        plan.Rule.ValueString(),
-		Type:        plan.Type.ValueString(),
-		Enabled:     plan.Enabled.ValueBool(),
-		Grouping:    plan.Grouping.ValueString(),
-		GroupingL2:  plan.GroupingL2.ValueString(),
-		GroupingL3:  plan.GroupingL3.ValueString(),
-		EventTags:   tags,
-		Score:       plan.Score.ValueString(),
-		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
-			TableName:     plan.BuilderConfig.TableName.ValueString(),
-			Added:         plan.BuilderConfig.Added.ValueBool(),
-			MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
-			Severity:      plan.BuilderConfig.Severity.ValueString(),
-			Key:           plan.BuilderConfig.Key.ValueString(),
-			ValueField:    plan.BuilderConfig.ValueField.ValueString(),
-			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
-				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
-				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
+	var eventRuleResp = uptycs.EventRule{}
+	var result = EventRule{}
+
+	if plan.Type.ValueString() == "builder" {
+
+		eventRuleResp, _ = r.client.CreateEventRule(uptycs.EventRule{
+			Name:        plan.Name.ValueString(),
+			Code:        plan.Code.ValueString(),
+			Description: plan.Description.ValueString(),
+			Rule:        plan.Rule.ValueString(),
+			Type:        plan.Type.ValueString(),
+			Enabled:     plan.Enabled.ValueBool(),
+			Grouping:    plan.Grouping.ValueString(),
+			GroupingL2:  plan.GroupingL2.ValueString(),
+			GroupingL3:  plan.GroupingL3.ValueString(),
+			EventTags:   tags,
+			Score:       plan.Score.ValueString(),
+			BuilderConfig: &uptycs.BuilderConfig{
+				Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
+				TableName:     plan.BuilderConfig.TableName.ValueString(),
+				Added:         plan.BuilderConfig.Added.ValueBool(),
+				MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
+				Severity:      plan.BuilderConfig.Severity.ValueString(),
+				Key:           plan.BuilderConfig.Key.ValueString(),
+				ValueField:    plan.BuilderConfig.ValueField.ValueString(),
+				AutoAlertConfig: uptycs.AutoAlertConfig{
+					DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
+					RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
+					MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
+				},
 			},
-		},
-	})
+		})
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating",
-			"Could not create eventRule, unexpected error: "+err.Error(),
-		)
-		return
-	}
+		filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
+		metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var result = EventRule{
-		ID:          types.StringValue(eventRuleResp.ID),
-		Enabled:     types.BoolValue(eventRuleResp.Enabled),
-		Name:        types.StringValue(eventRuleResp.Name),
-		Description: types.StringValue(eventRuleResp.Description),
-		Code:        types.StringValue(eventRuleResp.Code),
-		Type:        types.StringValue(eventRuleResp.Type),
-		Rule:        types.StringValue(eventRuleResp.Rule),
-		Grouping:    types.StringValue(eventRuleResp.Grouping),
-		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
-		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
-		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
-		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string(filtersJSON) + "\n"),
-			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
-			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
-			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
-			Severity:      types.StringValue(eventRuleResp.BuilderConfig.Severity),
-			Key:           types.StringValue(eventRuleResp.BuilderConfig.Key),
-			ValueField:    types.StringValue(eventRuleResp.BuilderConfig.ValueField),
-			AutoAlertConfig: AutoAlertConfig{
-				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
-				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
-				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
+		result = EventRule{
+			ID:          types.StringValue(eventRuleResp.ID),
+			Enabled:     types.BoolValue(eventRuleResp.Enabled),
+			Name:        types.StringValue(eventRuleResp.Name),
+			Description: types.StringValue(eventRuleResp.Description),
+			Code:        types.StringValue(eventRuleResp.Code),
+			Type:        types.StringValue(eventRuleResp.Type),
+			Rule:        types.StringValue(eventRuleResp.Rule),
+			Grouping:    types.StringValue(eventRuleResp.Grouping),
+			GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
+			GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
+			Score:       types.StringValue(eventRuleResp.Score),
+			EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
+			BuilderConfig: &BuilderConfig{
+				Filters:       types.StringValue(string(filtersJSON) + "\n"),
+				TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
+				Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
+				MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
+				Severity:      types.StringValue(eventRuleResp.BuilderConfig.Severity),
+				Key:           types.StringValue(eventRuleResp.BuilderConfig.Key),
+				ValueField:    types.StringValue(eventRuleResp.BuilderConfig.ValueField),
+				AutoAlertConfig: AutoAlertConfig{
+					DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
+					RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
+					MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
+				},
 			},
-		},
-		AlertRule: &AlertRuleLite{
-			Enabled:             types.BoolValue(false),
-			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
-			Destinations:        []AlertRuleDestination{},
-		},
-	}
-	if result.Type.ValueString() == "sql" {
-		result.Rule = types.StringValue(fmt.Sprintf("%s\n", result.Rule.ValueString()))
+			AlertRule: &AlertRuleLite{
+				Enabled:             types.BoolValue(false),
+				AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
+				Destinations:        []AlertRuleDestination{},
+			},
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not create eventRule, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	} else {
+		eventRuleResp, err := r.client.CreateEventRule(uptycs.EventRule{
+			Name:        plan.Name.ValueString(),
+			Code:        plan.Code.ValueString(),
+			Description: plan.Description.ValueString(),
+			Rule:        plan.Rule.ValueString(),
+			Type:        plan.Type.ValueString(),
+			Enabled:     plan.Enabled.ValueBool(),
+			Grouping:    plan.Grouping.ValueString(),
+			GroupingL2:  plan.GroupingL2.ValueString(),
+			GroupingL3:  plan.GroupingL3.ValueString(),
+			EventTags:   tags,
+			Score:       plan.Score.ValueString(),
+			SQLConfig: &uptycs.SQLConfig{
+				IntervalSeconds: int(plan.SQLConfig.IntervalSeconds.ValueInt64()),
+			},
+		})
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not create eventRule, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		result = EventRule{
+			ID:          types.StringValue(eventRuleResp.ID),
+			Enabled:     types.BoolValue(eventRuleResp.Enabled),
+			Name:        types.StringValue(eventRuleResp.Name),
+			Description: types.StringValue(eventRuleResp.Description),
+			Code:        types.StringValue(eventRuleResp.Code),
+			Type:        types.StringValue(eventRuleResp.Type),
+			Grouping:    types.StringValue(eventRuleResp.Grouping),
+			GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
+			GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
+			Score:       types.StringValue(eventRuleResp.Score),
+			EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
+			Rule:        types.StringValue(eventRuleResp.Rule),
+			SQLConfig: &SQLConfig{
+				IntervalSeconds: types.Int64Value(int64(eventRuleResp.SQLConfig.IntervalSeconds)),
+			},
+		}
 	}
 
 	time.Sleep(1 * time.Second)
 
 	if eventRuleResp.Type == "builder" {
-		//if plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool() {
 		if !plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool() {
 			if len(plan.AlertRule.Destinations) > 0 || len(plan.AlertRule.AlertRuleExceptions.Elements()) > 0 {
 				_, _ = r.client.DeleteEventRule(uptycs.EventRule{ID: eventRuleResp.ID})
@@ -371,6 +428,9 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 					AlertRuleExceptions: _ruleExceptions,
 					Destinations:        _destinations,
 					Type:                eventRuleResp.Type,
+					BuilderConfig: &uptycs.BuilderConfigLite{
+						ID: eventRuleResp.BuilderConfig.ID,
+					},
 				}
 
 				_, err := r.client.UpdateAlertRule(alertRule)
@@ -415,85 +475,133 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 	var tags []string
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
-	eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
-		ID:          eventRuleID,
-		Name:        plan.Name.ValueString(),
-		Code:        plan.Code.ValueString(),
-		Description: plan.Description.ValueString(),
-		Rule:        plan.Rule.ValueString(),
-		Type:        plan.Type.ValueString(),
-		Enabled:     plan.Enabled.ValueBool(),
-		Grouping:    plan.Grouping.ValueString(),
-		GroupingL2:  plan.GroupingL2.ValueString(),
-		GroupingL3:  plan.GroupingL3.ValueString(),
-		EventTags:   tags,
-		Score:       plan.Score.ValueString(),
-		BuilderConfig: uptycs.BuilderConfig{
-			Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
-			TableName:     plan.BuilderConfig.TableName.ValueString(),
-			Added:         plan.BuilderConfig.Added.ValueBool(),
-			MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
-			Severity:      plan.BuilderConfig.Severity.ValueString(),
-			Key:           plan.BuilderConfig.Key.ValueString(),
-			ValueField:    plan.BuilderConfig.ValueField.ValueString(),
-			AutoAlertConfig: uptycs.AutoAlertConfig{
-				DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
-				RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
-				MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
+	var eventRuleResp = uptycs.EventRule{}
+	var result = EventRule{}
+
+	if plan.Type.ValueString() == "builder" {
+
+		eventRuleResp, _ = r.client.UpdateEventRule(uptycs.EventRule{
+			ID:          eventRuleID,
+			Name:        plan.Name.ValueString(),
+			Code:        plan.Code.ValueString(),
+			Description: plan.Description.ValueString(),
+			Rule:        plan.Rule.ValueString(),
+			Type:        plan.Type.ValueString(),
+			Enabled:     plan.Enabled.ValueBool(),
+			Grouping:    plan.Grouping.ValueString(),
+			GroupingL2:  plan.GroupingL2.ValueString(),
+			GroupingL3:  plan.GroupingL3.ValueString(),
+			EventTags:   tags,
+			Score:       plan.Score.ValueString(),
+			BuilderConfig: &uptycs.BuilderConfig{
+				Filters:       uptycs.CustomJSONString(plan.BuilderConfig.Filters.ValueString()),
+				TableName:     plan.BuilderConfig.TableName.ValueString(),
+				Added:         plan.BuilderConfig.Added.ValueBool(),
+				MatchesFilter: plan.BuilderConfig.MatchesFilter.ValueBool(),
+				Severity:      plan.BuilderConfig.Severity.ValueString(),
+				Key:           plan.BuilderConfig.Key.ValueString(),
+				ValueField:    plan.BuilderConfig.ValueField.ValueString(),
+				AutoAlertConfig: uptycs.AutoAlertConfig{
+					DisableAlert:    plan.BuilderConfig.AutoAlertConfig.DisableAlert.ValueBool(),
+					RaiseAlert:      plan.BuilderConfig.AutoAlertConfig.RaiseAlert.ValueBool(),
+					MetadataSources: uptycs.CustomJSONString(plan.BuilderConfig.AutoAlertConfig.MetadataSources.ValueString()),
+				},
 			},
-		},
-	})
+		})
+		filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating",
-			"Could not create eventRule, unexpected error: "+err.Error(),
-		)
-		return
-	}
+		metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var result = EventRule{
-		ID:          types.StringValue(eventRuleResp.ID),
-		Enabled:     types.BoolValue(eventRuleResp.Enabled),
-		Name:        types.StringValue(eventRuleResp.Name),
-		Description: types.StringValue(eventRuleResp.Description),
-		Code:        types.StringValue(eventRuleResp.Code),
-		Type:        types.StringValue(eventRuleResp.Type),
-		Rule:        types.StringValue(eventRuleResp.Rule),
-		Grouping:    types.StringValue(eventRuleResp.Grouping),
-		GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
-		GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
-		Score:       types.StringValue(eventRuleResp.Score),
-		EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
-		BuilderConfig: BuilderConfig{
-			Filters:       types.StringValue(string(filtersJSON) + "\n"),
-			TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
-			Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
-			MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
-			Severity:      types.StringValue(eventRuleResp.BuilderConfig.Severity),
-			Key:           types.StringValue(eventRuleResp.BuilderConfig.Key),
-			ValueField:    types.StringValue(eventRuleResp.BuilderConfig.ValueField),
-			AutoAlertConfig: AutoAlertConfig{
-				RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
-				DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
-				MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
+		result = EventRule{
+			ID:          types.StringValue(eventRuleResp.ID),
+			Enabled:     types.BoolValue(eventRuleResp.Enabled),
+			Name:        types.StringValue(eventRuleResp.Name),
+			Description: types.StringValue(eventRuleResp.Description),
+			Code:        types.StringValue(eventRuleResp.Code),
+			Type:        types.StringValue(eventRuleResp.Type),
+			Rule:        types.StringValue(eventRuleResp.Rule),
+			Grouping:    types.StringValue(eventRuleResp.Grouping),
+			GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
+			GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
+			Score:       types.StringValue(eventRuleResp.Score),
+			EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
+			BuilderConfig: &BuilderConfig{
+				Filters:       types.StringValue(string(filtersJSON) + "\n"),
+				TableName:     types.StringValue(eventRuleResp.BuilderConfig.TableName),
+				Added:         types.BoolValue(eventRuleResp.BuilderConfig.Added),
+				MatchesFilter: types.BoolValue(eventRuleResp.BuilderConfig.MatchesFilter),
+				Severity:      types.StringValue(eventRuleResp.BuilderConfig.Severity),
+				Key:           types.StringValue(eventRuleResp.BuilderConfig.Key),
+				ValueField:    types.StringValue(eventRuleResp.BuilderConfig.ValueField),
+				AutoAlertConfig: AutoAlertConfig{
+					DisableAlert:    types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.DisableAlert),
+					RaiseAlert:      types.BoolValue(eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert),
+					MetadataSources: types.StringValue(string(metadataJSON) + "\n"),
+				},
 			},
-		},
-		AlertRule: &AlertRuleLite{
-			Enabled:             types.BoolValue(false),
-			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
-			Destinations:        []AlertRuleDestination{},
-		},
+			AlertRule: &AlertRuleLite{
+				Enabled:             types.BoolValue(false),
+				AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
+				Destinations:        []AlertRuleDestination{},
+			},
+		}
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error updating",
+				"Could not update eventRule, unexpected error: "+err.Error(),
+			)
+			return
+		}
+	} else {
+		eventRuleResp, err := r.client.UpdateEventRule(uptycs.EventRule{
+			ID:          eventRuleID,
+			Name:        plan.Name.ValueString(),
+			Code:        plan.Code.ValueString(),
+			Description: plan.Description.ValueString(),
+			Rule:        plan.Rule.ValueString(),
+			Type:        plan.Type.ValueString(),
+			Enabled:     plan.Enabled.ValueBool(),
+			Grouping:    plan.Grouping.ValueString(),
+			GroupingL2:  plan.GroupingL2.ValueString(),
+			GroupingL3:  plan.GroupingL3.ValueString(),
+			EventTags:   tags,
+			Score:       plan.Score.ValueString(),
+			SQLConfig: &uptycs.SQLConfig{
+				IntervalSeconds: int(plan.SQLConfig.IntervalSeconds.ValueInt64()),
+			},
+		})
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not update eventRule, unexpected error: "+err.Error(),
+			)
+			return
+		}
+		result = EventRule{
+			ID:          types.StringValue(eventRuleResp.ID),
+			Enabled:     types.BoolValue(eventRuleResp.Enabled),
+			Name:        types.StringValue(eventRuleResp.Name),
+			Description: types.StringValue(eventRuleResp.Description),
+			Code:        types.StringValue(eventRuleResp.Code),
+			Type:        types.StringValue(eventRuleResp.Type),
+			Grouping:    types.StringValue(eventRuleResp.Grouping),
+			GroupingL2:  types.StringValue(eventRuleResp.GroupingL2),
+			GroupingL3:  types.StringValue(eventRuleResp.GroupingL3),
+			Score:       types.StringValue(eventRuleResp.Score),
+			EventTags:   makeListStringAttribute(eventRuleResp.EventTags),
+			Rule:        types.StringValue(eventRuleResp.Rule),
+			SQLConfig: &SQLConfig{
+				IntervalSeconds: types.Int64Value(int64(eventRuleResp.SQLConfig.IntervalSeconds)),
+			},
+		}
 	}
 
 	// Do the attached alert rule
@@ -534,6 +642,9 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 				AlertRuleExceptions: _ruleExceptions,
 				Destinations:        _destinations,
 				Type:                eventRuleResp.Type,
+				BuilderConfig: &uptycs.BuilderConfigLite{
+					ID: eventRuleResp.BuilderConfig.ID,
+				},
 			}
 
 			alertRuleResp, err := r.client.UpdateAlertRule(alertRule)

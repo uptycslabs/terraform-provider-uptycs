@@ -17,8 +17,6 @@ description: |-
 
 ### Required
 
-- `alert_rule` (Attributes) (see [below for nested schema](#nestedatt--alert_rule))
-- `builder_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config))
 - `code` (String)
 - `description` (String)
 - `event_tags` (List of String)
@@ -29,10 +27,13 @@ description: |-
 
 ### Optional
 
+- `alert_rule` (Attributes) (see [below for nested schema](#nestedatt--alert_rule))
+- `builder_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config))
 - `enabled` (Boolean)
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `score` (String)
+- `sql_config` (Attributes) (see [below for nested schema](#nestedatt--sql_config))
 
 ### Read-Only
 
@@ -90,5 +91,14 @@ Required:
 Optional:
 
 - `metadata_sources` (String)
+
+
+
+<a id="nestedatt--sql_config"></a>
+### Nested Schema for `sql_config`
+
+Optional:
+
+- `interval_seconds` (Number)
 
 
