@@ -3,6 +3,7 @@ package uptycs
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -52,7 +53,7 @@ func (r *alertRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				Required: true,
 				Computed: false,
 				Validators: []validator.String{
-					stringvalidator.OneOfCaseInsensitive([]string{"sql"}...),
+					stringvalidator.OneOfCaseInsensitive([]string{"sql", "javascript", "uptycs"}...),
 				},
 			},
 			"rule":     schema.StringAttribute{Required: true},
@@ -127,6 +128,18 @@ func (r *alertRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
 		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
+
+	// Only attempt to manage non-global rule exceptions
+	nonGlobalRuleExceptions := make([]attr.Value, 0)
+	for _, re := range alertRuleResp.AlertRuleExceptions {
+		_ruleException, _ := r.client.GetException(uptycs.Exception{
+			ID: re.ExceptionID,
+		})
+		if !_ruleException.IsGlobal {
+			nonGlobalRuleExceptions = append(nonGlobalRuleExceptions, types.StringValue(_ruleException.ID))
+		}
+	}
+	result.AlertRuleExceptions = types.ListValueMust(types.StringType, nonGlobalRuleExceptions)
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
@@ -284,11 +297,28 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 
 	var ruleExceptions []string
 	plan.AlertRuleExceptions.ElementsAs(ctx, &ruleExceptions, false)
+
+	// Gather all the rule exceptions from the plan
+	// Note: this excludes global rule exceptions so you must gather those back at Update() time
+	alertRuleResp, _ := r.client.GetAlertRule(uptycs.AlertRule{ID: alertRuleID})
 	_ruleExceptions := make([]uptycs.RuleException, 0)
 	for _, _re := range ruleExceptions {
 		_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
 			ExceptionID: _re,
 		})
+	}
+
+	// Gather back the global rule exceptions so we dont remove them at Update time by leaving
+	// them out of .AlertRuleExceptions[]
+	for _, _re := range alertRuleResp.AlertRuleExceptions {
+		re, _ := r.client.GetException(uptycs.Exception{
+			ID: _re.ExceptionID,
+		})
+		if re.IsGlobal {
+			_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
+				ExceptionID: re.ID,
+			})
+		}
 	}
 
 	_destinations := make([]uptycs.AlertRuleDestination, 0)
@@ -353,8 +383,18 @@ func (r *alertRuleResource) Update(ctx context.Context, req resource.UpdateReque
 		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
 		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
 		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
-		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 	}
+	// Only attempt to manage non-global rule exceptions
+	nonGlobalRuleExceptions := make([]attr.Value, 0)
+	for _, re := range alertRuleResp.AlertRuleExceptions {
+		_ruleException, _ := r.client.GetException(uptycs.Exception{
+			ID: re.ExceptionID,
+		})
+		if !_ruleException.IsGlobal {
+			nonGlobalRuleExceptions = append(nonGlobalRuleExceptions, types.StringValue(_ruleException.ID))
+		}
+	}
+	result.AlertRuleExceptions = types.ListValueMust(types.StringType, nonGlobalRuleExceptions)
 
 	if alertRuleResp.SQLConfig != nil {
 		result.SQLConfig = &SQLConfig{
