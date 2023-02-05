@@ -119,7 +119,6 @@ func (d *alertRuleDataSource) Read(ctx context.Context, req datasource.ReadReque
 		AlertNotifyCount:    types.Int64Value(int64(alertRuleResp.AlertNotifyCount)),
 		AlertNotifyInterval: types.Int64Value(int64(alertRuleResp.AlertNotifyInterval)),
 		AlertTags:           makeListStringAttribute(alertRuleResp.AlertTags),
-
 		GroupingL2:          types.StringValue(alertRuleResp.GroupingL2),
 		GroupingL3:          types.StringValue(alertRuleResp.GroupingL3),
 		AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),

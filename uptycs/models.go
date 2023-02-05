@@ -4,6 +4,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+type AlertRuleLite struct {
+	Enabled             types.Bool             `tfsdk:"enabled"`
+	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
+	Destinations        []AlertRuleDestination `tfsdk:"destinations"`
+}
+
 type AlertRule struct {
 	ID                  types.String           `tfsdk:"id"`
 	Name                types.String           `tfsdk:"name"`
@@ -49,19 +55,21 @@ type Exception struct {
 }
 
 type EventRule struct {
-	ID            types.String  `tfsdk:"id"`
-	Name          types.String  `tfsdk:"name"`
-	Description   types.String  `tfsdk:"description"`
-	Code          types.String  `tfsdk:"code"`
-	Type          types.String  `tfsdk:"type"`
-	Rule          types.String  `tfsdk:"rule"`
-	Grouping      types.String  `tfsdk:"grouping"`
-	GroupingL2    types.String  `tfsdk:"grouping_l2"`
-	GroupingL3    types.String  `tfsdk:"grouping_l3"`
-	Score         types.String  `tfsdk:"score"`
-	Enabled       types.Bool    `tfsdk:"enabled"`
-	EventTags     types.List    `tfsdk:"event_tags"`
-	BuilderConfig BuilderConfig `tfsdk:"builder_config"`
+	ID            types.String   `tfsdk:"id"`
+	Name          types.String   `tfsdk:"name"`
+	Description   types.String   `tfsdk:"description"`
+	Code          types.String   `tfsdk:"code"`
+	Type          types.String   `tfsdk:"type"`
+	Rule          types.String   `tfsdk:"rule"`
+	Grouping      types.String   `tfsdk:"grouping"`
+	GroupingL2    types.String   `tfsdk:"grouping_l2"`
+	GroupingL3    types.String   `tfsdk:"grouping_l3"`
+	Score         types.String   `tfsdk:"score"`
+	Enabled       types.Bool     `tfsdk:"enabled"`
+	EventTags     types.List     `tfsdk:"event_tags"`
+	BuilderConfig *BuilderConfig `tfsdk:"builder_config"`
+	AlertRule     *AlertRuleLite `tfsdk:"alert_rule"`
+	SQLConfig     *SQLConfig     `tfsdk:"sql_config"`
 }
 
 type BuilderConfig struct {

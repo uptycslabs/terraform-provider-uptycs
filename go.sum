@@ -200,8 +200,8 @@ github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RR
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.2 h1:G2LzWKi524PWgd3mLHV8Y5k7s6XUvT0Gef6zxSIeXaQ=
 github.com/mitchellh/reflectwalk v1.0.2/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184903-6cd82880569f h1:HhiEQhhr1W4qpRXt9YD2/bXVddc8KTsHBFEoMRnlN4c=
-github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201184903-6cd82880569f/go.mod h1:3Clx6Vx3+M+vDvD8KrgPAfit1iHePqWMs3+0P1rumcw=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201202102-41c2c21deae7 h1:gjY6N2q4/ygjPvyipOzNiyNJTBWXM/1oSnkcP9hrx5g=
+github.com/myoung34/terraform-plugin-framework-utils v0.0.0-20230201202102-41c2c21deae7/go.mod h1:3Clx6Vx3+M+vDvD8KrgPAfit1iHePqWMs3+0P1rumcw=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
@@ -239,10 +239,8 @@ github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.2 h1:4jaiDzPyXQvSd7D0EjG45355tLlV3VOECpq10pLC+8s=
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
-github.com/uptycslabs/uptycs-client-go v0.0.27-0.20230130193611-8bb1ee615566 h1:HGMXV/2HisJa9HZ5OGwagRCI0QuDoy+mCOq4D7rupTQ=
-github.com/uptycslabs/uptycs-client-go v0.0.27-0.20230130193611-8bb1ee615566/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
-github.com/uptycslabs/uptycs-client-go v0.0.27-0.20230201190639-2875d2113c0c h1:7Bdnh2Y29QShF0ogPCEu2DOzrsRXue2049acksCPx7M=
-github.com/uptycslabs/uptycs-client-go v0.0.27-0.20230201190639-2875d2113c0c/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
+github.com/uptycslabs/uptycs-client-go v0.0.27 h1:ufrLGKBmF3xGqQZV+FCVMyPuHzf5XO/X6SMa/Mhrp80=
+github.com/uptycslabs/uptycs-client-go v0.0.27/go.mod h1:y4h23mQeoKTt0mpyvEMoEStW/azCQ/CSlMtLqqUlC8M=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=

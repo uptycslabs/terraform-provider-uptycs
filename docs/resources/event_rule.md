@@ -17,7 +17,6 @@ description: |-
 
 ### Required
 
-- `builder_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config))
 - `code` (String)
 - `description` (String)
 - `event_tags` (List of String)
@@ -28,14 +27,41 @@ description: |-
 
 ### Optional
 
+- `alert_rule` (Attributes) (see [below for nested schema](#nestedatt--alert_rule))
+- `builder_config` (Attributes) (see [below for nested schema](#nestedatt--builder_config))
 - `enabled` (Boolean)
 - `grouping_l2` (String)
 - `grouping_l3` (String)
 - `score` (String)
+- `sql_config` (Attributes) (see [below for nested schema](#nestedatt--sql_config))
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--alert_rule"></a>
+### Nested Schema for `alert_rule`
+
+Required:
+
+- `destinations` (Attributes List) (see [below for nested schema](#nestedatt--alert_rule--destinations))
+- `rule_exceptions` (List of String)
+
+Read-Only:
+
+- `enabled` (Boolean)
+
+<a id="nestedatt--alert_rule--destinations"></a>
+### Nested Schema for `alert_rule.destinations`
+
+Optional:
+
+- `close_after_delivery` (Boolean)
+- `destination_id` (String)
+- `notify_every_alert` (Boolean)
+- `severity` (String)
+
+
 
 <a id="nestedatt--builder_config"></a>
 ### Nested Schema for `builder_config`
@@ -65,5 +91,14 @@ Required:
 Optional:
 
 - `metadata_sources` (String)
+
+
+
+<a id="nestedatt--sql_config"></a>
+### Nested Schema for `sql_config`
+
+Optional:
+
+- `interval_seconds` (Number)
 
 
