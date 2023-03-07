@@ -110,6 +110,7 @@ func (r *userResource) Schema(_ context.Context, req resource.SchemaRequest, res
 func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var userID string
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("id"), &userID)...)
+
 	userResp, err := r.client.GetUser(uptycs.User{
 		ID: userID,
 	})
@@ -132,8 +133,8 @@ func (r *userResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		Support:            types.BoolValue(userResp.Support),
 		MaxIdleTimeMins:    types.Int64Value(int64(userResp.MaxIdleTimeMins)),
 		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
-		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
-		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttribute(userResp.AlertHiddenColumns),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -209,8 +210,8 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		ImageURL:           types.StringValue(userResp.ImageURL),
 		MaxIdleTimeMins:    types.Int64Value(int64(userResp.MaxIdleTimeMins)),
 		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
-		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
-		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttribute(userResp.AlertHiddenColumns),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -295,8 +296,8 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Support:            types.BoolValue(userResp.Support),
 		MaxIdleTimeMins:    types.Int64Value(int64(userResp.MaxIdleTimeMins)),
 		Roles:              makeListStringAttributeFn(userResp.Roles, func(f uptycs.Role) (string, bool) { return f.ID, true }),
-		AlertHiddenColumns: makeListStringAttributeFn(userResp.AlertHiddenColumns, func(f string) (string, bool) { return f, true }),
-		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(f uptycs.ObjectGroup) (string, bool) { return f.ID, true }),
+		AlertHiddenColumns: makeListStringAttribute(userResp.AlertHiddenColumns),
+		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
 	diags = resp.State.Set(ctx, result)
