@@ -83,10 +83,10 @@ func (r *roleResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		ID:                   types.StringValue(roleResp.ID),
 		Name:                 types.StringValue(roleResp.Name),
 		Description:          types.StringValue(roleResp.Description),
-		Permissions:          makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
+		RoleObjectGroups:     makeListStringAttributeFn(roleResp.RoleObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 		Hidden:               types.BoolValue(roleResp.Hidden),
 		NoMinimalPermissions: types.BoolValue(roleResp.NoMinimalPermissions),
-		RoleObjectGroups:     makeListStringAttribute(roleResp.Permissions),
+		Permissions:          makeListStringAttribute(roleResp.Permissions),
 	}
 
 	diags := resp.State.Set(ctx, result)
