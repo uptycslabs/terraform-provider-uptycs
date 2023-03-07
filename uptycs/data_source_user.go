@@ -99,8 +99,8 @@ func (d *userDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 		Support:            types.BoolValue(userResp.Support),
 		ImageURL:           types.StringValue(userResp.ImageURL),
 		MaxIdleTimeMins:    types.Int64Value(int64(userResp.MaxIdleTimeMins)),
-		AlertHiddenColumns: makeListStringAttributeFn(userResp.Roles, func(r uptycs.Role) (string, bool) { return r.ID, true }),
-		Roles:              makeListStringAttribute(userResp.AlertHiddenColumns),
+		AlertHiddenColumns: makeListStringAttribute(userResp.AlertHiddenColumns),
+		Roles:              makeListStringAttributeFn(userResp.Roles, func(g uptycs.Role) (string, bool) { return g.ID, true }),
 		UserObjectGroups:   makeListStringAttributeFn(userResp.UserObjectGroups, func(g uptycs.ObjectGroup) (string, bool) { return g.ObjectGroupID, true }),
 	}
 
