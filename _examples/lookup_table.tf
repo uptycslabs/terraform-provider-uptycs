@@ -14,8 +14,10 @@ provider "uptycs" {
   api_secret  = "234444444444433333333333222222221111111"
 }
 
-resource "uptycs_compliance_profile" "test" {
-  name        = "marc test"
-  description = ""
-  priority    = 1337
+data "uptycs_lookup_table" "test" {
+  id = "385d7735-9342-41bc-b660-87040313b39e"
+}
+
+output "lookup_table" {
+  value = data.uptycs_lookup_table.test
 }
