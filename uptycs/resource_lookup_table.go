@@ -46,14 +46,9 @@ func (r *lookupTableResource) Schema(_ context.Context, req resource.SchemaReque
 					modifiers.DefaultString(""),
 				},
 			},
-			"data_rows": schema.ListNestedAttribute{
-				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":   schema.StringAttribute{Computed: true},
-						"data": schema.StringAttribute{Optional: true},
-					},
-				},
+			"data_rows": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
 			},
 		},
 	}
@@ -77,13 +72,7 @@ func (r *lookupTableResource) Read(ctx context.Context, req resource.ReadRequest
 		Name:        types.StringValue(lookupTableResp.Name),
 		Description: types.StringValue(lookupTableResp.Description),
 		IDField:     types.StringValue(lookupTableResp.IDField),
-	}
-
-	for _, _lookupTableDataRow := range lookupTableResp.DataRows {
-		result.DataRows = append(result.DataRows, LookupTableDataRow{
-			ID:   types.StringValue(_lookupTableDataRow.ID),
-			Data: types.StringValue(string(_lookupTableDataRow.Data)),
-		})
+		DataRows:    makeListStringAttributeFn(lookupTableResp.DataRows, func(v uptycs.LookupTableDataRow) (string, bool) { return string(v.Data), true }),
 	}
 
 	diags := resp.State.Set(ctx, result)
@@ -116,14 +105,26 @@ func (r *lookupTableResource) Create(ctx context.Context, req resource.CreateReq
 		)
 		return
 	}
-	// Handle the data rows
-	for _, _lookupTableDataRow := range plan.DataRows {
+
+	var dataRows []string
+	plan.DataRows.ElementsAs(ctx, &dataRows, false)
+
+	// Gather all the data rows from the plan
+	for _, _dr := range dataRows {
 		_, _ = r.client.CreateLookupTableDataRow(
 			lookupTableResp,
 			uptycs.LookupTableDataRow{
-				Data: uptycs.CustomJSONString(fmt.Sprintf("[%s]", _lookupTableDataRow.Data.ValueString())),
+				Data: uptycs.CustomJSONString(fmt.Sprintf("[%s]", _dr)),
 			},
 		)
+	}
+
+	updatedLookupTableResp, _ := r.client.GetLookupTable(uptycs.LookupTable{
+		ID: lookupTableResp.ID,
+	})
+	_dataRows := make([]string, len(updatedLookupTableResp.DataRows))
+	for ind := range updatedLookupTableResp.DataRows {
+		_dataRows[ind] = string(updatedLookupTableResp.DataRows[ind].Data)
 	}
 
 	var result = LookupTable{
@@ -131,16 +132,7 @@ func (r *lookupTableResource) Create(ctx context.Context, req resource.CreateReq
 		Name:        types.StringValue(lookupTableResp.Name),
 		Description: types.StringValue(lookupTableResp.Description),
 		IDField:     types.StringValue(lookupTableResp.IDField),
-	}
-
-	updatedLookupTableResp, _ := r.client.GetLookupTable(uptycs.LookupTable{
-		ID: lookupTableResp.ID,
-	})
-	for ind, _lookupTableDataRow := range updatedLookupTableResp.DataRows {
-		result.DataRows = append(result.DataRows, LookupTableDataRow{
-			ID:   types.StringValue(_lookupTableDataRow.ID),
-			Data: types.StringValue(string(updatedLookupTableResp.DataRows[ind].Data)),
-		})
+		DataRows:    makeListStringAttribute(_dataRows),
 	}
 
 	diags = resp.State.Set(ctx, result)

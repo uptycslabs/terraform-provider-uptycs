@@ -17,7 +17,7 @@ description: |-
 
 ### Optional
 
-- `data_rows` (Attributes List) (see [below for nested schema](#nestedatt--data_rows))
+- `data_rows` (List of String)
 - `description` (String)
 - `id_field` (String)
 - `name` (String)
@@ -25,16 +25,5 @@ description: |-
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-
-<a id="nestedatt--data_rows"></a>
-### Nested Schema for `data_rows`
-
-Optional:
-
-- `data` (String)
-
-Read-Only:
-
-- `id` (String)
 
 

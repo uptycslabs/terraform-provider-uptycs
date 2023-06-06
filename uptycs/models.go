@@ -8,18 +8,8 @@ type LookupTable struct {
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	Description types.String `tfsdk:"description"`
-	// Active is useless. Setting it to false is not helpful,
-	// and setting it to true causes a 400 with
-	//    "active should be a boolean value and only value false is allowed for creation"
-	// Since We cannot update lookup tables (only delete and recreate) we wont support it here
-	//Active         types.Bool   `tfsdk:"active"`
-	IDField  types.String         `tfsdk:"id_field"`
-	DataRows []LookupTableDataRow `tfsdk:"data_rows"`
-}
-
-type LookupTableDataRow struct {
-	ID   types.String `tfsdk:"id"`
-	Data types.String `tfsdk:"data"`
+	IDField     types.String `tfsdk:"id_field"`
+	DataRows    types.List   `tfsdk:"data_rows"`
 }
 
 type AlertRuleLite struct {

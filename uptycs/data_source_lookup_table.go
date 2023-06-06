@@ -36,14 +36,9 @@ func (d *lookupTableDataSource) Schema(_ context.Context, req datasource.SchemaR
 			"name":        schema.StringAttribute{Optional: true},
 			"description": schema.StringAttribute{Optional: true},
 			"id_field":    schema.StringAttribute{Optional: true},
-			"data_rows": schema.ListNestedAttribute{
-				Optional: true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id":   schema.StringAttribute{Computed: true},
-						"data": schema.StringAttribute{Optional: true},
-					},
-				},
+			"data_rows": schema.ListAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
 		},
 	}
@@ -84,17 +79,7 @@ func (d *lookupTableDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Name:        types.StringValue(lookupTableResp.Name),
 		Description: types.StringValue(lookupTableResp.Description),
 		IDField:     types.StringValue(lookupTableResp.IDField),
-	}
-
-	//panic(lookupTableResp.DataRows[0].IDFieldValue)
-	//_lookupTableDataRows, _ := uptycs.GetAllLookupTableData(d.client, fmt.Sprintf("lookupTables/%s/data", result.ID))
-	//for _, _lookupTableDataRow := range _lookupTableDataRows {
-	for _, _lookupTableDataRow := range lookupTableResp.DataRows {
-		result.DataRows = append(result.DataRows, LookupTableDataRow{
-			ID: types.StringValue(_lookupTableDataRow.ID),
-			//IDFieldValue: types.StringValue(_lookupTableDataRow.IDFieldValue),
-			Data: types.StringValue(string(_lookupTableDataRow.Data)),
-		})
+		DataRows:    makeListStringAttributeFn(lookupTableResp.DataRows, func(v uptycs.LookupTableDataRow) (string, bool) { return string(v.Data), true }),
 	}
 
 	diags := resp.State.Set(ctx, result)
