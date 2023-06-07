@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/myoung34/terraform-plugin-framework-utils/modifiers"
 	"github.com/uptycslabs/uptycs-client-go/uptycs"
+	"golang.org/x/exp/slices"
 )
 
 func LookupTableResource() resource.Resource {
@@ -150,6 +151,9 @@ func (r *lookupTableResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	var _actualState LookupTable
+	resp.State.Get(ctx, &_actualState)
+
 	lookupTableID := state.ID.ValueString()
 
 	// Retrieve values from plan
@@ -165,7 +169,6 @@ func (r *lookupTableResource) Update(ctx context.Context, req resource.UpdateReq
 		Name:        plan.Name.ValueString(),
 		Description: plan.Description.ValueString(),
 		IDField:     plan.IDField.ValueString(),
-		//DataLookupTable: uptycs.DataLookupTable{},
 	})
 
 	if err != nil {
@@ -176,11 +179,84 @@ func (r *lookupTableResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
+	var planDataRows []string
+	plan.DataRows.ElementsAs(ctx, &planDataRows, false)
+
+	var stateDataRows []string
+	_actualState.DataRows.ElementsAs(ctx, &stateDataRows, false)
+
+	var keysInPlan []string
+	var keysInState []string
+
+	for _, _dr := range planDataRows {
+		_, _tempStr, _ := getKeyValueFromRawJSON(_dr, plan.IDField.ValueString())
+		keysInPlan = append(keysInPlan, _tempStr)
+	}
+	for _, _dr := range stateDataRows {
+		_, _tempStr, _ := getKeyValueFromRawJSON(_dr, plan.IDField.ValueString())
+		keysInState = append(keysInState, _tempStr)
+	}
+
+	_completed := make([]string, 0)
+	for _, _dr := range append(planDataRows, stateDataRows...) {
+		_, _tempStr, _ := getKeyValueFromRawJSON(_dr, plan.IDField.ValueString())
+		if slices.Contains(difference(keysInState, keysInPlan), _tempStr) {
+			//delete
+			_, err = r.client.DeleteLookupTableDataRow(
+				lookupTableResp,
+				uptycs.LookupTableDataRow{
+					IDFieldValue: _tempStr,
+				},
+			)
+			if err != nil {
+				panic(fmt.Sprintf("Error deleting lookup table row '%s': %s", _tempStr, err))
+			}
+		} else if slices.Contains(difference(keysInPlan, keysInState), _tempStr) {
+			//add
+			_, err = r.client.CreateLookupTableDataRow(
+				lookupTableResp,
+				uptycs.LookupTableDataRow{
+					IDFieldValue: _tempStr,
+					Data:         uptycs.CustomJSONString(fmt.Sprintf("[%s]", _dr)),
+				},
+			)
+			if err != nil {
+				panic(fmt.Sprintf("Error adding lookup table row '%s': %s", _tempStr, err))
+			}
+
+		} else if slices.Contains(interSection(keysInPlan, keysInState), _tempStr) {
+			//update
+			if !slices.Contains(_completed, _tempStr) {
+				_updatedRow, err := r.client.UpdateLookupTableDataRow(
+					lookupTableResp,
+					uptycs.LookupTableDataRow{
+						IDFieldValue: _tempStr,
+						Data:         uptycs.CustomJSONString(fmt.Sprintf("[%s]", _dr)),
+					},
+				)
+				if err != nil {
+					panic(fmt.Sprintf("Error updating lookup table row '%s' with data '%+v': %s", _tempStr, _updatedRow.Data, err))
+				}
+				_completed = append(_completed, _tempStr)
+			}
+		}
+
+	}
+
+	updatedLookupTableResp, _ := r.client.GetLookupTable(uptycs.LookupTable{
+		ID: lookupTableResp.ID,
+	})
+	_dataRows := make([]string, len(updatedLookupTableResp.DataRows))
+	for ind := range updatedLookupTableResp.DataRows {
+		_dataRows[ind] = string(updatedLookupTableResp.DataRows[ind].Data)
+	}
+
 	var result = LookupTable{
 		ID:          types.StringValue(lookupTableResp.ID),
 		Name:        types.StringValue(lookupTableResp.Name),
 		Description: types.StringValue(lookupTableResp.Description),
 		IDField:     types.StringValue(lookupTableResp.IDField),
+		DataRows:    makeListStringAttribute(_dataRows),
 	}
 
 	diags = resp.State.Set(ctx, result)
