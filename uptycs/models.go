@@ -4,6 +4,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+type LookupTable struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Description types.String `tfsdk:"description"`
+	IDField     types.String `tfsdk:"id_field"`
+	DataRows    types.List   `tfsdk:"data_rows"`
+}
+
 type AlertRuleLite struct {
 	Enabled             types.Bool             `tfsdk:"enabled"`
 	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
