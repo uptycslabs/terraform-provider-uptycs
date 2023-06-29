@@ -36,8 +36,21 @@ func (d *destinationDataSource) Schema(_ context.Context, req datasource.SchemaR
 			"name":    schema.StringAttribute{Optional: true},
 			"type":    schema.StringAttribute{Optional: true},
 			"address": schema.StringAttribute{Optional: true},
-			"enabled": schema.BoolAttribute{Optional: true}, //PlanModifiers: tfsdk.AttributePlanModifiers{modifiers.DefaultBool(true)},
-
+			"enabled": schema.BoolAttribute{Optional: true},
+			"config": schema.SingleNestedAttribute{
+				Optional: true,
+				Attributes: map[string]schema.Attribute{
+					"sender":           schema.StringAttribute{Optional: true},
+					"method":           schema.StringAttribute{Optional: true},
+					"username":         schema.StringAttribute{Optional: true},
+					"password":         schema.StringAttribute{Optional: true},
+					"data_key":         schema.StringAttribute{Optional: true},
+					"token":            schema.StringAttribute{Optional: true},
+					"slack_attachment": schema.BoolAttribute{Optional: true},
+					"headers":          schema.StringAttribute{Optional: true},
+				},
+			},
+			"template": schema.StringAttribute{Optional: true},
 		},
 	}
 }
@@ -78,6 +91,17 @@ func (d *destinationDataSource) Read(ctx context.Context, req datasource.ReadReq
 		Type:    types.StringValue(destinationResp.Type),
 		Address: types.StringValue(destinationResp.Address),
 		Enabled: types.BoolValue(destinationResp.Enabled),
+		Config: DestinationConfig{
+			Sender:          types.StringValue(destinationResp.Config.Sender),
+			Method:          types.StringValue(destinationResp.Config.Method),
+			Username:        types.StringValue(destinationResp.Config.Username),
+			Password:        types.StringValue(destinationResp.Config.Password),
+			DataKey:         types.StringValue(destinationResp.Config.DataKey),
+			Token:           types.StringValue(destinationResp.Config.Token),
+			SlackAttachment: types.BoolValue(destinationResp.Config.SlackAttachment),
+			Headers:         types.StringValue(string(destinationResp.Config.Headers) + "\n"),
+		},
+		Template: types.StringValue(destinationResp.Template.Template),
 	}
 
 	diags := resp.State.Set(ctx, result)

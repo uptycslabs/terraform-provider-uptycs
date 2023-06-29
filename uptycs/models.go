@@ -98,16 +98,24 @@ type AutoAlertConfig struct {
 }
 
 type Destination struct {
-	ID      types.String `tfsdk:"id"`
-	Name    types.String `tfsdk:"name"`
-	Type    types.String `tfsdk:"type"`
-	Address types.String `tfsdk:"address"`
-	Enabled types.Bool   `tfsdk:"enabled"`
-	//Config TODO
-	//"config": {
-	//  "sender": null
-	//},
-	//Template TODO
+	ID       types.String      `tfsdk:"id"`
+	Name     types.String      `tfsdk:"name"`
+	Type     types.String      `tfsdk:"type"`
+	Address  types.String      `tfsdk:"address"`
+	Enabled  types.Bool        `tfsdk:"enabled"`
+	Config   DestinationConfig `tfsdk:"config"`
+	Template types.String      `tfsdk:"template"`
+}
+
+type DestinationConfig struct {
+	Sender          types.String `tfsdk:"sender"`
+	Method          types.String `tfsdk:"method"`
+	Username        types.String `tfsdk:"username"`
+	Password        types.String `tfsdk:"password"`
+	DataKey         types.String `tfsdk:"data_key"`
+	Token           types.String `tfsdk:"token"`
+	SlackAttachment types.Bool   `tfsdk:"slack_attachment"`
+	Headers         types.String `tfsdk:"headers"`
 }
 
 type EventExcludeProfile struct {
