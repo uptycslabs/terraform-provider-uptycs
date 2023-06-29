@@ -18,12 +18,28 @@ description: |-
 ### Optional
 
 - `address` (String)
+- `config` (Attributes) (see [below for nested schema](#nestedatt--config))
 - `enabled` (Boolean)
 - `name` (String)
+- `template` (String)
 - `type` (String)
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--config"></a>
+### Nested Schema for `config`
+
+Optional:
+
+- `data_key` (String)
+- `headers` (String)
+- `method` (String)
+- `password` (String)
+- `sender` (String)
+- `slack_attachment` (Boolean)
+- `token` (String)
+- `username` (String)
 
 

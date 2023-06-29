@@ -2,7 +2,7 @@ terraform {
   required_providers {
     uptycs = {
       source  = "uptycslabs/uptycs"
-      version = "0.0.23"
+      version = "0.0.24"
     }
   }
 }
@@ -28,6 +28,25 @@ resource "uptycs_destination" "test" {
   type    = "email"
 }
 
-output "foo" {
-  value = data.uptycs_destination.foo.name
+resource "uptycs_destination" "test2" {
+  address = "https://hooks.example.com/hooks/123456"
+  enabled = true
+  name    = "Testing"
+  type    = "http"
+  config = {
+    sender           = ""
+    token            = ""
+    password         = ""
+    data_key         = ""
+    headers          = <<EOT
+{}
+EOT
+    method           = "POST"
+    slack_attachment = false
+    username         = ""
+  }
+  template = ""
+  lifecycle {
+    ignore_changes = [config]
+  }
 }

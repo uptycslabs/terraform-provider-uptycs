@@ -273,6 +273,8 @@ github.com/uptycslabs/uptycs-client-go v0.0.28-0.20230613155552-1d84bd701c3f h1:
 github.com/uptycslabs/uptycs-client-go v0.0.28-0.20230613155552-1d84bd701c3f/go.mod h1:L5fmg1TDleBLEQmcuysc/mGYkshQq2WWyEwBrMG2/do=
 github.com/uptycslabs/uptycs-client-go v0.0.28 h1:JgAvgecSEGlMrCFGbgvbSBLDEL10e/o3hqJ3adS5iSQ=
 github.com/uptycslabs/uptycs-client-go v0.0.28/go.mod h1:L5fmg1TDleBLEQmcuysc/mGYkshQq2WWyEwBrMG2/do=
+github.com/uptycslabs/uptycs-client-go v0.0.31 h1:7mfa7L+ZInmTQXoZ1cPw1nVsBZHYuf1i+S2md7BHhHw=
+github.com/uptycslabs/uptycs-client-go v0.0.31/go.mod h1:L5fmg1TDleBLEQmcuysc/mGYkshQq2WWyEwBrMG2/do=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
