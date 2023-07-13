@@ -119,9 +119,10 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
 					"enabled": schema.BoolAttribute{
-						Computed: true,
+						Optional: true,
 						PlanModifiers: []planmodifier.Bool{
 							boolplanmodifier.UseStateForUnknown(),
+							modifiers.DefaultBool(false),
 						},
 					},
 					"rule_exceptions": schema.ListAttribute{
