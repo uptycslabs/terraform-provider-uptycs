@@ -47,7 +47,7 @@ Required:
 - `destinations` (Attributes List) (see [below for nested schema](#nestedatt--alert_rule--destinations))
 - `rule_exceptions` (List of String)
 
-Read-Only:
+Optional:
 
 - `enabled` (Boolean)
 
