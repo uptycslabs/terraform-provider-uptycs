@@ -13,7 +13,6 @@ type LookupTable struct {
 }
 
 type AlertRuleLite struct {
-	Enabled             types.Bool             `tfsdk:"enabled"`
 	AlertRuleExceptions types.List             `tfsdk:"rule_exceptions"`
 	Destinations        []AlertRuleDestination `tfsdk:"destinations"`
 }

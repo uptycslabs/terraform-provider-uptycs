@@ -38,7 +38,7 @@ func (r *eventRuleResource) Configure(_ context.Context, req resource.ConfigureR
 	r.client = req.ProviderData.(*uptycs.Client)
 }
 
-func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *eventRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id":          schema.StringAttribute{Computed: true},
@@ -118,13 +118,6 @@ func (r *eventRuleResource) Schema(_ context.Context, req resource.SchemaRequest
 			"alert_rule": schema.SingleNestedAttribute{
 				Optional: true,
 				Attributes: map[string]schema.Attribute{
-					"enabled": schema.BoolAttribute{
-						Optional: true,
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-							modifiers.DefaultBool(false),
-						},
-					},
 					"rule_exceptions": schema.ListAttribute{
 						ElementType: types.StringType,
 						Required:    true,
@@ -206,14 +199,12 @@ func (r *eventRuleResource) Read(ctx context.Context, req resource.ReadRequest, 
 		}
 
 		result.AlertRule = &AlertRuleLite{
-			Enabled:             types.BoolValue(false),
 			AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
 			Destinations:        []AlertRuleDestination{},
 		}
 		if eventRuleResp.BuilderConfig.AutoAlertConfig.RaiseAlert {
 			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
 			if err == nil {
-
 				nonGlobalRuleExceptions := make([]attr.Value, 0)
 				for _, re := range alertRuleResp.AlertRuleExceptions {
 					_ruleException, _ := r.client.GetException(uptycs.Exception{
@@ -267,11 +258,12 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 	plan.EventTags.ElementsAs(ctx, &tags, false)
 
 	var eventRuleResp = uptycs.EventRule{}
+	var err = error(nil)
 	var result = EventRule{}
 
 	if plan.Type.ValueString() == "builder" {
 
-		eventRuleResp, _ = r.client.CreateEventRule(uptycs.EventRule{
+		eventRuleResp, err = r.client.CreateEventRule(uptycs.EventRule{
 			Name:        plan.Name.ValueString(),
 			Code:        plan.Code.ValueString(),
 			Description: plan.Description.ValueString(),
@@ -298,15 +290,30 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				},
 			},
 		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not create eventRule, unexpected error: "+err.Error(),
+			)
+			return
+		}
 
 		filtersJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.Filters, "", "  ")
 		if err != nil {
-			fmt.Println(err)
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not create eventRule, unexpected error: "+err.Error(),
+			)
+			return
 		}
 
 		metadataJSON, err := json.MarshalIndent(eventRuleResp.BuilderConfig.AutoAlertConfig.MetadataSources, "", "  ")
 		if err != nil {
-			fmt.Println(err)
+			resp.Diagnostics.AddError(
+				"Error creating",
+				"Could not create eventRule, unexpected error: "+err.Error(),
+			)
+			return
 		}
 
 		result = EventRule{
@@ -337,7 +344,6 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				},
 			},
 			AlertRule: &AlertRuleLite{
-				Enabled:             types.BoolValue(false),
 				AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
 				Destinations:        []AlertRuleDestination{},
 			},
@@ -411,6 +417,7 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 
 			alertRuleResp, err := r.client.GetAlertRule(uptycs.AlertRule{ID: eventRuleResp.ID})
 			if err == nil {
+
 				if plan.AlertRule == nil {
 					resp.Diagnostics.AddError(
 						"Error creating",
@@ -424,14 +431,14 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				plan.AlertRule.AlertRuleExceptions.ElementsAs(ctx, &ruleExceptions, false)
 
 				// Gather all the rule exceptions from the plan
-				// Note: this excludes global rule exceptions so you must gather those back at Update() time
+				// Note: this excludes global rule exceptions, so you must gather those back at Update() time
 				_ruleExceptions := make([]uptycs.RuleException, 0)
 				for _, _re := range ruleExceptions {
 					_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
 						ExceptionID: _re,
 					})
 				}
-				// Gather back the global rule exceptions so we dont remove them at Update time by leaving
+				// Gather back the global rule exceptions, so we don't remove them at Update time by leaving
 				// them out of .AlertRuleExceptions[]
 				for _, _re := range eventRuleResp.Exceptions {
 					re, _ := r.client.GetException(uptycs.Exception{
@@ -487,6 +494,12 @@ func (r *eventRuleResource) Create(ctx context.Context, req resource.CreateReque
 				}
 				result.AlertRule.AlertRuleExceptions = types.ListValueMust(types.StringType, nonGlobalRuleExceptions)
 				result.AlertRule.Destinations = plan.AlertRule.Destinations
+			} else {
+				resp.Diagnostics.AddError(
+					"Error creating",
+					"Could not create eventRule, unexpected error: "+err.Error(),
+				)
+				return
 			}
 		}
 	} else {
@@ -605,7 +618,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 				},
 			},
 			AlertRule: &AlertRuleLite{
-				Enabled:             types.BoolValue(false),
 				AlertRuleExceptions: makeListStringAttributeFn([]string{}, func(v string) (string, bool) { return v, true }),
 				Destinations:        []AlertRuleDestination{},
 			},
@@ -681,13 +693,13 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			_ruleExceptions := make([]uptycs.RuleException, 0)
 
 			// Gather all the rule exceptions from the plan
-			// Note: this excludes global rule exceptions so you must gather those back at Update() time
+			// Note: this excludes global rule exceptions, so you must gather those back at Update() time
 			for _, _re := range ruleExceptions {
 				_ruleExceptions = append(_ruleExceptions, uptycs.RuleException{
 					ExceptionID: _re,
 				})
 			}
-			// Gather back the global rule exceptions so we dont remove them at Update time by leaving
+			// Gather back the global rule exceptions, so we don't remove them at Update time by leaving
 			// them out of .AlertRuleExceptions[]
 			for _, _re := range eventRuleResp.Exceptions {
 				re, _ := r.client.GetException(uptycs.Exception{
@@ -736,7 +748,6 @@ func (r *eventRuleResource) Update(ctx context.Context, req resource.UpdateReque
 			}
 
 			var arResult = AlertRuleLite{
-				Enabled:             types.BoolValue(alertRuleResp.Enabled),
 				AlertRuleExceptions: makeListStringAttributeFn(alertRuleResp.AlertRuleExceptions, func(v uptycs.RuleException) (string, bool) { return v.ExceptionID, true }),
 			}
 

@@ -3,7 +3,7 @@ HOSTNAME=registry.terraform.io
 NAMESPACE=uptycslabs
 NAME=uptycs
 BINARY=terraform-provider-${NAME}
-VERSION = 0.0.25
+VERSION = 0.0.26
 GOOS = darwin
 GOARCH = amd64
 
