@@ -78,3 +78,5 @@ require (
 	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
+
+exclude github.com/Masterminds/goutils v1.1.0 //CVE-2021-4238
